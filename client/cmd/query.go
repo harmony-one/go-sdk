@@ -51,5 +51,5 @@ func init() {
 		"http://localhost:9500",
 		"<host>:<port>",
 	)
-	rootCmd.AddCommand(cmdQuery)
+	RootCmd.AddCommand(cmdQuery)
 }

@@ -7,7 +7,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var rootCmd = &cobra.Command{
+var RootCmd = &cobra.Command{
 	Use:   "hmy_cli",
 	Short: "Harmony blockchain",
 	Long: `
@@ -23,22 +23,12 @@ var (
 )
 
 func init() {
-	rootCmd.PersistentFlags().BoolVarP(&prettyPrintJSONOutput, "pretty", "p", false, "pretty print JSON outputs")
+	RootCmd.PersistentFlags().BoolVarP(&prettyPrintJSONOutput, "pretty", "p", false, "pretty print JSON outputs")
 
-	cmdVersion := &cobra.Command{
-		Use:   "version",
-		Short: "Show version",
-		Run: func(cmd *cobra.Command, args []string) {
-
-			os.Exit(0)
-		},
-	}
-
-	rootCmd.AddCommand(cmdVersion)
 }
 
 func Execute() {
-	if err := rootCmd.Execute(); err != nil {
+	if err := RootCmd.Execute(); err != nil {
 		fmt.Println(err)
 		os.Exit(1)
 	}

@@ -69,5 +69,5 @@ Manage your local keys
 	}
 
 	cmdKeys.AddCommand(cmdMnemonic, cmdAdd, cmdList, cmdShow, cmdDelete, cmdUpdate)
-	rootCmd.AddCommand(cmdKeys)
+	RootCmd.AddCommand(cmdKeys)
 }
