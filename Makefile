@@ -1,14 +1,17 @@
-version=$(shell git rev-list --count HEAD)
-commit=$(shell git describe --always --long --dirty)
-built_at=$(shell date +%FT%T%z)
-built_by=${USER}
+version := $(shell git rev-list --count HEAD)
+commit := $(shell git describe --always --long --dirty)
+built_at := $(shell date +%FT%T%z)
+built_by := ${USER}
 
 flags := -gcflags="all=-N -l -c 2"
+ldflags := -X main.version=v${version} -X main.commit=${commit}
+ldflags += -X main.builtAt=${built_at} -X main.builtBy=${built_by}
 cli := hmy_cli
 
 all:
-	printf '%s %s %s %s\n' $(version) $(commit) $(built_at) $(built_by)
-	go build $(flags) -o $(cli) client/main.go
+	go build $(flags) -o $(cli) -ldflags="$(ldflags)" client/main.go
+
+.PHONY:clean
 
 clean:
 	@rm -f $(cli)
