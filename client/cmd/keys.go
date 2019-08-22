@@ -2,9 +2,8 @@ package cmd
 
 import (
 	"fmt"
-	"strings"
 
-	// homedir "github.com/mitchellh/go-homedir"
+	"github.com/harmony-one/go-sdk/pkg/keys"
 	"github.com/spf13/cobra"
 )
 
@@ -16,7 +15,7 @@ func init() {
 Manage your local keys
 `,
 		Run: func(cmd *cobra.Command, args []string) {
-			fmt.Println("Print: " + strings.Join(args, " "))
+			cmd.Help()
 		},
 	}
 
@@ -30,9 +29,9 @@ Manage your local keys
 
 	cmdAdd := &cobra.Command{
 		Use:   "add",
-		Short: "Create a new key, or import from seed",
+		Short: "Create a new key with passphrase",
 		Run: func(cmd *cobra.Command, args []string) {
-			fmt.Println(cmd)
+			keys.AddNewKey()
 		},
 	}
 
@@ -40,7 +39,7 @@ Manage your local keys
 		Use:   "list",
 		Short: "List all keys",
 		Run: func(cmd *cobra.Command, args []string) {
-			fmt.Println(cmd)
+			keys.ListKeys()
 		},
 	}
 
