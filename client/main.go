@@ -3,7 +3,7 @@ package main
 import (
 	"fmt"
 
-	"github.com/harmony-one/go-sdk/common"
+	"github.com/harmony-one/go-sdk/client/cmd"
 )
 
 var (
@@ -15,5 +15,5 @@ var (
 
 func main() {
 	fmt.Printf("%s %s %s %s", version, commit, builtAt, builtBy)
-	common.Speak()
+	cmd.Execute()
 }
