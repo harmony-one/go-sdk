@@ -9,6 +9,9 @@ ldflags += -X main.builtAt=${built_at} -X main.builtBy=${built_by}
 cli := hmy_cli
 
 all:
+	go build -o $(cli) -ldflags="$(ldflags)" client/main.go
+
+debug:
 	go build $(flags) -o $(cli) -ldflags="$(ldflags)" client/main.go
 
 run: all
