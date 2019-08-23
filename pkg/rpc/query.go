@@ -25,7 +25,7 @@ func init() {
 	}
 }
 
-func baseRequest(method RPCMethod, node string, params []string) string {
+func baseRequest(method RPCMethod, node string, params interface{}) string {
 	requestBody, _ := json.Marshal(map[string]interface{}{
 		"jsonrpc": JSON_RPC_VERSION,
 		"id":      strconv.Itoa(queryID),
@@ -43,6 +43,7 @@ func baseRequest(method RPCMethod, node string, params []string) string {
 	}
 
 	defer resp.Body.Close()
+	// TODO Need to read the body, fail with the error values that come from ErrorCode list
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		fmt.Println(err)
@@ -52,6 +53,6 @@ func baseRequest(method RPCMethod, node string, params []string) string {
 	return string(body)
 }
 
-func RPCRequest(method, node string, params []string) string {
+func RPCRequest(method RPCMethod, node string, params interface{}) string {
 	return baseRequest(method, node, params)
 }

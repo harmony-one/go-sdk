@@ -19,11 +19,17 @@ Query Harmony's blockchain for high level metrics, queries
 		},
 	}
 
+	request := func(method rpc.RPCMethod, params interface{}) {
+		fmt.Print(rpc.RPCRequest(method, node, params))
+	}
+
 	subCommands := [...]*cobra.Command{{
-		Use:   "update",
-		Short: "Change the password used to protect private key",
+		Use:   "block-by-number",
+		Short: "Get a harmony blockchain block by block number",
+		Args:  cobra.ExactArgs(1),
+		// TODO Add flag for second boolean parameter, consume argument
 		Run: func(cmd *cobra.Command, args []string) {
-			fmt.Println(cmd)
+			request(rpc.Method.GetBlockByNumber, []interface{}{args[0], true})
 		},
 	}, {
 		Use:   "protocol-version",

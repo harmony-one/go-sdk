@@ -91,6 +91,7 @@ type rpcErrorCodeList struct {
 	RPC_METHOD_DEPRECATED      RPCErrorCode
 }
 
+// TODO Turn these error codes into error values in query.go
 var ErrorCode = rpcErrorCodeList{
 	// Standard JSON-RPC 2.0 errors
 	// RPC_INVALID_REQUEST is internally mapped to HTTP_BAD_REQUEST (400).
