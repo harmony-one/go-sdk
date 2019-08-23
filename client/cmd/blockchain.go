@@ -19,7 +19,10 @@ Query Harmony's blockchain for high level metrics, queries
 		},
 	}
 
-	request := func(method rpc.RPCMethod, params interface{}) {
+	request := func(method rpc.RPCMethod, params []interface{}) {
+		if useLatestInParamsForRPC {
+			params = append(params, "latest")
+		}
 		fmt.Print(rpc.RPCRequest(method, node, params))
 	}
 
@@ -38,7 +41,7 @@ Query Harmony's blockchain for high level metrics, queries
 Query Harmony's blockchain for high level metrics, queries
 `,
 		Run: func(cmd *cobra.Command, args []string) {
-			request(rpc.Method.ProtocolVersion, []string{})
+			request(rpc.Method.ProtocolVersion, []interface{}{})
 		},
 	}, {
 		Use:   "transaction-by-hash",
@@ -61,18 +64,27 @@ Find a Harmony transaction by receipt
 			request(rpc.Method.GetTransactionByHash, []interface{}{args[0]})
 		},
 	},
+		{
+			Use:   "transaction-count",
+			Short: "Get a transaction's count",
+			Args:  cobra.ExactArgs(1),
+			Long: `
+Get count of a transaction
+`,
+			Run: func(cmd *cobra.Command, args []string) {
+				request(rpc.Method.GetTransactionByHash, []interface{}{args[0]})
+			},
+		},
 	}
 
 	cmdBlockchain.Flags().StringVarP(
 		&node,
 		"node",
 		"",
-		"http://localhost:9500",
+		DEFAULT_NODE_ADDR,
 		"<host>:<port>",
 	)
-
+	cmdBlockchain.PersistentFlags().BoolVarP(&useLatestInParamsForRPC, "latest", "l", false, "Use latest in query")
 	cmdBlockchain.AddCommand(subCommands[:]...)
-
 	RootCmd.AddCommand(cmdBlockchain)
-
 }

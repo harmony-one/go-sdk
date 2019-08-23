@@ -10,9 +10,10 @@ import (
 )
 
 var (
-	prettyPrintJSONOutput bool
-	node                  string
-	RootCmd               = &cobra.Command{
+	useLatestInParamsForRPC bool
+	prettyPrintJSONOutput   bool
+	node                    string
+	RootCmd                 = &cobra.Command{
 		Use:   "hmy_cli",
 		Short: "Harmony blockchain",
 		Long: `
@@ -25,7 +26,8 @@ CLI interface to the Harmony blockchain
 )
 
 const (
-	HMY_CLI_DOCS_DIR = "hmy_cli-docs"
+	HMY_CLI_DOCS_DIR  = "hmy_cli-docs"
+	DEFAULT_NODE_ADDR = "http://localhost:9500"
 )
 
 func init() {
