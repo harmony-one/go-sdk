@@ -38,7 +38,27 @@ Query Harmony's blockchain for high level metrics, queries
 Query Harmony's blockchain for high level metrics, queries
 `,
 		Run: func(cmd *cobra.Command, args []string) {
-			fmt.Print(rpc.RPCRequest(rpc.Method.ProtocolVersion, node, []string{}))
+			request(rpc.Method.ProtocolVersion, []string{})
+		},
+	}, {
+		Use:   "transaction-by-hash",
+		Short: "Get transaction by hash",
+		Args:  cobra.ExactArgs(1),
+		Long: `
+Find a Harmony transaction by hash
+`,
+		Run: func(cmd *cobra.Command, args []string) {
+			request(rpc.Method.GetTransactionByHash, []interface{}{args[0]})
+		},
+	}, {
+		Use:   "transaction-by-receipt",
+		Short: "Get transaction by receipt",
+		Args:  cobra.ExactArgs(1),
+		Long: `
+Find a Harmony transaction by receipt
+`,
+		Run: func(cmd *cobra.Command, args []string) {
+			request(rpc.Method.GetTransactionByHash, []interface{}{args[0]})
 		},
 	},
 	}
