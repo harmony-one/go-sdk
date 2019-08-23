@@ -30,7 +30,6 @@ Query Harmony's blockchain for high level metrics, queries
 		Use:   "block-by-number",
 		Short: "Get a harmony blockchain block by block number",
 		Args:  cobra.ExactArgs(1),
-		// TODO Add flag for second boolean parameter, consume argument
 		Run: func(cmd *cobra.Command, args []string) {
 			request(rpc.Method.GetBlockByNumber, []interface{}{args[0], true})
 		},
@@ -42,6 +41,16 @@ Query Harmony's blockchain for high level metrics, queries
 `,
 		Run: func(cmd *cobra.Command, args []string) {
 			request(rpc.Method.ProtocolVersion, []interface{}{})
+		},
+	}, { // TODO Balance requires the second argument
+		Use:   "balance",
+		Short: "Retreive balance for account",
+		Args:  cobra.ExactArgs(1),
+		Long: `
+Check balance of an account
+`,
+		Run: func(cmd *cobra.Command, args []string) {
+			request(rpc.Method.GetBalance, []interface{}{args[0]})
 		},
 	}, {
 		Use:   "transaction-by-hash",
@@ -63,18 +72,17 @@ Find a Harmony transaction by receipt
 		Run: func(cmd *cobra.Command, args []string) {
 			request(rpc.Method.GetTransactionByHash, []interface{}{args[0]})
 		},
-	},
-		{
-			Use:   "transaction-count",
-			Short: "Get a transaction's count",
-			Args:  cobra.ExactArgs(1),
-			Long: `
+	}, {
+		Use:   "transaction-count",
+		Short: "Get a transaction's count",
+		Args:  cobra.ExactArgs(1),
+		Long: `
 Get count of a transaction
 `,
-			Run: func(cmd *cobra.Command, args []string) {
-				request(rpc.Method.GetTransactionByHash, []interface{}{args[0]})
-			},
+		Run: func(cmd *cobra.Command, args []string) {
+			request(rpc.Method.GetTransactionByHash, []interface{}{args[0]})
 		},
+	},
 	}
 
 	cmdBlockchain.Flags().StringVarP(
