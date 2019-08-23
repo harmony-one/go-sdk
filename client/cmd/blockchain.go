@@ -32,7 +32,7 @@ Query Harmony's blockchain for high level metrics, queries
 Query Harmony's blockchain for high level metrics, queries
 `,
 		Run: func(cmd *cobra.Command, args []string) {
-			fmt.Print(rpc.RPCRequest(rpc.Method.ProtocolVersion, node))
+			fmt.Print(rpc.RPCRequest(rpc.Method.ProtocolVersion, node, []string{}))
 		},
 	},
 	}

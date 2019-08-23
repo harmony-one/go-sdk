@@ -52,11 +52,6 @@ func baseRequest(method RPCMethod, node string, params []string) string {
 	return string(body)
 }
 
-// func readQuery() {
-// 	return baseRequest(method string, node string, params []string)
-// }
-
-func RPCRequest(method, node string) string {
-	params := [...]string{"0xD7Ff41CA29306122185A07d04293DdB35F24Cf2d", "latest"}
-	return baseRequest(method, node, params[:])
+func RPCRequest(method, node string, params []string) string {
+	return baseRequest(method, node, params)
 }
