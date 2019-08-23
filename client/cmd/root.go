@@ -3,8 +3,10 @@ package cmd
 import (
 	"fmt"
 	"os"
+	"path"
 
 	"github.com/spf13/cobra"
+	"github.com/spf13/cobra/doc"
 )
 
 var (
@@ -22,9 +24,22 @@ CLI interface to the Harmony blockchain
 	}
 )
 
+const (
+	HMY_CLI_DOCS_DIR = "hmy_cli-docs"
+)
+
 func init() {
 	RootCmd.PersistentFlags().BoolVarP(&prettyPrintJSONOutput, "pretty", "p", false, "pretty print JSON outputs")
-
+	RootCmd.AddCommand(&cobra.Command{
+		Use:   "docs",
+		Short: fmt.Sprintf("Generate docs to a local %s directory", HMY_CLI_DOCS_DIR),
+		Run: func(cmd *cobra.Command, args []string) {
+			cwd, _ := os.Getwd()
+			docDir := path.Join(cwd, HMY_CLI_DOCS_DIR)
+			os.Mkdir(docDir, 0700)
+			doc.GenMarkdownTree(RootCmd, docDir)
+		},
+	})
 }
 
 func Execute() {
