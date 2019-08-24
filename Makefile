@@ -8,6 +8,8 @@ ldflags := -X main.version=v${version} -X main.commit=${commit}
 ldflags += -X main.builtAt=${built_at} -X main.builtBy=${built_by}
 cli := hmy_cli
 
+GO111MODULE=on
+
 all:
 	go build -o $(cli) -ldflags="$(ldflags)" client/main.go
 
