@@ -3,6 +3,10 @@
 This is a go layer on top of the Harmony RPC, included is a CLI tool that you can build with a
 simple invocation of `make`
 
+# Build
+
+Invoke `make` to build the `hmy_cli` binary.
+
 # Usage
 
 hmy_cli implements a fluent API
