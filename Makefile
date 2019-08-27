@@ -8,18 +8,23 @@ ldflags := -X main.version=v${version} -X main.commit=${commit}
 ldflags += -X main.builtAt=${built_at} -X main.builtBy=${built_by}
 cli := hmy_cli
 
-GO111MODULE=on
+env := GO111MODULE=on
 
 all:
-	go build -o $(cli) -ldflags="$(ldflags)" client/main.go
+	$(env) go build -o $(cli) -ldflags="$(ldflags)" client/main.go
 
 debug:
-	go build $(flags) -o $(cli) -ldflags="$(ldflags)" client/main.go
+	$(env) go build $(flags) -o $(cli) -ldflags="$(ldflags)" client/main.go
 
-run: all
-	./$(cli)
+run-tests: test-rpc test-key;
 
-.PHONY:clean
+test-key:
+	go test ./pkg/keys -cover -v
+
+test-rpc:
+	go test ./pkg/rpc -cover -v
+
+.PHONY:clean run-tests
 
 clean:
 	@rm -f $(cli)
