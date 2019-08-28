@@ -8,6 +8,7 @@ import (
 
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	_ "github.com/ethereum/go-ethereum/common/hexutil"
+	"github.com/ethereum/go-ethereum/rlp"
 	"github.com/harmony-one/go-sdk/pkg/common/address"
 	"github.com/harmony-one/go-sdk/pkg/rpc"
 	"github.com/harmony-one/harmony/accounts"
@@ -18,6 +19,7 @@ import (
 )
 
 type TxController struct {
+	failure          error
 	messenger        rpc.T
 	node             string
 	useOneAddressRPC bool
@@ -31,6 +33,7 @@ func NewTxController(handler rpc.T, node string, useOneAddressInsteadOfHex bool)
 	scryptN := keystore.StandardScryptN
 	scryptP := keystore.StandardScryptP
 	return &TxController{
+		failure:          nil,
 		messenger:        handler,
 		node:             node,
 		useOneAddressRPC: useOneAddressInsteadOfHex, // TODO Not hard coded but parameterized
@@ -50,22 +53,31 @@ func (Controller *TxController) sendSignedRawTx(params []interface{}) rpcReply {
 	return rpc.RPCRequest(rpc.Method.SendRawTransaction, Controller.node, params)
 }
 
+func (Controller *TxController) txReceipt(params []interface{}) rpcReply {
+	return rpc.RPCRequest(rpc.Method.GetTransactionReceipt, Controller.node, params)
+}
+
+// func DoTransaction
+
+// TODO Respect the .useOneAddressRPC field for when actually sending it off
+// Get current transaction count, that's your new nonce
+// Get balance
+// Get gas issue
+// Then kick it off
+
 func (Controller *TxController) CreateTransaction(
 	from, to string,
 	amount float64,
 	fromShard, toShard int) []byte {
-	fmt.Println(from, to, amount, fromShard, toShard)
-	// TODO Respect the .useOneAddressRPC field for when actually sending it off
-	// Get current transaction count, that's your new nonce
-	// Get balance
-	// Get gas issue
-	// Then kick it off
-
 	senderAddress := address.Parse(from)
 	receiverAddress := address.Parse(to)
 	transactionCountRPCReply := Controller.transactionCount([]interface{}{senderAddress.Hex(), "latest"})
+
 	// TODO Handle the failure case or be more sure about result being fine
-	transactionCount, _ := transactionCountRPCReply["result"].(int)
+	transactionCount, _ := transactionCountRPCReply["result"].(string)
+
+	nonce, _ := big.NewInt(0).SetString(transactionCount[2:], 16)
+
 	// TODO Why the latest param? I forgot, used to know
 	balanceRPCReply := Controller.balance([]interface{}{address.ToBech32(senderAddress), "latest"})
 	currentBalance, _ := balanceRPCReply["result"].(string)
@@ -94,20 +106,29 @@ func (Controller *TxController) CreateTransaction(
 	// 	transactionCount+1, &receiverAddress, fromShard, toShard, amountBigInt,
 	// 	gas, gasPriceBigInt, inputData)
 
+	// fmt.Println(nonce.Uint64())
 	tx := types.NewTransaction(
-		uint64(transactionCount+1), receiverAddress, uint32(0), amountBigInt,
+		nonce.Uint64(), receiverAddress, uint32(0), amountBigInt,
 		gas, nil, inputData)
+
+	r, _ := tx.MarshalJSON()
+	fmt.Println(string(r))
 
 	signedTransaction, _ := Controller.ks.SignTx(account, tx, nil)
 
-	ts := types.Transactions{signedTransaction}
-	rawTx := hexutil.Encode(ts.GetRlp(0))
+	// ts := types.Transactions{signedTransaction}
+	// rawTx := hexutil.Encode(ts.GetRlp(0))
+
+	enc, _ := rlp.EncodeToBytes(signedTransaction)
+	rawTx := hexutil.Encode(enc)
 
 	sendRawTransactionRPCReply := Controller.sendSignedRawTx([]interface{}{rawTx})
 	txReceipt, _ := sendRawTransactionRPCReply["result"].(string)
 
 	fmt.Println(sendRawTransactionRPCReply, txReceipt)
 
+	txReceiptRPCReply := Controller.txReceipt([]interface{}{txReceipt})
+	fmt.Println(txReceiptRPCReply)
 	return nil
 }
 

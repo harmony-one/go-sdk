@@ -39,7 +39,7 @@ Manage your local keys
 		Use:   "list",
 		Short: "List all keys",
 		Run: func(cmd *cobra.Command, args []string) {
-			keys.ListKeys()
+			keys.ListKeys(keyStoreDir)
 		},
 	}
 
@@ -67,6 +67,14 @@ Manage your local keys
 		},
 	}
 
-	cmdKeys.AddCommand(cmdMnemonic, cmdAdd, cmdList, cmdShow, cmdDelete, cmdUpdate)
+	cmdExport := &cobra.Command{
+		Use:   "export",
+		Short: "Export your keystore",
+		Run: func(cmd *cobra.Command, args []string) {
+			// keys.ListKeys(keyStoreDir)
+		},
+	}
+
+	cmdKeys.AddCommand(cmdMnemonic, cmdAdd, cmdList, cmdShow, cmdDelete, cmdUpdate, cmdExport)
 	RootCmd.AddCommand(cmdKeys)
 }

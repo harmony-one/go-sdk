@@ -1,9 +1,9 @@
 package rpc
 
 // Adapted from https://github.com/harmony-one/sdk/blob/master/packages/harmony-network/src/rpcMethod/rpc.ts
-type RPCMethod = string
+type RPCMethod string
 
-type RPCErrorCode = int
+type RPCErrorCode int
 
 type rpcEnumList struct {
 	GetBlockByHash                      RPCMethod
