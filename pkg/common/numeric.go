@@ -7,6 +7,10 @@ import (
 	"github.com/harmony-one/harmony/common/denominations"
 )
 
+func NormalizeAmount(value *big.Int) *big.Int {
+	return value.Div(value, big.NewInt(denominations.Nano))
+}
+
 func ConvertBalanceIntoReadableFormat(balance *big.Int) string {
 	balance = balance.Div(balance, big.NewInt(denominations.Nano))
 	strBalance := fmt.Sprintf("%d", balance.Uint64())

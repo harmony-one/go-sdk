@@ -19,9 +19,14 @@ func init() {
 		Use:   "account",
 		Short: "Check account balance",
 		Long:  `Query for the latest account balance given a Harmony Address`,
+		Args:  cobra.ExactArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
 			// TODO Would we ever NOT want to have the latest?
-			balanceRPCReply := rpc.RPCRequest(rpc.Method.GetBalance, node, []string{address.ToBech32(address.Parse(accountAddress)), "latest"})
+			balanceRPCReply := rpc.RPCRequest(
+				rpc.Method.GetBalance,
+				node,
+				[]string{address.ToBech32(address.Parse(args[0])), "latest"},
+			)
 			currentBalance, _ := balanceRPCReply["result"].(string)
 			balance := big.NewInt(0)
 			balance, _ = balance.SetString(currentBalance[2:], 16)
@@ -29,7 +34,5 @@ func init() {
 		},
 	}
 
-	cmdQuery.Flags().StringVar(&accountAddress, "address", "", "Harmony address of account to check")
-	cmdQuery.MarkFlagRequired("address")
 	RootCmd.AddCommand(cmdQuery)
 }

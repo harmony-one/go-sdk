@@ -14,7 +14,7 @@ import (
 
 func jsonPrettyPrint(in string) string {
 	var out bytes.Buffer
-	err := json.Indent(&out, []byte(in), "", "\t")
+	err := json.Indent(&out, []byte(in), "", "  ")
 	if err != nil {
 		return in
 	}
@@ -34,8 +34,9 @@ var (
 		asJSON, _ := json.Marshal(rpc.RPCRequest(method, node, params))
 		if prettyPrintJSONOutput {
 			fmt.Print(jsonPrettyPrint(string(asJSON)))
+			return
 		}
-		fmt.Print(asJSON)
+		fmt.Print(string(asJSON))
 	}
 	RootCmd = &cobra.Command{
 		Use:   "hmy_cli",
@@ -55,16 +56,16 @@ const (
 )
 
 func init() {
-	RootCmd.Flags().StringVarP(
+	RootCmd.PersistentFlags().StringVarP(
 		&node,
 		"node",
-		"",
+		"n",
 		DEFAULT_NODE_ADDR,
 		"<host>:<port>",
 	)
 	RootCmd.PersistentFlags().BoolVarP(&prettyPrintJSONOutput, "pretty", "p", false, "pretty print JSON outputs")
 	RootCmd.PersistentFlags().BoolVarP(&useOneAddressInsteadOfHex, "one-address", "o", false, "use one address for RPC calls")
-	RootCmd.PersistentFlags().StringVar(&keyStoreDir, "key-store-dir", "", "What directory to use as the keystore")
+	RootCmd.PersistentFlags().StringVar(&keyStoreDir, "key-store-dir", "k", "What directory to use as the keystore")
 	RootCmd.AddCommand(&cobra.Command{
 		Use:   "docs",
 		Short: fmt.Sprintf("Generate docs to a local %s directory", HMY_CLI_DOCS_DIR),

@@ -1,6 +1,9 @@
 package cmd
 
 import (
+	"fmt"
+	"os"
+
 	"github.com/harmony-one/go-sdk/pkg/common"
 	"github.com/harmony-one/go-sdk/pkg/rpc"
 	"github.com/spf13/cobra"
@@ -12,7 +15,7 @@ var (
 	amount      float64
 	fromShardID int
 	toShardID   int
-	confirmWait int
+	confirmWait uint32
 )
 
 func init() {
@@ -23,10 +26,22 @@ func init() {
 Create a transaction, sign it, and send off to the Harmony blockchain
 `,
 		Run: func(cmd *cobra.Command, args []string) {
-			transactionController := common.NewTxController(rpc.HTTPHandler, node, useOneAddressInsteadOfHex)
-			tx := transactionController.CreateTransaction(fromAddress, toAddress, amount, fromShardID, toShardID)
-			signedTransaction := transactionController.SignTransaction(tx)
-			transactionController.SendTransaction(signedTransaction)
+			networkHandler := rpc.NewHTTPHandler(node)
+			fromCmdLineFlags := func(ctlr *common.TxController) {
+				// ctlr.PreferOneAddress = true
+				if confirmWait != 0 {
+					ctlr.WaitForTxConfirm = true
+				}
+
+			}
+			ctrlr, err := common.NewTxController(networkHandler, fromAddress, fromCmdLineFlags)
+			if err != nil {
+				fmt.Println(err)
+				os.Exit(-1)
+			}
+			if transactionFailure := ctrlr.ExecuteTransaction(toAddress, "", amount, fromShardID, toShardID); transactionFailure != nil {
+				fmt.Println(transactionFailure)
+			}
 		},
 	}
 
@@ -36,7 +51,7 @@ Create a transaction, sign it, and send off to the Harmony blockchain
 	cmdTransfer.Flags().Float64Var(&amount, "amount", 0.0, "amount")
 	cmdTransfer.Flags().IntVar(&fromShardID, "from-shard", -1, "source shard id")
 	cmdTransfer.Flags().IntVar(&toShardID, "to-shard", -1, "target shard id")
-	cmdTransfer.PersistentFlags().IntVar(&confirmWait, "wait-for-confirm", 0, "Only waits if non-zero value, in seconds")
+	cmdTransfer.PersistentFlags().Uint32Var(&confirmWait, "wait-for-confirm", 0, "Only waits if non-zero value, in seconds")
 
 	for _, flagName := range [...]string{"from-address", "to-address", "amount", "from-shard", "to-shard"} {
 		cmdTransfer.MarkFlagRequired(flagName)

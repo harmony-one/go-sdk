@@ -1,27 +1,20 @@
 package rpc
 
-// "github.com/pkg/errors"
+type reply map[string]interface{}
 
-// Okay so the interface is just methods
 type T interface {
-	SendRPC(RPCMethod, interface{}) (string, error)
+	SendRPC(RPCMethod, []interface{}) reply
 }
 
-// And the struct is data
 type HTTPMessenger struct {
-	error
-	nodePath string
-	queryID  int
+	node string
 }
 
-var (
-	HTTPHandler T
-)
-
-func init() {
-	HTTPHandler = HTTPMessenger{nodePath: "http://localhost:9500"}
+func (M *HTTPMessenger) SendRPC(meth RPCMethod, params []interface{}) reply {
+	return RPCRequest(meth, M.node, params)
 }
 
-func (handler HTTPMessenger) SendRPC(method RPCMethod, params interface{}) (string, error) {
-	return "!23", nil
+func NewHTTPHandler(node string) *HTTPMessenger {
+	// TODO Sanity check the URL for HTTP
+	return &HTTPMessenger{node}
 }
