@@ -27,10 +27,9 @@ func init() {
 				node,
 				[]string{address.ToBech32(address.Parse(args[0])), "latest"},
 			)
-			currentBalance, _ := balanceRPCReply["result"].(string)
-			balance := big.NewInt(0)
-			balance, _ = balance.SetString(currentBalance[2:], 16)
-			fmt.Println(common.ConvertBalanceIntoReadableFormat(balance))
+			balance, _ := balanceRPCReply["result"].(string)
+			bln, _ := big.NewInt(0).SetString(balance[2:], 16)
+			fmt.Println(common.ConvertBalanceIntoReadableFormat(bln))
 		},
 	}
 

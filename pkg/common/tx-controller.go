@@ -64,7 +64,7 @@ func NewTxController(handler rpc.T, senderAddr string, options ...func(*TxContro
 	ks := keystore.NewKeyStore("/Users/edgar/.hmy_cli/keystore", scryptN, scryptP)
 	senderParsed := address.Parse(senderAddr)
 	account, lookupError := ks.Find(accounts.Account{Address: senderParsed})
-	unlockError := ks.Unlock(account, "edgar")
+	unlockError := ks.Unlock(account, "")
 
 	if lookupError != nil || unlockError != nil {
 		return nil, errors.New("Lookup or account unlocking of sender address in local keystore failed")
@@ -83,7 +83,7 @@ func NewTxController(handler rpc.T, senderAddr string, options ...func(*TxContro
 	return ctrlr, nil
 }
 
-func (C *TxController) verifyBalance() {
+func (C *TxController) verifyBalance(amount float64) {
 	if C.failure != nil {
 		return
 	}
@@ -94,8 +94,8 @@ func (C *TxController) verifyBalance() {
 	currentBalance, _ := balanceRPCReply["result"].(string)
 	balance, _ := big.NewInt(0).SetString(currentBalance[2:], 16)
 	balance = NormalizeAmount(balance)
-	transfer, _ := C.sender.txParams["transfer-amount"].(*big.Int)
-	transfer = NormalizeAmount(transfer)
+	transfer := big.NewInt(int64(amount * denominations.Nano))
+
 	tns := (float64(transfer.Uint64()) / denominations.Nano)
 	bln := (float64(balance.Uint64()) / denominations.Nano)
 
@@ -151,14 +151,15 @@ func (C *TxController) setGasPrice() {
 
 func (C *TxController) setAmount(amount float64) {
 	amountBigInt := big.NewInt(int64(amount * denominations.Nano))
-	C.sender.txParams["transfer-amount"] = amountBigInt.Mul(amountBigInt, big.NewInt(denominations.Nano))
+	amt := amountBigInt.Mul(amountBigInt, big.NewInt(denominations.Nano))
+	C.sender.txParams["transfer-amount"] = amt
 }
 
 func (C *TxController) setReceiver(receiver string) {
 	C.sender.txParams["receiver"] = address.Parse(receiver)
 }
 
-func (C *TxController) setNewTransactionWithData(inputData string) {
+func (C *TxController) setNewTransactionWithData(inputData string, amount float64) {
 	if C.failure != nil {
 		return
 	}
@@ -172,11 +173,15 @@ func (C *TxController) setNewTransactionWithData(inputData string) {
 		gasPrice = value
 	}
 
+	amountBigInt := big.NewInt(int64(amount * denominations.Nano))
+	amt := amountBigInt.Mul(amountBigInt, big.NewInt(denominations.Nano))
+
 	tx := types.NewTransaction(
 		C.sender.txParams["nonce"].(uint64),
 		C.sender.txParams["receiver"].(common.Address),
 		C.sender.txParams["shardID"].(uint32),
-		C.sender.txParams["transfer-amount"].(*big.Int),
+		amt,
+		// C.sender.txParams["transfer-amount"].(*big.Int),
 		C.sender.txParams["gas"].(uint64),
 		gasPrice,
 		[]byte(inputData),
@@ -203,16 +208,17 @@ func (C *TxController) signAndPrepareTxEncodedForSending() {
 }
 
 func (C *TxController) ExecuteTransaction(to, inputData string, amount float64, fromShard, toShard int) error {
+	fmt.Println(to, inputData, amount, fromShard, toShard)
 	// HACK This is pre cross shard transaction
 	C.sender.txParams["shardID"] = uint32(0)
 	// WARNING Order of execution matters
 	C.setIntrinsicGas(inputData)
 	C.setAmount(amount)
-	C.verifyBalance()
+	C.verifyBalance(amount)
 	C.setReceiver(to)
 	C.setGasPrice()
 	C.setNextNonce()
-	C.setNewTransactionWithData(inputData)
+	C.setNewTransactionWithData(inputData, amount)
 	C.signAndPrepareTxEncodedForSending()
 	C.sendSignedTx()
 	return C.failure

@@ -44,7 +44,7 @@ func AddNewKey() {
 	scryptN := keystore.StandardScryptN
 	scryptP := keystore.StandardScryptP
 	ks := keystore.NewKeyStore(hmyCLIDir, scryptN, scryptP)
-	password := "edgar"
+	password := ""
 	// TODO Need to factor out some definitions from harmony/internal to something
 	// more public, like core or api
 	// password := utils.AskForPassphrase("Passphrase: ")
