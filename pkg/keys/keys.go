@@ -4,17 +4,20 @@ import (
 	"fmt"
 	"os"
 	"path"
+	"strings"
 
+	ethCommon "github.com/ethereum/go-ethereum/common"
+	"github.com/harmony-one/go-sdk/pkg/common/address"
 	"github.com/harmony-one/harmony/accounts/keystore"
-	// common2 "github.com/harmony-one/harmony/internal/common"
-	// "github.com/harmony-one/harmony/internal/utils"
+
+	// "github.com/ethereum/go-ethereum/crypto"
 
 	homedir "github.com/mitchellh/go-homedir"
 )
 
 func checkAndMakeKeyDirIfNeeded() string {
 	userDir, _ := homedir.Dir()
-	hmyCLIDir := path.Join(userDir, ".hmy_cli")
+	hmyCLIDir := path.Join(userDir, ".hmy_cli", "keystore")
 	if _, err := os.Stat(hmyCLIDir); os.IsNotExist(err) {
 		// Double check with Leo what is right file persmission
 		os.Mkdir(hmyCLIDir, 0700)
@@ -23,15 +26,15 @@ func checkAndMakeKeyDirIfNeeded() string {
 	return hmyCLIDir
 }
 
-func ListKeys() {
+func ListKeys(keystoreDir string) {
 	hmyCLIDir := checkAndMakeKeyDirIfNeeded()
 	scryptN := keystore.StandardScryptN
 	scryptP := keystore.StandardScryptP
 	ks := keystore.NewKeyStore(hmyCLIDir, scryptN, scryptP)
 	allAccounts := ks.Accounts()
+	fmt.Printf("Harmony Address:%s File URL:\n", strings.Repeat(" ", ethCommon.AddressLength*2))
 	for _, account := range allAccounts {
-		fmt.Printf("account: %s\n", account.Address)
-		fmt.Printf("URL: %s\n", account.URL)
+		fmt.Printf("%s\t\t %s\n", address.ToBech32(account.Address), account.URL)
 	}
 
 }
@@ -41,7 +44,7 @@ func AddNewKey() {
 	scryptN := keystore.StandardScryptN
 	scryptP := keystore.StandardScryptP
 	ks := keystore.NewKeyStore(hmyCLIDir, scryptN, scryptP)
-	password := "edgar"
+	password := ""
 	// TODO Need to factor out some definitions from harmony/internal to something
 	// more public, like core or api
 	// password := utils.AskForPassphrase("Passphrase: ")
@@ -54,8 +57,7 @@ func AddNewKey() {
 	if err != nil {
 		fmt.Printf("new account error: %v\n", err)
 	}
-	// fmt.Printf("account: %s\n", common2.MustAddressToBech32(account.Address))
 	// fmt.Printf("URL: %s\n", account.URL)
-	fmt.Printf("account: %s\n", account.Address)
+	fmt.Printf("account: %s\n", address.ToBech32(account.Address))
 	fmt.Printf("URL: %s\n", account.URL)
 }
