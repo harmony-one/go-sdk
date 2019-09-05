@@ -27,11 +27,13 @@ Manage your local keys
 		},
 	}
 
+
+	var password string
 	cmdAdd := &cobra.Command{
 		Use:   "add",
 		Short: "Create a new key with passphrase",
 		Run: func(cmd *cobra.Command, args []string) {
-			keys.AddNewKey()
+			keys.AddNewKey(password)
 		},
 	}
 
@@ -75,6 +77,10 @@ Manage your local keys
 		},
 	}
 
+	cmdAdd.Flags().StringVarP(&password, "password", "w", "", "password to encrypt generated private key")
+	cmdAdd.MarkFlagRequired("password")
+
 	cmdKeys.AddCommand(cmdMnemonic, cmdAdd, cmdList, cmdShow, cmdDelete, cmdUpdate, cmdExport)
 	RootCmd.AddCommand(cmdKeys)
+
 }
