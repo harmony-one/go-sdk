@@ -39,25 +39,15 @@ func ListKeys(keystoreDir string) {
 
 }
 
-func AddNewKey() {
+func AddNewKey(password string) {
 	hmyCLIDir := checkAndMakeKeyDirIfNeeded()
 	scryptN := keystore.StandardScryptN
 	scryptP := keystore.StandardScryptP
 	ks := keystore.NewKeyStore(hmyCLIDir, scryptN, scryptP)
-	password := ""
-	// TODO Need to factor out some definitions from harmony/internal to something
-	// more public, like core or api
-	// password := utils.AskForPassphrase("Passphrase: ")
-	// password2 := utils.AskForPassphrase("Passphrase again: ")
-	// if password != password2 {
-	// 	fmt.Printf("Passphrase doesn't match. Please try again!\n")
-	// 	os.Exit(3)
-	// }
 	account, err := ks.NewAccount(password)
 	if err != nil {
 		fmt.Printf("new account error: %v\n", err)
 	}
-	// fmt.Printf("URL: %s\n", account.URL)
 	fmt.Printf("account: %s\n", address.ToBech32(account.Address))
 	fmt.Printf("URL: %s\n", account.URL)
 }
