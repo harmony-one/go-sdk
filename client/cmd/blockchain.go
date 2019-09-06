@@ -38,7 +38,7 @@ Query Harmony's blockchain for high level metrics, queries
 		Short: "Get transaction by hash",
 		Args:  cobra.ExactArgs(1),
 		Long: `
-Find a Harmony transaction by hash
+Inputs of a transaction and r, s, v value of transaction
 `,
 		Run: func(cmd *cobra.Command, args []string) {
 			request(rpc.Method.GetTransactionByHash, []interface{}{args[0]})
@@ -48,10 +48,10 @@ Find a Harmony transaction by hash
 		Short: "Get transaction by receipt",
 		Args:  cobra.ExactArgs(1),
 		Long: `
-Find a Harmony transaction by receipt
+High level information about transaction, like blockNumber, blockHash
 `,
 		Run: func(cmd *cobra.Command, args []string) {
-			request(rpc.Method.GetTransactionByHash, []interface{}{args[0]})
+			request(rpc.Method.GetTransactionReceipt, []interface{}{args[0]})
 		},
 	}, {
 		Use:   "transaction-count",

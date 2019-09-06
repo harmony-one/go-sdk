@@ -63,6 +63,7 @@ func init() {
 		DEFAULT_NODE_ADDR,
 		"<host>:<port>",
 	)
+	RootCmd.PersistentFlags().BoolVarP(&useLatestInParamsForRPC, "latest", "l", false, "Add 'latest' to RPC params")
 	RootCmd.PersistentFlags().BoolVarP(&prettyPrintJSONOutput, "pretty", "p", false, "pretty print JSON outputs")
 	RootCmd.PersistentFlags().BoolVarP(&useOneAddressInsteadOfHex, "one-address", "o", false, "use one address for RPC calls")
 	RootCmd.PersistentFlags().StringVar(&keyStoreDir, "key-store-dir", "k", "What directory to use as the keystore")
