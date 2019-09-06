@@ -23,7 +23,9 @@ Manage your local keys
 		Use:   "mnemonic",
 		Short: "Compute the bip39 mnemonic for some input entropy",
 		Run: func(cmd *cobra.Command, args []string) {
-			fmt.Println(cmd)
+			mnemonic := keys.GenerateMnemonic()
+			fmt.Println(mnemonic)
+			fmt.Println(keys.NewAccountByMnemonic(mnemonic))
 		},
 	}
 
