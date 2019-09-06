@@ -6,11 +6,17 @@ built_by := ${USER}@harmony.one
 flags := -gcflags="all=-N -l -c 2"
 ldflags := -X main.version=v${version} -X main.commit=${commit}
 ldflags += -X main.builtAt=${built_at} -X main.builtBy=${built_by}
-cli := hmy_cli
+cli := ./dist/hmy_cli
 
 env := GO111MODULE=on
 
+DIR := ${CURDIR}
+export CGO_LDFLAGS=-L$(DIR)/lib -Wl,-rpath -Wl,\$ORIGIN/lib
+#rsync ./lib/. ./dist/
+
 all:
+	mkdir dist
+	rsync -a ./lib/* ./dist/lib/
 	$(env) go build -o $(cli) -ldflags="$(ldflags)" client/main.go
 
 debug:
@@ -28,3 +34,4 @@ test-rpc:
 
 clean:
 	@rm -f $(cli)
+	@rm -rf ./dist
