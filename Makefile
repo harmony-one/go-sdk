@@ -11,12 +11,13 @@ cli := ./dist/hmy_cli
 env := GO111MODULE=on
 
 DIR := ${CURDIR}
-export CGO_LDFLAGS=-L$(DIR)/lib -Wl,-rpath -Wl,\$ORIGIN/lib
-#rsync ./lib/. ./dist/
+export CGO_LDFLAGS=-L$(DIR)/dist/lib -Wl,-rpath -Wl,\$ORIGIN/lib
 
 all:
-	mkdir dist
-	rsync -a ./lib/* ./dist/lib/
+	mkdir -p dist
+	rsync -a $(shell go env GOPATH)/src/github.com/harmony-one/bls/lib/* ./dist/lib/
+	rsync -a $(shell go env GOPATH)/src/github.com/harmony-one/mcl/lib/* ./dist/lib/
+	rsync -a /usr/local/opt/openssl/lib/* ./dist/lib/
 	$(env) go build -o $(cli) -ldflags="$(ldflags)" client/main.go
 
 debug:
