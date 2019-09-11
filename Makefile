@@ -19,6 +19,7 @@ all:
 	rsync -a $(shell go env GOPATH)/src/github.com/harmony-one/mcl/lib/* ./dist/lib/
 	rsync -a /usr/local/opt/openssl/lib/* ./dist/lib/
 	$(env) go build -o $(cli) -ldflags="$(ldflags)" client/main.go
+	cp $(cli) hmy
 
 debug:
 	$(env) go build $(flags) -o $(cli) -ldflags="$(ldflags)" client/main.go
