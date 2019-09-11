@@ -2,6 +2,7 @@ package common
 
 import (
 	"math/big"
+	"github.com/pkg/errors"
 
 	"github.com/harmony-one/harmony/accounts/keystore"
 	"github.com/harmony-one/go-sdk/pkg/address"
@@ -44,21 +45,43 @@ func StringToChainID(name string) *ChainID {
 	}
 }
 
+func (chainID ChainID) String() string {
+	return string(chainID.Name)
+}
+
+// Set and validate chainID
+func (chainID *ChainID) Set(s string) error {
+	chainID = StringToChainID(chainID.Name)
+	if &chainID == nil {
+		return errors.New("ChainID \"" + chainID.Name + "\" is invalid")
+	}
+	return nil
+}
+
+// Type of ChainID
+func (chainID ChainID) Type() string {
+	return "ChainID"
+}
+
+
 /////////// OneAddress
 
 // OneAddress type for validates address entered with cli_flags
-type OneAddress string
+type OneAddress struct{
+	address string
+}
 
 func (oneAddress OneAddress) String() string {
-	return string(oneAddress)
+	return oneAddress.address
 }
 // Set and validate OneAddress
-func (oneAddress OneAddress) Set(s string) error {
+func (oneAddress *OneAddress) Set(s string) error {
 	_, err := address.Bech32ToAddress(s)
 	if err != nil {
-		return err;
+		return err
 	}
-	return nil;
+	oneAddress.address = s
+	return nil
 }
 // Type of OneAddress
 func (oneAddress OneAddress) Type() string {
