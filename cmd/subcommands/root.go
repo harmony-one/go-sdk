@@ -1,25 +1,17 @@
 package cmd
 
 import (
-	"bytes"
 	"encoding/json"
 	"fmt"
 	"os"
 	"path"
 
+	"github.com/harmony-one/go-sdk/pkg/common"
 	"github.com/harmony-one/go-sdk/pkg/rpc"
+
 	"github.com/spf13/cobra"
 	"github.com/spf13/cobra/doc"
 )
-
-func jsonPrettyPrint(in string) string {
-	var out bytes.Buffer
-	err := json.Indent(&out, []byte(in), "", "  ")
-	if err != nil {
-		return in
-	}
-	return out.String()
-}
 
 var (
 	useLatestInParamsForRPC   bool
@@ -31,14 +23,14 @@ var (
 		if useLatestInParamsForRPC {
 			params = append(params, "latest")
 		}
-		success, failure := rpc.RPCRequest(method, node, params)
+		success, failure := rpc.Request(method, node, params)
 		if failure != nil {
 			fmt.Println(failure)
 			os.Exit(-1)
 		}
 		asJSON, _ := json.Marshal(success)
 		if prettyPrintJSONOutput {
-			fmt.Print(jsonPrettyPrint(string(asJSON)))
+			fmt.Print(common.JSONPrettyFormat(string(asJSON)))
 			return
 		}
 		fmt.Print(string(asJSON))

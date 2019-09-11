@@ -5,7 +5,8 @@ import (
 	"os"
 	"path"
 
-	"github.com/harmony-one/go-sdk/client/cmd"
+	cmd "github.com/harmony-one/go-sdk/cmd/subcommands"
+	// Need this side effect
 	_ "github.com/harmony-one/go-sdk/pkg/store"
 	"github.com/spf13/cobra"
 )
