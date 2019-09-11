@@ -31,7 +31,12 @@ var (
 		if useLatestInParamsForRPC {
 			params = append(params, "latest")
 		}
-		asJSON, _ := json.Marshal(rpc.RPCRequest(method, node, params))
+		success, failure := rpc.RPCRequest(method, node, params)
+		if failure != nil {
+			fmt.Println(failure)
+			os.Exit(-1)
+		}
+		asJSON, _ := json.Marshal(success)
 		if prettyPrintJSONOutput {
 			fmt.Print(jsonPrettyPrint(string(asJSON)))
 			return

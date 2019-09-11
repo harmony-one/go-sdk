@@ -17,7 +17,7 @@ Query Harmony's blockchain for high level metrics, queries
 		},
 	}
 
-	subCommands := [...]*cobra.Command{{
+	subCommands := []*cobra.Command{{
 		Use:   "block-by-number",
 		Short: "Get a harmony blockchain block by block number",
 		Args:  cobra.ExactArgs(1),

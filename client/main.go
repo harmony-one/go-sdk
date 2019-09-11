@@ -6,6 +6,7 @@ import (
 	"path"
 
 	"github.com/harmony-one/go-sdk/client/cmd"
+	_ "github.com/harmony-one/go-sdk/pkg/store"
 	"github.com/spf13/cobra"
 )
 
