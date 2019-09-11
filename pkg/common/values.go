@@ -1,6 +1,8 @@
 package common
 
 import (
+	"math/big"
+
 	"github.com/harmony-one/harmony/accounts/keystore"
 )
 
@@ -14,3 +16,29 @@ var (
 	ScryptN = keystore.StandardScryptN
 	ScryptP = keystore.StandardScryptP
 )
+
+type ChainID struct {
+	Name  string
+	Value *big.Int
+}
+
+type chainIDList struct {
+	MainNet ChainID
+	TestNet ChainID
+}
+
+var Chain = chainIDList{
+	MainNet: ChainID{"mainnet", big.NewInt(1)},
+	TestNet: ChainID{"testnet", big.NewInt(2)},
+}
+
+func StringToChainID(name string) *ChainID {
+	switch name {
+	case "mainnet":
+		return &Chain.MainNet
+	case "testnet":
+		return &Chain.TestNet
+	default:
+		return nil
+	}
+}
