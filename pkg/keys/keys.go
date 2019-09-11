@@ -7,7 +7,7 @@ import (
 	"strings"
 
 	ethCommon "github.com/ethereum/go-ethereum/common"
-	"github.com/harmony-one/go-sdk/pkg/common/address"
+	"github.com/harmony-one/go-sdk/pkg/address"
 	"github.com/harmony-one/harmony/accounts/keystore"
 
 	// "github.com/ethereum/go-ethereum/crypto"
@@ -31,6 +31,7 @@ func ListKeys(keystoreDir string) {
 	scryptN := keystore.StandardScryptN
 	scryptP := keystore.StandardScryptP
 	ks := keystore.NewKeyStore(hmyCLIDir, scryptN, scryptP)
+	// keystore.KeyStore
 	allAccounts := ks.Accounts()
 	fmt.Printf("Harmony Address:%s File URL:\n", strings.Repeat(" ", ethCommon.AddressLength*2))
 	for _, account := range allAccounts {

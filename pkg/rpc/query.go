@@ -3,6 +3,7 @@ package rpc
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -55,9 +56,13 @@ func baseRequest(method RPCMethod, node string, params interface{}) []byte {
 }
 
 // TODO add the error code usage here, change return signature, make CLI be consumer that checks error
-func RPCRequest(method RPCMethod, node string, params interface{}) map[string]interface{} {
+func RPCRequest(method RPCMethod, node string, params interface{}) (map[string]interface{}, error) {
 	rpcJson := make(map[string]interface{})
 	rawReply := baseRequest(method, node, params)
 	json.Unmarshal(rawReply, &rpcJson)
-	return rpcJson
+	if oops := rpcJson["error"]; oops != nil {
+		message := oops.(map[string]interface{})["message"].(string)
+		return nil, errors.New(message)
+	}
+	return rpcJson, nil
 }
