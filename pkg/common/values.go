@@ -4,6 +4,7 @@ import (
 	"math/big"
 
 	"github.com/harmony-one/harmony/accounts/keystore"
+	"github.com/harmony-one/go-sdk/pkg/address"
 )
 
 const (
@@ -41,4 +42,25 @@ func StringToChainID(name string) *ChainID {
 	default:
 		return nil
 	}
+}
+
+/////////// OneAddress
+
+// OneAddress type for validates address entered with cli_flags
+type OneAddress string
+
+func (oneAddress OneAddress) String() string {
+	return string(oneAddress)
+}
+// Set and validate OneAddress
+func (oneAddress OneAddress) Set(s string) error {
+	_, err := address.Bech32ToAddress(s)
+	if err != nil {
+		return err;
+	}
+	return nil;
+}
+// Type of OneAddress
+func (oneAddress OneAddress) Type() string {
+	return "OneAddress"
 }
