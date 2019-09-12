@@ -38,13 +38,17 @@ func LocalAccounts() []string {
 	return accounts
 }
 
+var (
+	describe = fmt.Sprintf("%-24s\t\t%23s\n", "NAME", "ADDRESS")
+)
+
 func DescribeLocalAccounts() {
-	fmt.Printf("NAME\t\tADDRESS\n")
+	fmt.Println(describe)
 	for _, name := range LocalAccounts() {
 		ks := FromAccountName(name)
 		allAccounts := ks.Accounts()
 		for _, account := range allAccounts {
-			fmt.Printf("%s\t\t %s\n", name, address.ToBech32(account.Address))
+			fmt.Printf("%-48s\t%s\n", name, address.ToBech32(account.Address))
 		}
 	}
 }
