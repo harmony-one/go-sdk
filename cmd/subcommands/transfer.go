@@ -10,6 +10,7 @@ import (
 	"github.com/harmony-one/go-sdk/pkg/sharding"
 	"github.com/harmony-one/go-sdk/pkg/store"
 	"github.com/harmony-one/go-sdk/pkg/transaction"
+	"github.com/harmony-one/go-sdk/pkg/ledger"
 	"github.com/harmony-one/harmony/accounts"
 
 	"github.com/spf13/cobra"
@@ -45,38 +46,61 @@ Create a transaction, sign it, and send off to the Harmony blockchain
 `,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			networkHandler := handlerForShard(fromShardID, node)
-			ks := store.FromAddress(fromAddress)
-			if ks == nil {
-				return fmt.Errorf("could not open local keystore for %s", fromAddress)
-			}
-			sender := address.Parse(fromAddress)
-			account, lookupErr := ks.Find(accounts.Account{Address: sender})
-			if lookupErr != nil {
-				return fmt.Errorf("could not find %s in keystore", fromAddress)
-			}
-			if unlockError := ks.Unlock(account, unlockP); unlockError != nil {
-				return errors.New("could not unlock account with passphrase, perhaps need different phrase")
-			}
 			dryRunOpt := func(ctlr *transaction.Controller) {
 				if dryRun {
 					ctlr.Behavior.DryRun = true
 				}
 			}
 
-			ctrlr := transaction.NewController(
-				networkHandler, ks, &account,
-				*common.StringToChainID(chainName),
-				dryRunOpt,
-			)
-			if transactionFailure := ctrlr.ExecuteTransaction(
-				toAddress,
-				"",
-				amount,
-				fromShardID,
-				toShardID,
-			); transactionFailure != nil {
-				return transactionFailure
+			var ctrlr *transaction.Controller
+			if useLedgerWallet {
+				sender := ledger.GetAddress()
+				oneAddr, _ := address.Bech32ToAddress(sender)
+				account := accounts.Account{Address: oneAddr}
+				ctrlr = transaction.NewController(
+					networkHandler, nil, &account,
+					*common.StringToChainID(chainName),
+					dryRunOpt,
+				)
+				if transactionFailure := ctrlr.ExecuteHardwareTransaction(
+					toAddress,
+					"",
+					amount,
+					fromShardID,
+					toShardID,
+				); transactionFailure != nil {
+					return transactionFailure
+				}
+			} else {
+				ks := store.FromAddress(fromAddress)
+				if ks == nil {
+					return fmt.Errorf("could not open local keystore for %s", fromAddress)
+				}
+				sender := address.Parse(fromAddress)
+				account, lookupErr := ks.Find(accounts.Account{Address: sender})
+				if lookupErr != nil {
+					return fmt.Errorf("could not find %s in keystore", fromAddress)
+				}
+				if unlockError := ks.Unlock(account, unlockP); unlockError != nil {
+					return errors.New("could not unlock account with passphrase, perhaps need different phrase")
+				}
+
+				ctrlr = transaction.NewController(
+					networkHandler, ks, &account,
+					*common.StringToChainID(chainName),
+					dryRunOpt,
+				)
+				if transactionFailure := ctrlr.ExecuteTransaction(
+					toAddress,
+					"",
+					amount,
+					fromShardID,
+					toShardID,
+				); transactionFailure != nil {
+					return transactionFailure
+				}
 			}
+
 			if !dryRun {
 				fmt.Println(fmt.Sprintf(`{"transaction-receipt":"%s"}`, *ctrlr.Receipt()))
 			}

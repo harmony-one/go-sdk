@@ -10,6 +10,7 @@ require (
 	github.com/ethereum/go-ethereum v1.8.27
 	github.com/fatih/color v1.7.0
 	github.com/harmony-one/harmony v0.0.0-20190910224338-d385233a2a70
+	github.com/karalabe/hid v1.0.0
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/pkg/errors v0.8.1
 	github.com/spf13/cobra v0.0.5
