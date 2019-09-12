@@ -24,7 +24,7 @@ type transactionForRPC struct {
 	transaction *Transaction
 	// Hex encoded
 	signature *string
-	receipt   *uint64
+	receipt   *string
 }
 
 type sender struct {
@@ -125,10 +125,8 @@ func (C *Controller) sendSignedTx() {
 		C.failure = err
 		return
 	}
-	txReceipt, _ := reply["result"].(string)
-	receipt, _ := big.NewInt(0).SetString(txReceipt[2:], 16)
-	receiptAsUint := receipt.Uint64()
-	C.transactionForRPC.receipt = &receiptAsUint
+	r, _ := reply["result"].(string)
+	C.transactionForRPC.receipt = &r
 }
 
 func (C *Controller) setIntrinsicGas(rawInput string) {
@@ -203,8 +201,8 @@ func (C *Controller) setShardIDs(fromShard, toShard int) {
 	C.transactionForRPC.params["to-shard"] = uint32(toShard)
 }
 
-func (C *Controller) Receipt() string {
-	return hexutil.EncodeUint64(*C.transactionForRPC.receipt)
+func (C *Controller) Receipt() *string {
+	return C.transactionForRPC.receipt
 }
 
 func (C *Controller) ExecuteTransaction(

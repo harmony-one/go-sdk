@@ -78,7 +78,7 @@ Create a transaction, sign it, and send off to the Harmony blockchain
 				return transactionFailure
 			}
 			if !dryRun {
-				fmt.Println(ctrlr.Receipt())
+				fmt.Println(fmt.Sprintf(`{"transaction-receipt":"%s"}`, *ctrlr.Receipt()))
 			}
 			return nil
 		},
