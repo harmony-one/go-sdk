@@ -6,6 +6,7 @@ type RPCMethod string
 type RPCErrorCode int
 
 type rpcEnumList struct {
+	GetShardingStructure                RPCMethod
 	GetBlockByHash                      RPCMethod
 	GetBlockByNumber                    RPCMethod
 	GetBlockTransactionCountByHash      RPCMethod
@@ -40,6 +41,7 @@ type rpcEnumList struct {
 }
 
 var Method = rpcEnumList{
+	GetShardingStructure:                "hmy_getShardingStructure",
 	GetBlockByHash:                      "hmy_getBlockByHash",
 	GetBlockByNumber:                    "hmy_getBlockByNumber",
 	GetBlockTransactionCountByHash:      "hmy_getBlockTransactionCountByHash",
