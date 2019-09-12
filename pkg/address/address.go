@@ -33,7 +33,7 @@ func decodeAndConvert(bech string) (string, []byte, error) {
 
 // ParseBech32Addr decodes the given bech32 address and populates the given
 // human-readable-part string and address with the decoded result.
-func ParseBech32Addr(b32 string, hrp *string, addr *T) error {
+func parseBech32Addr(b32 string, hrp *string, addr *T) error {
 	h, b, err := decodeAndConvert(b32)
 	if err != nil {
 		return errors.Wrapf(err, "cannot decode %#v as bech32 address", b32)
@@ -49,7 +49,7 @@ func ParseBech32Addr(b32 string, hrp *string, addr *T) error {
 
 func Bech32ToAddress(b32 string) (addr T, err error) {
 	var hrp string
-	err = ParseBech32Addr(b32, &hrp, &addr)
+	err = parseBech32Addr(b32, &hrp, &addr)
 	if err == nil && hrp != Bech32AddressHRP {
 		err = errors.Errorf("%#v is not a %#v address", b32, Bech32AddressHRP)
 	}
