@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 
+	color "github.com/fatih/color"
 	"github.com/harmony-one/go-sdk/pkg/account"
 	c "github.com/harmony-one/go-sdk/pkg/common"
 
@@ -13,6 +14,11 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/tyler-smith/go-bip39"
 	"golang.org/x/crypto/ssh/terminal"
+)
+
+const (
+	seedPhraseWarning = ("**Important** write this seed phrase in a safe place, " +
+		"it is the only way to recover your account if you ever forget your password\n\n")
 )
 
 var (
@@ -59,11 +65,13 @@ func keysSub() []*cobra.Command {
 				}
 				t.Mnemonic = m
 			}
-			// TODO refactor
-			if keyInfo, err := account.CreateNewLocalAccount(t); err != nil {
-				fmt.Println(keyInfo)
+
+			if err := account.CreateNewLocalAccount(&t); err != nil {
+				fmt.Println(err)
 				os.Exit(-1)
 			}
+			color.Red(seedPhraseWarning)
+			fmt.Println(t.Mnemonic)
 		},
 	}
 
