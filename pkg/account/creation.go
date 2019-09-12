@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/harmony-one/go-sdk/pkg/keys"
+	"github.com/harmony-one/go-sdk/pkg/mnemonic"
 	"github.com/harmony-one/go-sdk/pkg/store"
 )
 
@@ -36,10 +37,16 @@ const (
 )
 
 // By this point assume all the inputs are valid, legitmate
-func CreateNewLocalAccount(candidate Creation) (error, error) {
+func CreateNewLocalAccount(candidate *Creation) error {
 	ks := store.FromAccountName(candidate.Name)
+	if candidate.Mnemonic == "" {
+		candidate.Mnemonic = mnemonic.Generate()
+	}
 	private, public := keys.FromMnemonicSeedAndPassphrase(candidate.Mnemonic, candidate.Passphrase)
 	acct, err := ks.ImportECDSA(private.ToECDSA(), candidate.Passphrase)
-	fmt.Println(acct, err, public)
-	return nil, nil
+	if err != nil {
+		fmt.Println(acct.Address.Hex(), public)
+		return err
+	}
+	return nil
 }
