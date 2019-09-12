@@ -40,14 +40,12 @@ func doubleTakePhrase() string {
 
 func keysSub() []*cobra.Command {
 	add := &cobra.Command{
-		Use:   "add",
+		Use:   "add <ACCOUNT_NAME>",
 		Short: "Create a new key",
 		Args:  cobra.ExactArgs(1),
-		Run: func(cmd *cobra.Command, args []string) {
+		RunE: func(cmd *cobra.Command, args []string) error {
 			if store.DoesNamedAccountExist(args[0]) {
-				// Ask whether to override existing account
-				fmt.Printf("Account %s already exists\n", args[0])
-				os.Exit(-1)
+				return fmt.Errorf("Account %s already exists\n", args[0])
 			}
 			passphrase := c.DefaultPassphrase
 			if userProvidesPassphrase {
@@ -60,25 +58,23 @@ func keysSub() []*cobra.Command {
 				scanner.Scan()
 				m := scanner.Text()
 				if !bip39.IsMnemonicValid(m) {
-					fmt.Println("Invalid mnemonic given")
-					os.Exit(-1)
+					return mnemonic.InvalidMnemonic
 				}
 				t.Mnemonic = m
 			}
-
 			if err := account.CreateNewLocalAccount(&t); err != nil {
-				fmt.Println(err)
-				os.Exit(-1)
+				return err
 			}
-			color.Red(seedPhraseWarning)
-			fmt.Println(t.Mnemonic)
+			if !recoverFromMnemonic {
+				color.Red(seedPhraseWarning)
+				fmt.Println(t.Mnemonic)
+			}
+			return nil
 		},
 	}
-
 	add.Flags().BoolVar(&recoverFromMnemonic, "recover", false, "create keys from a mnemonic")
-	ppPrompt := fmt.Sprintf("provide own phrase over default: %s", c.DefaultPassphrase)
+	ppPrompt := fmt.Sprintf("provide own phrase over default: `%s`", c.DefaultPassphrase)
 	add.Flags().BoolVar(&userProvidesPassphrase, "passphrase", false, ppPrompt)
-
 	return []*cobra.Command{add, {
 		Use:   "mnemonic",
 		Short: "Compute the bip39 mnemonic for some input entropy",

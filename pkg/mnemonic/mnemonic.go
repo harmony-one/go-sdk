@@ -1,7 +1,13 @@
 package mnemonic
 
 import (
+	"errors"
+
 	"github.com/tyler-smith/go-bip39"
+)
+
+var (
+	InvalidMnemonic = errors.New("invalid mnemonic given")
 )
 
 func Generate() string {
