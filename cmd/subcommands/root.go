@@ -36,8 +36,9 @@ var (
 		fmt.Print(string(asJSON))
 	}
 	RootCmd = &cobra.Command{
-		Use:   "hmy_cli",
-		Short: "Harmony blockchain",
+		Use:          "hmy_cli",
+		Short:        "Harmony blockchain",
+		SilenceUsage: true,
 		Long: `
 CLI interface to the Harmony blockchain
 `,
@@ -78,7 +79,6 @@ func init() {
 
 func Execute() {
 	if err := RootCmd.Execute(); err != nil {
-		fmt.Println(err)
 		os.Exit(1)
 	}
 }
