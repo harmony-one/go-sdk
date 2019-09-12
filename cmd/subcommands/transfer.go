@@ -1,8 +1,8 @@
 package cmd
 
 import (
+	"errors"
 	"fmt"
-	"os"
 
 	"github.com/harmony-one/go-sdk/pkg/address"
 	"github.com/harmony-one/go-sdk/pkg/common"
@@ -22,8 +22,9 @@ var (
 	fromShardID int
 	toShardID   int
 	confirmWait uint32
-	accountName string
 	chainName   string
+	dryRun      bool
+	unlockP     string
 )
 
 func handlerForShard(senderShard int, node string) *rpc.HTTPMessenger {
@@ -42,25 +43,31 @@ func init() {
 		Long: `
 Create a transaction, sign it, and send off to the Harmony blockchain
 `,
-		Run: func(cmd *cobra.Command, args []string) {
+		RunE: func(cmd *cobra.Command, args []string) error {
 			networkHandler := handlerForShard(fromShardID, node)
-			ks := store.FromAccountName(accountName)
+			ks := store.FromAddress(fromAddress)
+			if ks == nil {
+				return fmt.Errorf("could not open local keystore for %s", fromAddress)
+			}
 			sender := address.Parse(fromAddress)
-			account, _ := ks.Find(accounts.Account{Address: sender})
-			ks.Unlock(account, common.DefaultPassphrase)
-			fromCmdLineFlags := func(ctlr *transaction.Controller) {
-				//
+			account, lookupErr := ks.Find(accounts.Account{Address: sender})
+			if lookupErr != nil {
+				return fmt.Errorf("could not find %s in keystore", fromAddress)
+			}
+			if unlockError := ks.Unlock(account, unlockP); unlockError != nil {
+				return errors.New("could not unlock account with passphrase, perhaps need different phrase")
+			}
+			dryRunOpt := func(ctlr *transaction.Controller) {
+				if dryRun {
+					ctlr.Behavior.DryRun = true
+				}
 			}
 
-			ctrlr, err := transaction.NewController(
+			ctrlr := transaction.NewController(
 				networkHandler, ks, &account,
 				*common.StringToChainID(chainName),
-				fromCmdLineFlags,
+				dryRunOpt,
 			)
-			if err != nil {
-				fmt.Println(err)
-				os.Exit(-1)
-			}
 			if transactionFailure := ctrlr.ExecuteTransaction(
 				toAddress,
 				"",
@@ -68,24 +75,24 @@ Create a transaction, sign it, and send off to the Harmony blockchain
 				fromShardID,
 				toShardID,
 			); transactionFailure != nil {
-				fmt.Println(transactionFailure)
-				os.Exit(-1)
+				return transactionFailure
 			}
-			fmt.Println(ctrlr.Receipt())
+			if !dryRun {
+				fmt.Println(ctrlr.Receipt())
+			}
+			return nil
 		},
 	}
 
-	// TODO Intern do custom flag validation for one address: see https://github.com/spf13/cobra/issues/376
 	cmdTransfer.Flags().StringVar(&fromAddress, "from", "", "From can be an account alias or a one address")
 	cmdTransfer.Flags().StringVar(&toAddress, "to", "", "the to address")
-
-	cmdTransfer.Flags().StringVar(&accountName, "account-name", "", "account-name")
-
+	cmdTransfer.Flags().BoolVar(&dryRun, "dry-run", false, "Do not send signed transaction")
 	cmdTransfer.Flags().Float64Var(&amount, "amount", 0.0, "amount")
 	cmdTransfer.Flags().IntVar(&fromShardID, "from-shard", -1, "source shard id")
 	cmdTransfer.Flags().IntVar(&toShardID, "to-shard", -1, "target shard id")
 	cmdTransfer.Flags().StringVar(&chainName, "chain-id", common.Chain.TestNet.Name, "What chain ID to target")
 	cmdTransfer.Flags().Uint32Var(&confirmWait, "wait-for-confirm", 0, "Only waits if non-zero value, in seconds")
+	cmdTransfer.Flags().StringVar(&unlockP, "passphrase", common.DefaultPassphrase, "Passphrase to unlock `from`")
 
 	for _, flagName := range [...]string{"from", "to", "amount", "from-shard", "to-shard"} {
 		cmdTransfer.MarkFlagRequired(flagName)

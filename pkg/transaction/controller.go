@@ -38,6 +38,11 @@ type Controller struct {
 	sender            sender
 	transactionForRPC transactionForRPC
 	chain             common.ChainID
+	Behavior          behavior
+}
+
+type behavior struct {
+	DryRun bool
 }
 
 func NewController(
@@ -45,10 +50,9 @@ func NewController(
 	senderKs *keystore.KeyStore,
 	senderAcct *accounts.Account,
 	chain common.ChainID,
-	options ...func(*Controller)) (*Controller, error) {
+	options ...func(*Controller)) *Controller {
 
 	txParams := make(map[string]interface{})
-
 	ctrlr := &Controller{
 		failure:   nil,
 		messenger: handler,
@@ -61,21 +65,19 @@ func NewController(
 			signature: nil,
 			receipt:   nil,
 		},
-		chain: chain,
+		chain:    chain,
+		Behavior: behavior{false},
 	}
-
 	for _, option := range options {
 		option(ctrlr)
 	}
-
-	return ctrlr, nil
+	return ctrlr
 }
 
 func (C *Controller) verifyBalance(amount float64) {
 	if C.failure != nil {
 		return
 	}
-
 	balanceRPCReply, err := C.messenger.SendRPC(
 		rpc.Method.GetBalance,
 		p{address.ToBech32(C.sender.account.Address), "latest"},
@@ -115,11 +117,10 @@ func (C *Controller) setNextNonce() {
 }
 
 func (C *Controller) sendSignedTx() {
-	if C.failure != nil {
+	if C.failure != nil || C.Behavior.DryRun {
 		return
 	}
 	reply, err := C.messenger.SendRPC(rpc.Method.SendRawTransaction, p{C.transactionForRPC.signature})
-
 	if err != nil {
 		C.failure = err
 		return
@@ -184,7 +185,6 @@ func (C *Controller) signAndPrepareTxEncodedForSending() {
 	if C.failure != nil {
 		return
 	}
-
 	signedTransaction, err :=
 		C.sender.ks.SignTx(*C.sender.account, C.transactionForRPC.transaction, C.chain.Value)
 	if err != nil {
@@ -212,10 +212,7 @@ func (C *Controller) ExecuteTransaction(
 	amount float64,
 	fromShard, toShard int,
 ) error {
-
 	C.transactionForRPC.params["gas-price"] = big.NewInt(0)
-
-	fmt.Println(to, inputData, amount, fromShard, toShard)
 	// WARNING Order of execution matters
 	C.setShardIDs(fromShard, toShard)
 	C.setIntrinsicGas(inputData)
