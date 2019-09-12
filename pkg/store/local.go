@@ -58,6 +58,19 @@ func DoesNamedAccountExist(name string) bool {
 	return false
 }
 
+func FromAddress(bech32 string) *keystore.KeyStore {
+	for _, name := range LocalAccounts() {
+		ks := FromAccountName(name)
+		allAccounts := ks.Accounts()
+		for _, account := range allAccounts {
+			if bech32 == address.ToBech32(account.Address) {
+				return ks
+			}
+		}
+	}
+	return nil
+}
+
 func FromAccountName(name string) *keystore.KeyStore {
 	uDir, _ := homedir.Dir()
 	p := path.Join(uDir, c.DefaultConfigDirName, c.DefaultConfigAccountAliasesDirName, name)
