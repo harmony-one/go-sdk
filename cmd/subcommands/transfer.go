@@ -43,8 +43,7 @@ func init() {
 Create a transaction, sign it, and send off to the Harmony blockchain
 `,
 		Run: func(cmd *cobra.Command, args []string) {
-			networkHandler := rpc.NewHTTPHandler(node)
-			// networkHandler := handlerForShard(fromShardID, node)
+			networkHandler := handlerForShard(fromShardID, node)
 			ks := store.FromAccountName(accountName)
 			sender := address.Parse(fromAddress)
 			account, _ := ks.Find(accounts.Account{Address: sender})
@@ -53,7 +52,11 @@ Create a transaction, sign it, and send off to the Harmony blockchain
 				//
 			}
 
-			ctrlr, err := transaction.NewController(networkHandler, ks, &account, fromCmdLineFlags)
+			ctrlr, err := transaction.NewController(
+				networkHandler, ks, &account,
+				*common.StringToChainID(chainName),
+				fromCmdLineFlags,
+			)
 			if err != nil {
 				fmt.Println(err)
 				os.Exit(-1)
@@ -64,7 +67,6 @@ Create a transaction, sign it, and send off to the Harmony blockchain
 				amount,
 				fromShardID,
 				toShardID,
-				*common.StringToChainID(chainName),
 			); transactionFailure != nil {
 				fmt.Println(transactionFailure)
 				os.Exit(-1)
@@ -74,7 +76,6 @@ Create a transaction, sign it, and send off to the Harmony blockchain
 	}
 
 	// TODO Intern do custom flag validation for one address: see https://github.com/spf13/cobra/issues/376
-
 	cmdTransfer.Flags().StringVar(&fromAddress, "from", "", "From can be an account alias or a one address")
 	cmdTransfer.Flags().StringVar(&toAddress, "to", "", "the to address")
 

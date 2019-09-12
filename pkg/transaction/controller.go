@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"math/big"
-	"os"
 
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/ethereum/go-ethereum/rlp"
@@ -18,17 +17,7 @@ import (
 	"github.com/harmony-one/harmony/core"
 )
 
-var (
-	debugEnabled = false
-)
-
-func init() {
-	if _, enabled := os.LookupEnv("HMY_TX_DEBUG"); enabled != false {
-		debugEnabled = true
-	}
-}
-
-type p = []interface{}
+type p []interface{}
 
 type transactionForRPC struct {
 	params      map[string]interface{}
@@ -48,13 +37,18 @@ type Controller struct {
 	messenger         rpc.T
 	sender            sender
 	transactionForRPC transactionForRPC
+	chain             common.ChainID
 }
 
 func NewController(
 	handler rpc.T,
 	senderKs *keystore.KeyStore,
 	senderAcct *accounts.Account,
+	chain common.ChainID,
 	options ...func(*Controller)) (*Controller, error) {
+
+	txParams := make(map[string]interface{})
+
 	ctrlr := &Controller{
 		failure:   nil,
 		messenger: handler,
@@ -63,11 +57,13 @@ func NewController(
 			account: senderAcct,
 		},
 		transactionForRPC: transactionForRPC{
-			params:    make(map[string]interface{}),
+			params:    txParams,
 			signature: nil,
 			receipt:   nil,
 		},
+		chain: chain,
 	}
+
 	for _, option := range options {
 		option(ctrlr)
 	}
@@ -160,11 +156,11 @@ func (C *Controller) setReceiver(receiver string) {
 	C.transactionForRPC.params["receiver"] = address.Parse(receiver)
 }
 
-func (C *Controller) setNewTransactionWithData(inputData string, amount float64) {
+func (C *Controller) setNewTransactionWithData(i string, a float64) {
 	if C.failure != nil {
 		return
 	}
-	amountBigInt := big.NewInt(int64(amount * denominations.Nano))
+	amountBigInt := big.NewInt(int64(a * denominations.Nano))
 	amt := amountBigInt.Mul(amountBigInt, big.NewInt(denominations.Nano))
 	tx := NewTransaction(
 		C.transactionForRPC.params["nonce"].(uint64),
@@ -173,11 +169,11 @@ func (C *Controller) setNewTransactionWithData(inputData string, amount float64)
 		C.transactionForRPC.params["from-shard"].(uint32),
 		C.transactionForRPC.params["to-shard"].(uint32),
 		amt,
-		big.NewInt(0),
+		C.chain.Value,
 		// C.transactionForRPC.params["gas-price"].(*big.Int),
-		[]byte(inputData),
+		[]byte(i),
 	)
-	if debugEnabled {
+	if common.DebugTransaction {
 		r, _ := tx.MarshalJSON()
 		fmt.Println(string(r))
 	}
@@ -190,7 +186,7 @@ func (C *Controller) signAndPrepareTxEncodedForSending() {
 	}
 
 	signedTransaction, err :=
-		C.sender.ks.SignTx(*C.sender.account, C.transactionForRPC.transaction, big.NewInt(2))
+		C.sender.ks.SignTx(*C.sender.account, C.transactionForRPC.transaction, C.chain.Value)
 	if err != nil {
 		fmt.Println(err)
 	}
@@ -211,7 +207,11 @@ func (C *Controller) Receipt() string {
 	return hexutil.EncodeUint64(*C.transactionForRPC.receipt)
 }
 
-func (C *Controller) ExecuteTransaction(to, inputData string, amount float64, fromShard, toShard int) error {
+func (C *Controller) ExecuteTransaction(
+	to, inputData string,
+	amount float64,
+	fromShard, toShard int,
+) error {
 
 	C.transactionForRPC.params["gas-price"] = big.NewInt(0)
 

@@ -11,7 +11,7 @@ type HTTPMessenger struct {
 }
 
 func (M *HTTPMessenger) SendRPC(meth RPCMethod, params []interface{}) (reply, error) {
-	return RPCRequest(meth, M.node, params)
+	return Request(meth, M.node, params)
 }
 
 func NewHTTPHandler(node string) *HTTPMessenger {

@@ -9,32 +9,23 @@ import (
 	"net/http"
 	"os"
 	"strconv"
-)
 
-const (
-	JSON_RPC_VERSION = "2.0"
+	"github.com/harmony-one/go-sdk/pkg/common"
 )
 
 var (
-	queryID      = 0
-	debugEnabled = false
+	queryID = 0
 )
-
-func init() {
-	if _, enabled := os.LookupEnv("HMY_RPC_DEBUG"); enabled != false {
-		debugEnabled = true
-	}
-}
 
 func baseRequest(method RPCMethod, node string, params interface{}) []byte {
 	requestBody, _ := json.Marshal(map[string]interface{}{
-		"jsonrpc": JSON_RPC_VERSION,
+		"jsonrpc": common.JSONRPCVersion,
 		"id":      strconv.Itoa(queryID),
 		"method":  method,
 		"params":  params,
 	})
 	resp, err := http.Post(node, "application/json", bytes.NewBuffer(requestBody))
-	if debugEnabled {
+	if common.DebugRPC {
 		fmt.Printf("URL: %s, Request Body: %s\n\n", node, string(requestBody))
 	}
 	if err != nil {
@@ -49,14 +40,14 @@ func baseRequest(method RPCMethod, node string, params interface{}) []byte {
 		os.Exit(-1)
 	}
 	queryID++
-	if debugEnabled {
+	if common.DebugRPC {
 		fmt.Printf("URL: %s, Response Body: %s\n\n", node, string(body))
 	}
 	return body
 }
 
 // TODO add the error code usage here, change return signature, make CLI be consumer that checks error
-func RPCRequest(method RPCMethod, node string, params interface{}) (map[string]interface{}, error) {
+func Request(method RPCMethod, node string, params interface{}) (map[string]interface{}, error) {
 	rpcJson := make(map[string]interface{})
 	rawReply := baseRequest(method, node, params)
 	json.Unmarshal(rawReply, &rpcJson)
@@ -65,4 +56,8 @@ func RPCRequest(method RPCMethod, node string, params interface{}) (map[string]i
 		return nil, errors.New(message)
 	}
 	return rpcJson, nil
+}
+
+func RawRequest(method RPCMethod, node string, params interface{}) []byte {
+	return baseRequest(method, node, params)
 }
