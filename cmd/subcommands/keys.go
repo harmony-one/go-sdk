@@ -9,9 +9,9 @@ import (
 	"github.com/harmony-one/go-sdk/pkg/account"
 	c "github.com/harmony-one/go-sdk/pkg/common"
 
+	"github.com/harmony-one/go-sdk/pkg/ledger"
 	"github.com/harmony-one/go-sdk/pkg/mnemonic"
 	"github.com/harmony-one/go-sdk/pkg/store"
-	"github.com/harmony-one/go-sdk/pkg/ledger"
 	"github.com/spf13/cobra"
 	"github.com/tyler-smith/go-bip39"
 	"golang.org/x/crypto/ssh/terminal"
@@ -25,7 +25,6 @@ const (
 var (
 	recoverFromMnemonic    bool
 	userProvidesPassphrase bool
-	useLedgerWallet        bool
 )
 
 func doubleTakePhrase() string {
@@ -109,7 +108,6 @@ Manage your local keys
 		},
 	}
 
-	RootCmd.PersistentFlags().BoolVarP(&useLedgerWallet, "ledger", "e", false, "Use ledger hardware wallet")
 	cmdKeys.AddCommand(keysSub()...)
 	RootCmd.AddCommand(cmdKeys)
 }

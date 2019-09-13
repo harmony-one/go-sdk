@@ -14,6 +14,7 @@ import (
 )
 
 var (
+	useLedgerWallet         bool
 	useLatestInParamsForRPC bool
 	noPrettyOutput          bool
 	node                    string
@@ -49,17 +50,10 @@ See "hmy cookbook" for examples of the most common, important usages`,
 )
 
 func init() {
-	RootCmd.PersistentFlags().StringVarP(
-		&node,
-		"node",
-		"n",
-		defaultNodeAddr,
-		"<host>:<port>",
-	)
+	RootCmd.PersistentFlags().StringVarP(&node, "node", "n", defaultNodeAddr, "<host>")
 	RootCmd.PersistentFlags().BoolVarP(&useLatestInParamsForRPC, "latest", "l", false, "Add 'latest' to RPC params")
 	RootCmd.PersistentFlags().BoolVar(&noPrettyOutput, "no-pretty", false, "disable pretty print JSON outputs")
-	RootCmd.PersistentFlags().StringVar(&keyStoreDir, "key-store-dir", "k", "What directory to use as the keystore")
-
+	RootCmd.PersistentFlags().StringVar(&keyStoreDir, "key-store-dir", "k", "what directory to use as the keystore")
 	RootCmd.AddCommand(&cobra.Command{
 		Use:   "cookbook",
 		Short: "Example usages of the most important, frequently used commands",
@@ -67,7 +61,7 @@ func init() {
 			fmt.Print(cookbookDoc)
 		},
 	})
-
+	RootCmd.PersistentFlags().BoolVarP(&useLedgerWallet, "ledger", "e", false, "Use ledger hardware wallet")
 	RootCmd.AddCommand(&cobra.Command{
 		Use:   "docs",
 		Short: fmt.Sprintf("Generate docs to a local %s directory", defaultNodeAddr),

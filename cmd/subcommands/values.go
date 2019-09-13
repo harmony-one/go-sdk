@@ -7,7 +7,7 @@ import (
 )
 
 const (
-	hmyDocsDir      = "hmycli-docs"
+	hmyDocsDir      = "hmy-docs"
 	defaultNodeAddr = "http://localhost:9500"
 )
 
@@ -20,7 +20,7 @@ Cookbook of usage, note that every subcommand recognizes a '--help' flag
 hmy --node="https://api.s1.b.hmny.io/" balance <SOME_ONE_ADDRESS>
 
 %s
-hmy --node="https://api.s1.b.hmny.io" blockchain transaction-by-hash <SOME_TRANSACTION_HASH>
+hmy --node="https://api.s1.b.hmny.io" blockchain transaction-by-hash <SOME_TX_HASH>
 
 %s
 hmy keys list
@@ -30,10 +30,14 @@ hmy keys list
     --from one1yc06ghr2p8xnl2380kpfayweguuhxdtupkhqzw \
     --to one1q6gkzcap0uruuu8r6sldxuu47pd4ww9w9t7tg6 \
     --from-shard 0 --to-shard 1 --amount 200
+
+%s
+./hmy --node="https://api.s0.b.hmny.io" blockchain transaction-receipt <SOME_TX_HASH>
 `,
 		g("1. Check Balances"),
 		g("2. Check completed transaction"),
 		g("3. List local keys"),
 		g("4. Sending a transaction"),
+		g("5. Check a completed transaction receipt"),
 	)
 )
