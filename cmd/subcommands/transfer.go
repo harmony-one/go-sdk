@@ -22,7 +22,7 @@ var (
 	fromShardID int
 	toShardID   int
 	confirmWait uint32
-	chainName   = chainIDWrapper{chainID:&common.Chain.TestNet}
+	chainName   = chainIDWrapper{chainID: &common.Chain.TestNet}
 	dryRun      bool
 	unlockP     string
 	gasPrice    float64
@@ -90,7 +90,7 @@ Create a transaction, sign it, and send off to the Harmony blockchain
 					}
 				}
 
-				ctrlr := transaction.NewController(
+				ctrlr = transaction.NewController(
 					networkHandler, ks, &account,
 					*chainName.chainID,
 					dryRunOpt,
@@ -107,7 +107,7 @@ Create a transaction, sign it, and send off to the Harmony blockchain
 
 			}
 			if !dryRun {
-				fmt.Println(fmt.Sprintf(`{"transaction-receipt":"%s"}`, *ctrlr.Receipt()))
+				fmt.Println(fmt.Sprintf(`{"transaction-receipt":"%s"}`, ctrlr.Receipt()))
 			}
 			return nil
 		},
@@ -132,7 +132,7 @@ Create a transaction, sign it, and send off to the Harmony blockchain
 }
 
 // implemets pflag.Value interface
-type oneAddress struct{
+type oneAddress struct {
 	address string
 }
 
@@ -154,7 +154,7 @@ func (oneAddress oneAddress) Type() string {
 }
 
 // implements pflag.Value interface
-type chainIDWrapper struct{
+type chainIDWrapper struct {
 	chainID *common.ChainID
 }
 
