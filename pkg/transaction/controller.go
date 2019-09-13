@@ -155,12 +155,15 @@ func (C *Controller) setReceiver(receiver string) {
 	C.transactionForRPC.params["receiver"] = address.Parse(receiver)
 }
 
-func (C *Controller) setNewTransactionWithData(i string, a float64) {
+func (C *Controller) setNewTransactionWithDataAndGas(i string, amount, gasPrice float64) {
 	if C.failure != nil {
 		return
 	}
-	amountBigInt := big.NewInt(int64(a * denominations.Nano))
+	amountBigInt := big.NewInt(int64(amount * denominations.Nano))
 	amt := amountBigInt.Mul(amountBigInt, big.NewInt(denominations.Nano))
+	gPrice := big.NewInt(int64(gasPrice))
+	gPrice = gPrice.Mul(gPrice, big.NewInt(denominations.Nano))
+
 	tx := NewTransaction(
 		C.transactionForRPC.params["nonce"].(uint64),
 		C.transactionForRPC.params["gas"].(uint64),
@@ -168,8 +171,7 @@ func (C *Controller) setNewTransactionWithData(i string, a float64) {
 		C.transactionForRPC.params["from-shard"].(uint32),
 		C.transactionForRPC.params["to-shard"].(uint32),
 		amt,
-		C.chain.Value,
-		// C.transactionForRPC.params["gas-price"].(*big.Int),
+		gPrice,
 		[]byte(i),
 	)
 	if common.DebugTransaction {
@@ -207,10 +209,9 @@ func (C *Controller) Receipt() *string {
 
 func (C *Controller) ExecuteTransaction(
 	to, inputData string,
-	amount float64,
+	amount, gPrice float64,
 	fromShard, toShard int,
 ) error {
-	C.transactionForRPC.params["gas-price"] = big.NewInt(0)
 	// WARNING Order of execution matters
 	C.setShardIDs(fromShard, toShard)
 	C.setIntrinsicGas(inputData)
@@ -219,7 +220,7 @@ func (C *Controller) ExecuteTransaction(
 	C.setReceiver(to)
 	C.setGasPrice()
 	C.setNextNonce()
-	C.setNewTransactionWithData(inputData, amount)
+	C.setNewTransactionWithDataAndGas(inputData, amount, gPrice)
 	C.signAndPrepareTxEncodedForSending()
 	C.sendSignedTx()
 	return C.failure

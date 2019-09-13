@@ -25,6 +25,7 @@ var (
 	chainName   string
 	dryRun      bool
 	unlockP     string
+	gasPrice    float64
 )
 
 func handlerForShard(senderShard int, node string) *rpc.HTTPMessenger {
@@ -71,7 +72,7 @@ Create a transaction, sign it, and send off to the Harmony blockchain
 			if transactionFailure := ctrlr.ExecuteTransaction(
 				toAddress,
 				"",
-				amount,
+				amount, gasPrice,
 				fromShardID,
 				toShardID,
 			); transactionFailure != nil {
@@ -88,6 +89,7 @@ Create a transaction, sign it, and send off to the Harmony blockchain
 	cmdTransfer.Flags().StringVar(&toAddress, "to", "", "the to address")
 	cmdTransfer.Flags().BoolVar(&dryRun, "dry-run", false, "Do not send signed transaction")
 	cmdTransfer.Flags().Float64Var(&amount, "amount", 0.0, "amount")
+	cmdTransfer.Flags().Float64Var(&gasPrice, "gas-price", 0.0, "gas price to pay")
 	cmdTransfer.Flags().IntVar(&fromShardID, "from-shard", -1, "source shard id")
 	cmdTransfer.Flags().IntVar(&toShardID, "to-shard", -1, "target shard id")
 	cmdTransfer.Flags().StringVar(&chainName, "chain-id", common.Chain.TestNet.Name, "What chain ID to target")
