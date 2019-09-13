@@ -16,13 +16,13 @@ import (
 )
 
 var (
-	fromAddress string
-	toAddress   string
+	fromAddress oneAddress
+	toAddress   oneAddress
 	amount      float64
 	fromShardID int
 	toShardID   int
 	confirmWait uint32
-	chainName   string
+	chainName   = chainIDWrapper{chainID:&common.Chain.TestNet}
 	dryRun      bool
 	unlockP     string
 	gasPrice    float64
@@ -52,17 +52,17 @@ Create a transaction, sign it, and send off to the Harmony blockchain
 				}
 			}
 
-			sender := address.Parse(fromAddress)
+			sender := address.Parse(fromAddress.String())
 			var ctrlr *transaction.Controller
 			if useLedgerWallet {
 				account := accounts.Account{Address: sender}
 				ctrlr = transaction.NewController(
 					networkHandler, nil, &account,
-					*common.StringToChainID(chainName),
+					*chainName.chainID,
 					dryRunOpt,
 				)
 				if transactionFailure := ctrlr.ExecuteHardwareTransaction(
-					toAddress,
+					toAddress.String(),
 					"",
 					amount, gasPrice,
 					fromShardID,
@@ -72,14 +72,14 @@ Create a transaction, sign it, and send off to the Harmony blockchain
 				}
 
 			} else {
-				ks := store.FromAddress(fromAddress)
+				ks := store.FromAddress(fromAddress.String())
 				if ks == nil {
-					return fmt.Errorf("could not open local keystore for %s", fromAddress)
+					return fmt.Errorf("could not open local keystore for %s", fromAddress.String())
 				}
 
 				account, lookupErr := ks.Find(accounts.Account{Address: sender})
 				if lookupErr != nil {
-					return fmt.Errorf("could not find %s in keystore", fromAddress)
+					return fmt.Errorf("could not find %s in keystore", fromAddress.String())
 				}
 				if unlockError := ks.Unlock(account, unlockP); unlockError != nil {
 					return errors.New("could not unlock account with passphrase, perhaps need different phrase")
@@ -92,11 +92,11 @@ Create a transaction, sign it, and send off to the Harmony blockchain
 
 				ctrlr := transaction.NewController(
 					networkHandler, ks, &account,
-					*common.StringToChainID(chainName),
+					*chainName.chainID,
 					dryRunOpt,
 				)
 				if transactionFailure := ctrlr.ExecuteTransaction(
-					toAddress,
+					toAddress.String(),
 					"",
 					amount, gasPrice,
 					fromShardID,
@@ -113,14 +113,14 @@ Create a transaction, sign it, and send off to the Harmony blockchain
 		},
 	}
 
-	cmdTransfer.Flags().StringVar(&fromAddress, "from", "", "From can be an account alias or a one address")
-	cmdTransfer.Flags().StringVar(&toAddress, "to", "", "the to address")
+	cmdTransfer.Flags().Var(&fromAddress, "from", "From can be an account alias or a one address")
+	cmdTransfer.Flags().Var(&toAddress, "to", "the to address")
 	cmdTransfer.Flags().BoolVar(&dryRun, "dry-run", false, "Do not send signed transaction")
 	cmdTransfer.Flags().Float64Var(&amount, "amount", 0.0, "amount")
 	cmdTransfer.Flags().Float64Var(&gasPrice, "gas-price", 0.0, "gas price to pay")
 	cmdTransfer.Flags().IntVar(&fromShardID, "from-shard", -1, "source shard id")
 	cmdTransfer.Flags().IntVar(&toShardID, "to-shard", -1, "target shard id")
-	cmdTransfer.Flags().StringVar(&chainName, "chain-id", common.Chain.TestNet.Name, "What chain ID to target")
+	cmdTransfer.Flags().Var(&chainName, "chain-id", "What chain ID to target")
 	cmdTransfer.Flags().Uint32Var(&confirmWait, "wait-for-confirm", 0, "Only waits if non-zero value, in seconds")
 	cmdTransfer.Flags().StringVar(&unlockP, "passphrase", common.DefaultPassphrase, "Passphrase to unlock `from`")
 
@@ -129,4 +129,47 @@ Create a transaction, sign it, and send off to the Harmony blockchain
 	}
 
 	RootCmd.AddCommand(cmdTransfer)
+}
+
+// implemets pflag.Value interface
+type oneAddress struct{
+	address string
+}
+
+func (oneAddress oneAddress) String() string {
+	return oneAddress.address
+}
+
+func (oneAddress *oneAddress) Set(s string) error {
+	_, err := address.Bech32ToAddress(s)
+	if err != nil {
+		return err
+	}
+	oneAddress.address = s
+	return nil
+}
+
+func (oneAddress oneAddress) Type() string {
+	return "OneAddress"
+}
+
+// implements pflag.Value interface
+type chainIDWrapper struct{
+	chainID *common.ChainID
+}
+
+func (chainIDWrapper chainIDWrapper) String() string {
+	return chainIDWrapper.chainID.Name
+}
+
+func (chainIDWrapper *chainIDWrapper) Set(s string) error {
+	chainIDWrapper.chainID = common.StringToChainID(s)
+	if chainIDWrapper.chainID == nil {
+		return errors.New("ChainID \"" + s + "\" is invalid")
+	}
+	return nil
+}
+
+func (chainIDWrapper chainIDWrapper) Type() string {
+	return "ChainID"
 }
