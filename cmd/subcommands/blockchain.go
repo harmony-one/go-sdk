@@ -70,7 +70,7 @@ Get count of a transaction
 		&node,
 		"node",
 		"",
-		DEFAULT_NODE_ADDR,
+		defaultNodeAddr,
 		"<host>:<port>",
 	)
 	cmdBlockchain.PersistentFlags().BoolVarP(&useLatestInParamsForRPC, "latest", "l", false, "Use latest in query")
