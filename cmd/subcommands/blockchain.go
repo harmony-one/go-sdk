@@ -44,8 +44,8 @@ Inputs of a transaction and r, s, v value of transaction
 			request(rpc.Method.GetTransactionByHash, []interface{}{args[0]})
 		},
 	}, {
-		Use:   "transaction-by-receipt",
-		Short: "Get transaction by receipt",
+		Use:   "transaction-receipt",
+		Short: "Get information about a finalized transaction",
 		Args:  cobra.ExactArgs(1),
 		Long: `
 High level information about transaction, like blockNumber, blockHash
