@@ -64,10 +64,10 @@ func init() {
 	RootCmd.PersistentFlags().BoolVarP(&useLedgerWallet, "ledger", "e", false, "Use ledger hardware wallet")
 	RootCmd.AddCommand(&cobra.Command{
 		Use:   "docs",
-		Short: fmt.Sprintf("Generate docs to a local %s directory", defaultNodeAddr),
+		Short: fmt.Sprintf("Generate docs to a local %s directory", hmyDocsDir),
 		Run: func(cmd *cobra.Command, args []string) {
 			cwd, _ := os.Getwd()
-			docDir := path.Join(cwd, defaultNodeAddr)
+			docDir := path.Join(cwd, hmyDocsDir)
 			os.Mkdir(docDir, 0700)
 			doc.GenMarkdownTree(RootCmd, docDir)
 		},
