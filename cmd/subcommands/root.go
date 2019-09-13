@@ -14,12 +14,11 @@ import (
 )
 
 var (
-	useLatestInParamsForRPC   bool
-	prettyPrintJSONOutput     bool
-	useOneAddressInsteadOfHex bool
-	node                      string
-	keyStoreDir               string
-	request                   = func(method rpc.RPCMethod, params []interface{}) {
+	useLatestInParamsForRPC bool
+	noPrettyOutput          bool
+	node                    string
+	keyStoreDir             string
+	request                 = func(method rpc.RPCMethod, params []interface{}) {
 		if useLatestInParamsForRPC {
 			params = append(params, "latest")
 		}
@@ -29,28 +28,24 @@ var (
 			os.Exit(-1)
 		}
 		asJSON, _ := json.Marshal(success)
-		if prettyPrintJSONOutput {
-			fmt.Print(common.JSONPrettyFormat(string(asJSON)))
+		if noPrettyOutput {
+			fmt.Print(string(asJSON))
 			return
 		}
-		fmt.Print(string(asJSON))
+		fmt.Print(common.JSONPrettyFormat(string(asJSON)))
 	}
 	RootCmd = &cobra.Command{
-		Use:          "hmy_cli",
+		Use:          "hmy",
 		Short:        "Harmony blockchain",
 		SilenceUsage: true,
 		Long: `
 CLI interface to the Harmony blockchain
-`,
+
+See "hmy cookbook" for examples of the most common, important usages`,
 		Run: func(cmd *cobra.Command, args []string) {
 			cmd.Help()
 		},
 	}
-)
-
-const (
-	HMY_CLI_DOCS_DIR  = "hmy_cli-docs"
-	DEFAULT_NODE_ADDR = "http://localhost:9500"
 )
 
 func init() {
@@ -58,19 +53,27 @@ func init() {
 		&node,
 		"node",
 		"n",
-		DEFAULT_NODE_ADDR,
+		defaultNodeAddr,
 		"<host>:<port>",
 	)
 	RootCmd.PersistentFlags().BoolVarP(&useLatestInParamsForRPC, "latest", "l", false, "Add 'latest' to RPC params")
-	RootCmd.PersistentFlags().BoolVarP(&prettyPrintJSONOutput, "pretty", "p", false, "pretty print JSON outputs")
-	RootCmd.PersistentFlags().BoolVarP(&useOneAddressInsteadOfHex, "one-address", "o", false, "use one address for RPC calls")
+	RootCmd.PersistentFlags().BoolVar(&noPrettyOutput, "no-pretty", false, "disable pretty print JSON outputs")
 	RootCmd.PersistentFlags().StringVar(&keyStoreDir, "key-store-dir", "k", "What directory to use as the keystore")
+
+	RootCmd.AddCommand(&cobra.Command{
+		Use:   "cookbook",
+		Short: "Example usages of the most important, frequently used commands",
+		Run: func(cmd *cobra.Command, args []string) {
+			fmt.Print(cookbookDoc)
+		},
+	})
+
 	RootCmd.AddCommand(&cobra.Command{
 		Use:   "docs",
-		Short: fmt.Sprintf("Generate docs to a local %s directory", HMY_CLI_DOCS_DIR),
+		Short: fmt.Sprintf("Generate docs to a local %s directory", defaultNodeAddr),
 		Run: func(cmd *cobra.Command, args []string) {
 			cwd, _ := os.Getwd()
-			docDir := path.Join(cwd, HMY_CLI_DOCS_DIR)
+			docDir := path.Join(cwd, defaultNodeAddr)
 			os.Mkdir(docDir, 0700)
 			doc.GenMarkdownTree(RootCmd, docDir)
 		},

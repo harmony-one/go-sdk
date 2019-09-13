@@ -11,7 +11,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func checkAllShards(node, addr string, pretty bool) string {
+func checkAllShards(node, addr string, noPretty bool) string {
 	var out bytes.Buffer
 	out.WriteString("[")
 	params := []interface{}{addr, "latest"}
@@ -29,10 +29,10 @@ func checkAllShards(node, addr string, pretty bool) string {
 		}
 	}
 	out.WriteString("]")
-	if pretty {
-		return common.JSONPrettyFormat(out.String())
+	if noPretty {
+		return out.String()
 	}
-	return out.String()
+	return common.JSONPrettyFormat(out.String())
 }
 
 func init() {
@@ -42,7 +42,7 @@ func init() {
 		Long:  `Query for the latest account balance given a Harmony Address`,
 		Args:  cobra.ExactArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
-			fmt.Println(checkAllShards(node, args[0], prettyPrintJSONOutput))
+			fmt.Println(checkAllShards(node, args[0], noPrettyOutput))
 		},
 	}
 
