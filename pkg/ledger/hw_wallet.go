@@ -1,7 +1,6 @@
 package ledger
 
 import (
-	"encoding/hex"
 	"fmt"
 	"sync"
 	"github.com/pkg/errors"
@@ -60,7 +59,7 @@ func ProcessAddressCommand() {
 }
 
 // SignTx signs the given transaction with the requested account.
-func SignTx(tx *types.Transaction, chainID *big.Int) ([]byte, error) {
+func SignTx(tx *types.Transaction, chainID *big.Int) ([]byte, string, error) {
 	var rlpEncodedTx []byte
 
 	// Depending on the presence of the chain ID, sign with EIP155 or frontier
@@ -91,36 +90,31 @@ func SignTx(tx *types.Transaction, chainID *big.Int) ([]byte, error) {
 			} )
 	}
 
-	log.Printf("RLP encoded : %s\n", (hex.EncodeToString(rlpEncodedTx)))
-
 	n := getLedger()
 	sig, err := n.SignTxn(rlpEncodedTx)
 	if err != nil {
 		log.Println("Couldn't sign transaction, error: %s", err)
-		return nil, err
+		return nil, "", err
 	}
 
 	var hashBytes [32]byte
 	hw := sha3.NewLegacyKeccak256()
 	hw.Write(rlpEncodedTx[:])
 	hw.Sum(hashBytes[:0])
-	log.Printf("RLP hash:     %s\n", (hex.EncodeToString(hashBytes[:])))
 
 	pubkey, err := crypto.Ecrecover(hashBytes[:], sig[:])
 	if err != nil {
 		log.Println("Ecrecover failed : %s", err)
-		return nil, err
+		return nil, "", err
 	}
 
 	if len(pubkey) == 0 || pubkey[0] != 4 {
 		log.Println("invalid public key")
-		return nil, err
+		return nil, "", err
 	}
 
 	pubBytes := crypto.Keccak256(pubkey[1:65])[12:]
 	signerAddr, _ := address.ConvertAndEncode("one", pubBytes)
-	log.Println("Signer addr:  " + signerAddr)
-
 
 	var r, s, v *big.Int
 	if chainID != nil {
@@ -131,7 +125,7 @@ func SignTx(tx *types.Transaction, chainID *big.Int) ([]byte, error) {
 
 	if err != nil {
 		log.Println(err)
-		return nil, err
+		return nil, "", err
 	}
 
 	// Depending on the presence of the chain ID, sign with EIP155 or frontier
@@ -150,7 +144,7 @@ func SignTx(tx *types.Transaction, chainID *big.Int) ([]byte, error) {
 			s,
 		} )
 
-	return rawTx, err
+	return rawTx, signerAddr, err
 }
 
 func frontierSignatureValues(sig []byte) (r, s, v *big.Int, err error) {

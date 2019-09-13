@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"math/big"
 	"os"
+	"strings"
 
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/ethereum/go-ethereum/rlp"
@@ -233,9 +234,14 @@ func (C *Controller) hardwareSignAndPrepareTxEncodedForSending() {
 		return
 	}
 
-	enc, err := ledger.SignTx(C.transactionForRPC.transaction, C.chain.Value)
+	enc, signerAddr, err := ledger.SignTx(C.transactionForRPC.transaction, C.chain.Value)
 	if err != nil {
 		fmt.Println(err)
+		os.Exit(-1)
+	}
+
+	if  strings.Compare(signerAddr, address.ToBech32(C.sender.account.Address)) != 0 {
+		fmt.Println("signature verification failed : sender address doesn't match with ledger hardware addresss")
 		os.Exit(-1)
 	}
 
