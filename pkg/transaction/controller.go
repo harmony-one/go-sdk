@@ -5,12 +5,15 @@ import (
 	"errors"
 	"fmt"
 	"math/big"
+	"os"
+	"strings"
 
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/ethereum/go-ethereum/rlp"
 	"github.com/harmony-one/go-sdk/pkg/address"
 	"github.com/harmony-one/go-sdk/pkg/common"
 	"github.com/harmony-one/go-sdk/pkg/rpc"
+	"github.com/harmony-one/go-sdk/pkg/ledger"
 	"github.com/harmony-one/harmony/accounts"
 	"github.com/harmony-one/harmony/accounts/keystore"
 	"github.com/harmony-one/harmony/common/denominations"
@@ -222,6 +225,49 @@ func (C *Controller) ExecuteTransaction(
 	C.setNextNonce()
 	C.setNewTransactionWithDataAndGas(inputData, amount, gPrice)
 	C.signAndPrepareTxEncodedForSending()
+	C.sendSignedTx()
+	return C.failure
+}
+
+func (C *Controller) hardwareSignAndPrepareTxEncodedForSending() {
+	if C.failure != nil {
+		return
+	}
+
+	enc, signerAddr, err := ledger.SignTx(C.transactionForRPC.transaction, C.chain.Value)
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(-1)
+	}
+
+	if  strings.Compare(signerAddr, address.ToBech32(C.sender.account.Address)) != 0 {
+		fmt.Println("signature verification failed : sender address doesn't match with ledger hardware addresss")
+		os.Exit(-1)
+	}
+
+	hexSignature := hexutil.Encode(enc)
+	C.transactionForRPC.signature = &hexSignature
+}
+
+func (C *Controller) ExecuteHardwareTransaction(
+	to, inputData string,
+	amount, gPrice float64,
+	fromShard, toShard int,
+) error {
+
+	C.transactionForRPC.params["gas-price"] = big.NewInt(0)
+
+	fmt.Println(to, inputData, amount, fromShard, toShard)
+	// WARNING Order of execution matters
+	C.setShardIDs(fromShard, toShard)
+	C.setIntrinsicGas(inputData)
+	C.setAmount(amount)
+	C.verifyBalance(amount)
+	C.setReceiver(to)
+	C.setGasPrice()
+	C.setNextNonce()
+	C.setNewTransactionWithDataAndGas(inputData, amount, gPrice)
+	C.hardwareSignAndPrepareTxEncodedForSending()
 	C.sendSignedTx()
 	return C.failure
 }

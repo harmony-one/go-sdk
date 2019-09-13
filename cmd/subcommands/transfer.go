@@ -46,37 +46,65 @@ Create a transaction, sign it, and send off to the Harmony blockchain
 `,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			networkHandler := handlerForShard(fromShardID, node)
-			ks := store.FromAddress(fromAddress)
-			if ks == nil {
-				return fmt.Errorf("could not open local keystore for %s", fromAddress)
-			}
-			sender := address.Parse(fromAddress)
-			account, lookupErr := ks.Find(accounts.Account{Address: sender})
-			if lookupErr != nil {
-				return fmt.Errorf("could not find %s in keystore", fromAddress)
-			}
-			if unlockError := ks.Unlock(account, unlockP); unlockError != nil {
-				return errors.New("could not unlock account with passphrase, perhaps need different phrase")
-			}
 			dryRunOpt := func(ctlr *transaction.Controller) {
 				if dryRun {
 					ctlr.Behavior.DryRun = true
 				}
 			}
 
-			ctrlr := transaction.NewController(
-				networkHandler, ks, &account,
-				*common.StringToChainID(chainName),
-				dryRunOpt,
-			)
-			if transactionFailure := ctrlr.ExecuteTransaction(
-				toAddress,
-				"",
-				amount, gasPrice,
-				fromShardID,
-				toShardID,
-			); transactionFailure != nil {
-				return transactionFailure
+			sender := address.Parse(fromAddress)
+			var ctrlr *transaction.Controller
+			if useLedgerWallet {
+				account := accounts.Account{Address: sender}
+				ctrlr = transaction.NewController(
+					networkHandler, nil, &account,
+					*common.StringToChainID(chainName),
+					dryRunOpt,
+				)
+				if transactionFailure := ctrlr.ExecuteHardwareTransaction(
+					toAddress,
+					"",
+					amount, gasPrice,
+					fromShardID,
+					toShardID,
+				); transactionFailure != nil {
+					return transactionFailure
+				}
+
+			} else {
+				ks := store.FromAddress(fromAddress)
+				if ks == nil {
+					return fmt.Errorf("could not open local keystore for %s", fromAddress)
+				}
+
+				account, lookupErr := ks.Find(accounts.Account{Address: sender})
+				if lookupErr != nil {
+					return fmt.Errorf("could not find %s in keystore", fromAddress)
+				}
+				if unlockError := ks.Unlock(account, unlockP); unlockError != nil {
+					return errors.New("could not unlock account with passphrase, perhaps need different phrase")
+				}
+				dryRunOpt := func(ctlr *transaction.Controller) {
+					if dryRun {
+						ctlr.Behavior.DryRun = true
+					}
+				}
+
+				ctrlr := transaction.NewController(
+					networkHandler, ks, &account,
+					*common.StringToChainID(chainName),
+					dryRunOpt,
+				)
+				if transactionFailure := ctrlr.ExecuteTransaction(
+					toAddress,
+					"",
+					amount, gasPrice,
+					fromShardID,
+					toShardID,
+				); transactionFailure != nil {
+					return transactionFailure
+				}
+
 			}
 			if !dryRun {
 				fmt.Println(fmt.Sprintf(`{"transaction-receipt":"%s"}`, *ctrlr.Receipt()))
