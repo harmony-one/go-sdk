@@ -3,7 +3,6 @@ package rpc
 import (
 	"bytes"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -52,8 +51,12 @@ func Request(method RPCMethod, node string, params interface{}) (map[string]inte
 	rawReply := baseRequest(method, node, params)
 	json.Unmarshal(rawReply, &rpcJson)
 	if oops := rpcJson["error"]; oops != nil {
-		message := oops.(map[string]interface{})["message"].(string)
-		return nil, errors.New(message)
+		errNo := oops.(map[string]interface{})["code"].(float64)
+		errMessage := ""
+		if oops.(map[string]interface{})["message"] != nil {
+			errMessage = oops.(map[string]interface{})["message"].(string)
+		}
+		return nil, ErrorNumberToError(errMessage, errNo)
 	}
 	return rpcJson, nil
 }
