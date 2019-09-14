@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"errors"
 	"fmt"
 
 	color "github.com/fatih/color"
@@ -12,6 +13,7 @@ const (
 )
 
 var (
+	unlockErr   = errors.New("could not unlock account with passphrase, perhaps need different phrase")
 	g           = color.New(color.FgGreen).SprintFunc()
 	cookbookDoc = fmt.Sprintf(`
 Cookbook of usage, note that every subcommand recognizes a '--help' flag
@@ -37,7 +39,7 @@ hmy keys list
 		g("1. Check Balances"),
 		g("2. Check completed transaction"),
 		g("3. List local keys"),
-		g("4. Sending a transaction"),
+		g("4. Sending a transaction (add --wait-for-confirm=10 to wait 10 seconds for confirmation)"),
 		g("5. Check a completed transaction receipt"),
 	)
 )
