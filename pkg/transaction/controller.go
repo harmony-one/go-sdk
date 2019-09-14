@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"math/big"
 	"strings"
+	"time"
 
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/ethereum/go-ethereum/rlp"
@@ -25,8 +26,9 @@ type transactionForRPC struct {
 	params      map[string]interface{}
 	transaction *Transaction
 	// Hex encoded
-	signature *string
-	receipt   *string
+	signature   *string
+	receiptHash *string
+	receipt     rpc.Reply
 }
 
 type sender struct {
@@ -44,8 +46,9 @@ type Controller struct {
 }
 
 type behavior struct {
-	DryRun      bool
-	SigningImpl SignerImpl
+	DryRun               bool
+	SigningImpl          SignerImpl
+	ConfirmationWaitTime uint32
 }
 
 func NewController(
@@ -64,12 +67,13 @@ func NewController(
 			account: senderAcct,
 		},
 		transactionForRPC: transactionForRPC{
-			params:    txParams,
-			signature: nil,
-			receipt:   nil,
+			params:      txParams,
+			signature:   nil,
+			receiptHash: nil,
+			receipt:     nil,
 		},
 		chain:    chain,
-		Behavior: behavior{false, Software},
+		Behavior: behavior{false, Software, 0},
 	}
 	for _, option := range options {
 		option(ctrlr)
@@ -129,7 +133,7 @@ func (C *Controller) sendSignedTx() {
 		return
 	}
 	r, _ := reply["result"].(string)
-	C.transactionForRPC.receipt = &r
+	C.transactionForRPC.receiptHash = &r
 }
 
 func (C *Controller) setIntrinsicGas(rawInput string) {
@@ -206,7 +210,11 @@ func (C *Controller) setShardIDs(fromShard, toShard int) {
 	C.transactionForRPC.params["to-shard"] = uint32(toShard)
 }
 
-func (C *Controller) Receipt() *string {
+func (C *Controller) ReceiptHash() *string {
+	return C.transactionForRPC.receiptHash
+}
+
+func (C *Controller) Receipt() rpc.Reply {
 	return C.transactionForRPC.receipt
 }
 
@@ -225,6 +233,28 @@ func (C *Controller) hardwareSignAndPrepareTxEncodedForSending() {
 	}
 	hexSignature := hexutil.Encode(enc)
 	C.transactionForRPC.signature = &hexSignature
+}
+
+func (C *Controller) txConfirmation() {
+	if C.failure != nil {
+		return
+	}
+	if C.Behavior.ConfirmationWaitTime > 0 {
+		receipt := *C.ReceiptHash()
+		start := int(C.Behavior.ConfirmationWaitTime)
+		for {
+			if start < 0 {
+				return
+			}
+			r, _ := C.messenger.SendRPC(rpc.Method.GetTransactionReceipt, p{receipt})
+			if r["result"] != nil {
+				C.transactionForRPC.receipt = r
+				return
+			}
+			time.Sleep(time.Second * 2)
+			start = start - 2
+		}
+	}
 }
 
 func (C *Controller) ExecuteTransaction(
@@ -248,5 +278,6 @@ func (C *Controller) ExecuteTransaction(
 		C.hardwareSignAndPrepareTxEncodedForSending()
 	}
 	C.sendSignedTx()
+	C.txConfirmation()
 	return C.failure
 }

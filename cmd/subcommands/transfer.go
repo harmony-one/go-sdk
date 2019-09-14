@@ -1,7 +1,7 @@
 package cmd
 
 import (
-	"errors"
+	"encoding/json"
 	"fmt"
 
 	"github.com/harmony-one/go-sdk/pkg/address"
@@ -37,6 +37,18 @@ func handlerForShard(senderShard int, node string) *rpc.HTTPMessenger {
 	return nil
 }
 
+func opts(ctlr *transaction.Controller) {
+	if dryRun {
+		ctlr.Behavior.DryRun = true
+	}
+	if useLedgerWallet {
+		ctlr.Behavior.SigningImpl = transaction.Ledger
+	}
+	if confirmWait > 0 {
+		ctlr.Behavior.ConfirmationWaitTime = confirmWait
+	}
+}
+
 func init() {
 	cmdTransfer := &cobra.Command{
 		Use:   "transfer",
@@ -45,29 +57,21 @@ func init() {
 Create a transaction, sign it, and send off to the Harmony blockchain
 `,
 		RunE: func(cmd *cobra.Command, args []string) error {
+			from := fromAddress.String()
 			networkHandler := handlerForShard(fromShardID, node)
-			ks := store.FromAddress(fromAddress.String())
+			ks := store.FromAddress(from)
 			if ks == nil {
-				return fmt.Errorf("could not open local keystore for %s", fromAddress)
+				return fmt.Errorf("could not open local keystore for %s", from)
 			}
-			sender := address.Parse(fromAddress.String())
+			sender := address.Parse(from)
 			account, lookupErr := ks.Find(accounts.Account{Address: sender})
 			if lookupErr != nil {
-				return fmt.Errorf("could not find %s in keystore", fromAddress)
+				return fmt.Errorf("could not find %s in keystore", from)
 			}
 			if unlockError := ks.Unlock(account, unlockP); unlockError != nil {
-				return errors.New("could not unlock account with passphrase, perhaps need different phrase")
+				return unlockErr
 			}
-			opts := func(ctlr *transaction.Controller) {
-				if dryRun {
-					ctlr.Behavior.DryRun = true
-				}
-				if useLedgerWallet {
-					ctlr.Behavior.SigningImpl = transaction.Ledger
-				}
-			}
-			ctrlr :=
-				transaction.NewController(networkHandler, ks, &account, *chainName.chainID, opts)
+			ctrlr := transaction.NewController(networkHandler, ks, &account, *chainName.chainID, opts)
 			if transactionFailure := ctrlr.ExecuteTransaction(
 				toAddress.String(),
 				"",
@@ -78,7 +82,11 @@ Create a transaction, sign it, and send off to the Harmony blockchain
 				return transactionFailure
 			}
 			if !dryRun {
-				fmt.Println(fmt.Sprintf(`{"transaction-receipt":"%s"}`, *ctrlr.Receipt()))
+				fmt.Println(fmt.Sprintf(`{"transaction-receipt":"%s"}`, *ctrlr.ReceiptHash()))
+			}
+			if confirmWait > 0 && dryRun == false {
+				asJSON, _ := json.Marshal(ctrlr.Receipt())
+				fmt.Println(common.JSONPrettyFormat(string(asJSON)))
 			}
 			return nil
 		},
