@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"math/big"
-	"os"
 	"strings"
 
 	"github.com/ethereum/go-ethereum/common/hexutil"
@@ -215,18 +214,15 @@ func (C *Controller) hardwareSignAndPrepareTxEncodedForSending() {
 	if C.failure != nil {
 		return
 	}
-
 	enc, signerAddr, err := ledger.SignTx(C.transactionForRPC.transaction, C.chain.Value)
 	if err != nil {
-		fmt.Println(err)
-		os.Exit(-1)
+		C.failure = err
+		return
 	}
-
 	if strings.Compare(signerAddr, address.ToBech32(C.sender.account.Address)) != 0 {
-		fmt.Println("signature verification failed : sender address doesn't match with ledger hardware addresss")
-		os.Exit(-1)
+		C.failure = errors.New("signature verification failed : sender address doesn't match with ledger hardware addresss")
+		return
 	}
-
 	hexSignature := hexutil.Encode(enc)
 	C.transactionForRPC.signature = &hexSignature
 }
