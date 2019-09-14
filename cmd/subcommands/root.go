@@ -39,10 +39,10 @@ var (
 		Use:          "hmy",
 		Short:        "Harmony blockchain",
 		SilenceUsage: true,
-		Long: `
+		Long: fmt.Sprintf(`
 CLI interface to the Harmony blockchain
 
-See "hmy cookbook" for examples of the most common, important usages`,
+%s`, g("Invoke 'hmy cookbook' for examples of the most common, important usages")),
 		Run: func(cmd *cobra.Command, args []string) {
 			cmd.Help()
 		},
@@ -53,7 +53,6 @@ func init() {
 	RootCmd.PersistentFlags().StringVarP(&node, "node", "n", defaultNodeAddr, "<host>")
 	RootCmd.PersistentFlags().BoolVarP(&useLatestInParamsForRPC, "latest", "l", false, "Add 'latest' to RPC params")
 	RootCmd.PersistentFlags().BoolVar(&noPrettyOutput, "no-pretty", false, "disable pretty print JSON outputs")
-	RootCmd.PersistentFlags().StringVar(&keyStoreDir, "key-store-dir", "k", "what directory to use as the keystore")
 	RootCmd.AddCommand(&cobra.Command{
 		Use:   "cookbook",
 		Short: "Example usages of the most important, frequently used commands",
