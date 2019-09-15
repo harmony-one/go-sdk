@@ -6,6 +6,7 @@ require (
 	github.com/btcsuite/btcd v0.0.0-20190824003749-130ea5bddde3
 	github.com/btcsuite/btcutil v0.0.0-20190425235716-9e5f4b9a998d
 	github.com/cosmos/cosmos-sdk v0.37.0
+	github.com/deckarep/golang-set v1.7.1
 	github.com/elastic/gosigar v0.10.5 // indirect
 	github.com/ethereum/go-ethereum v1.8.27
 	github.com/fatih/color v1.7.0
