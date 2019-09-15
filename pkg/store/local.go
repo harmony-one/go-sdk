@@ -80,3 +80,8 @@ func FromAccountName(name string) *keystore.KeyStore {
 	p := path.Join(uDir, c.DefaultConfigDirName, c.DefaultConfigAccountAliasesDirName, name)
 	return common.KeyStoreForPath(p)
 }
+
+func DefaultLocation() string {
+	uDir, _ := homedir.Dir()
+	return path.Join(uDir, c.DefaultConfigDirName, c.DefaultConfigAccountAliasesDirName)
+}
