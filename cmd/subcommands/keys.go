@@ -23,8 +23,10 @@ const (
 )
 
 var (
+	quietImport            bool
 	recoverFromMnemonic    bool
 	userProvidesPassphrase bool
+	importPassphrase       string
 )
 
 func doubleTakePhrase() string {
@@ -76,18 +78,27 @@ func keysSub() []*cobra.Command {
 	add.Flags().BoolVar(&recoverFromMnemonic, "recover", false, "create keys from a mnemonic")
 	ppPrompt := fmt.Sprintf("provide own phrase over default: `%s`", c.DefaultPassphrase)
 	add.Flags().BoolVar(&userProvidesPassphrase, "passphrase", false, ppPrompt)
-	return []*cobra.Command{add, {
-		Use:   "mnemonic",
-		Short: "Compute the bip39 mnemonic for some input entropy",
-		Run: func(cmd *cobra.Command, args []string) {
-			fmt.Println(mnemonic.Generate())
-		},
-	}, {
+	cmdImport := &cobra.Command{
 		Use:   "import <ABSOLUTE_PATH_KEYSTORE>",
 		Args:  cobra.ExactArgs(1),
 		Short: "Import an existing keystore key",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return account.ImportKeyStore(args[0])
+			name, err := account.ImportKeyStore(args[0], importPassphrase)
+			if !quietImport {
+				fmt.Printf("Imported keystore given account alias of `%s`\n", name)
+			}
+			return err
+		},
+	}
+	importP := `passphrase of key being imported, default assumes ""`
+	cmdImport.Flags().StringVar(&importPassphrase, "passphrase", "", importP)
+	cmdImport.Flags().BoolVar(&quietImport, "quiet", false, "do not print out imported account name")
+
+	return []*cobra.Command{add, cmdImport, {
+		Use:   "mnemonic",
+		Short: "Compute the bip39 mnemonic for some input entropy",
+		Run: func(cmd *cobra.Command, args []string) {
+			fmt.Println(mnemonic.Generate())
 		},
 	}, {
 		Use:   "list",

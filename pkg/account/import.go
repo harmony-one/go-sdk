@@ -16,13 +16,13 @@ var (
 	NotAbsPath = errors.New("keypath is not absolute path")
 )
 
-func ImportKeyStore(keypath string) error {
+func ImportKeyStore(keypath, passphrase string) (string, error) {
 	if !path.IsAbs(keypath) {
-		return NotAbsPath
+		return "", NotAbsPath
 	}
 	keyJSON, readError := ioutil.ReadFile(keypath)
 	if readError != nil {
-		return readError
+		return "", readError
 	}
 	words := strings.Split(mnemonic.Generate(), " ")
 	existingAccounts := mapset.NewSet()
@@ -46,11 +46,12 @@ func ImportKeyStore(keypath string) error {
 			break
 		}
 	}
-	ks := store.FromAccountName(acct + "-imported")
-	_, err := ks.Import(keyJSON, "", common.DefaultPassphrase)
+	name := acct + "-imported"
+	ks := store.FromAccountName(name)
+	_, err := ks.Import(keyJSON, passphrase, common.DefaultPassphrase)
 	if err != nil {
-		return errors.Wrap(err, "could not import")
+		return "", errors.Wrap(err, "could not import")
 	}
 
-	return nil
+	return name, nil
 }
