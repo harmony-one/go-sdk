@@ -83,6 +83,13 @@ func keysSub() []*cobra.Command {
 			fmt.Println(mnemonic.Generate())
 		},
 	}, {
+		Use:   "import <ABSOLUTE_PATH_KEYSTORE>",
+		Args:  cobra.ExactArgs(1),
+		Short: "Import an existing keystore key",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			return account.ImportKeyStore(args[0])
+		},
+	}, {
 		Use:   "list",
 		Short: "List all the local accounts",
 		Run: func(cmd *cobra.Command, args []string) {
@@ -91,6 +98,12 @@ func keysSub() []*cobra.Command {
 			if useLedgerWallet {
 				ledger.ProcessAddressCommand()
 			}
+		},
+	}, {
+		Use:   "location",
+		Short: "List all the local accounts",
+		Run: func(cmd *cobra.Command, args []string) {
+			fmt.Println(store.DefaultLocation())
 		},
 	},
 	}
