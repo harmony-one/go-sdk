@@ -21,8 +21,12 @@ var Chain = chainIDList{
 }
 
 var (
-	unknownChain = errors.New("unknown chain id provided")
+	UnknownChain = errors.New("unknown chain id provided")
 )
+
+func AllChainIDs() []string {
+	return []string{"mainnet", "testnet"}
+}
 
 func StringToChainID(name string) (*ChainID, error) {
 	switch name {
@@ -31,6 +35,6 @@ func StringToChainID(name string) (*ChainID, error) {
 	case "testnet":
 		return &Chain.TestNet, nil
 	default:
-		return nil, unknownChain
+		return nil, UnknownChain
 	}
 }

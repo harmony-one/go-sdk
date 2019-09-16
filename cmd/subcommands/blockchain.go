@@ -1,6 +1,9 @@
 package cmd
 
 import (
+	"fmt"
+
+	"github.com/harmony-one/go-sdk/pkg/common"
 	"github.com/harmony-one/go-sdk/pkg/rpc"
 	"github.com/spf13/cobra"
 )
@@ -10,7 +13,7 @@ func init() {
 		Use:   "blockchain",
 		Short: "Interact with the Harmony.one Blockchain",
 		Long: `
-Query Harmony's blockchain for high level metrics, queries
+Query Harmony's blockchain for completed transaction, historic records
 `,
 		Run: func(cmd *cobra.Command, args []string) {
 			cmd.Help()
@@ -23,6 +26,12 @@ Query Harmony's blockchain for high level metrics, queries
 		Args:  cobra.ExactArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
 			request(rpc.Method.GetBlockByNumber, []interface{}{args[0], true})
+		},
+	}, {
+		Use:   "known-chains",
+		Short: "Print out the known chain-ids",
+		Run: func(cmd *cobra.Command, args []string) {
+			fmt.Println(common.AllChainIDs())
 		},
 	}, {
 		Use:   "protocol-version",
