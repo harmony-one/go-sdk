@@ -62,16 +62,6 @@ High level information about transaction, like blockNumber, blockHash
 		Run: func(cmd *cobra.Command, args []string) {
 			request(rpc.Method.GetTransactionReceipt, []interface{}{args[0]})
 		},
-	}, {
-		Use:   "transaction-count",
-		Short: "Get a transaction's count",
-		Args:  cobra.ExactArgs(1),
-		Long: `
-Get count of a transaction
-`,
-		Run: func(cmd *cobra.Command, args []string) {
-			request(rpc.Method.GetTransactionByHash, []interface{}{args[0]})
-		},
 	},
 	}
 
