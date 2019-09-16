@@ -112,7 +112,7 @@ func keysSub() []*cobra.Command {
 		},
 	}, {
 		Use:   "location",
-		Short: "List all the local accounts",
+		Short: "Show where `hmy` keeps accounts & their keys",
 		Run: func(cmd *cobra.Command, args []string) {
 			fmt.Println(store.DefaultLocation())
 		},
