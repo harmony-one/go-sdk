@@ -104,11 +104,11 @@ func keysSub() []*cobra.Command {
 		Use:   "list",
 		Short: "List all the local accounts",
 		Run: func(cmd *cobra.Command, args []string) {
-			store.DescribeLocalAccounts()
-
 			if useLedgerWallet {
 				ledger.ProcessAddressCommand()
+				return
 			}
+			store.DescribeLocalAccounts()
 		},
 	}, {
 		Use:   "location",
