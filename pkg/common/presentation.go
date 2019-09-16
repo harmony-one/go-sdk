@@ -18,6 +18,18 @@ func JSONPrettyFormat(in string) string {
 	return out.String()
 }
 
+// returns "{}" on failure case
+func ToJSONUnsafe(payload interface{}, pretty bool) string {
+	j, err := json.Marshal(payload)
+	if err != nil {
+		return "{}"
+	}
+	if pretty {
+		return JSONPrettyFormat(string(j))
+	}
+	return string(j)
+}
+
 func ConvertBalanceIntoReadableFormat(balance *big.Int) string {
 	balance = balance.Div(balance, big.NewInt(denominations.Nano))
 	strBalance := fmt.Sprintf("%d", balance.Uint64())

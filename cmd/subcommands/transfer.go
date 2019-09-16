@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"encoding/json"
 	"fmt"
 
 	"github.com/harmony-one/go-sdk/pkg/address"
@@ -81,12 +80,13 @@ Create a transaction, sign it, and send off to the Harmony blockchain
 			); transactionFailure != nil {
 				return transactionFailure
 			}
-			if !dryRun {
+			switch {
+			case !dryRun && confirmWait == 0:
 				fmt.Println(fmt.Sprintf(`{"transaction-receipt":"%s"}`, *ctrlr.ReceiptHash()))
-			}
-			if confirmWait > 0 && dryRun == false {
-				asJSON, _ := json.Marshal(ctrlr.Receipt())
-				fmt.Println(common.JSONPrettyFormat(string(asJSON)))
+			case !dryRun && confirmWait > 0:
+				fmt.Println(common.ToJSONUnsafe(ctrlr.Receipt(), !noPrettyOutput))
+			case dryRun:
+				fmt.Println(ctrlr.TransactionToJSON(!noPrettyOutput))
 			}
 			return nil
 		},

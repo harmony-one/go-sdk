@@ -31,7 +31,7 @@ Query Harmony's blockchain for completed transaction, historic records
 		Use:   "known-chains",
 		Short: "Print out the known chain-ids",
 		Run: func(cmd *cobra.Command, args []string) {
-			fmt.Println(common.AllChainIDs())
+			fmt.Println(common.ToJSONUnsafe(common.AllChainIDs(), !noPrettyOutput))
 		},
 	}, {
 		Use:   "protocol-version",

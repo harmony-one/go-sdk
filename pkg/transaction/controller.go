@@ -188,6 +188,14 @@ func (C *Controller) setNewTransactionWithDataAndGas(i string, amount, gasPrice 
 	C.transactionForRPC.transaction = tx
 }
 
+func (C *Controller) TransactionToJSON(pretty bool) string {
+	r, _ := C.transactionForRPC.transaction.MarshalJSON()
+	if pretty {
+		return common.JSONPrettyFormat(string(r))
+	}
+	return string(r)
+}
+
 func (C *Controller) signAndPrepareTxEncodedForSending() {
 	if C.failure != nil {
 		return
@@ -197,6 +205,7 @@ func (C *Controller) signAndPrepareTxEncodedForSending() {
 	if err != nil {
 		fmt.Println(err)
 	}
+	C.transactionForRPC.transaction = signedTransaction
 	enc, _ := rlp.EncodeToBytes(signedTransaction)
 	hexSignature := hexutil.Encode(enc)
 	C.transactionForRPC.signature = &hexSignature
