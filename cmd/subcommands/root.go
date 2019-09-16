@@ -14,13 +14,13 @@ import (
 )
 
 var (
-	useLedgerWallet         bool
-	useLatestInParamsForRPC bool
-	noPrettyOutput          bool
-	node                    string
-	keyStoreDir             string
-	request                 = func(method rpc.RPCMethod, params []interface{}) {
-		if useLatestInParamsForRPC {
+	useLedgerWallet bool
+	noLatest        bool
+	noPrettyOutput  bool
+	node            string
+	keyStoreDir     string
+	request         = func(method rpc.RPCMethod, params []interface{}) {
+		if !noLatest {
 			params = append(params, "latest")
 		}
 		success, failure := rpc.Request(method, node, params)
@@ -51,8 +51,8 @@ CLI interface to the Harmony blockchain
 
 func init() {
 	RootCmd.PersistentFlags().StringVarP(&node, "node", "n", defaultNodeAddr, "<host>")
-	RootCmd.PersistentFlags().BoolVarP(&useLatestInParamsForRPC, "latest", "l", false, "Add 'latest' to RPC params")
-	RootCmd.PersistentFlags().BoolVar(&noPrettyOutput, "no-pretty", false, "disable pretty print JSON outputs")
+	RootCmd.PersistentFlags().BoolVar(&noLatest, "no-latest", false, "Do not add 'latest' to RPC params")
+	RootCmd.PersistentFlags().BoolVar(&noPrettyOutput, "no-pretty", false, "Disable pretty print JSON outputs")
 	RootCmd.AddCommand(&cobra.Command{
 		Use:   "cookbook",
 		Short: "Example usages of the most important, frequently used commands",

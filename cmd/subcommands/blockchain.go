@@ -64,15 +64,6 @@ High level information about transaction, like blockNumber, blockHash
 		},
 	},
 	}
-
-	cmdBlockchain.Flags().StringVarP(
-		&node,
-		"node",
-		"",
-		defaultNodeAddr,
-		"<host>:<port>",
-	)
-	cmdBlockchain.PersistentFlags().BoolVarP(&useLatestInParamsForRPC, "latest", "l", false, "Use latest in query")
 	cmdBlockchain.AddCommand(subCommands[:]...)
 	RootCmd.AddCommand(cmdBlockchain)
 }
