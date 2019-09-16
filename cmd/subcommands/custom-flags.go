@@ -24,7 +24,7 @@ func (oneAddress *oneAddress) Set(s string) error {
 }
 
 func (oneAddress oneAddress) Type() string {
-	return ""
+	return "string"
 }
 
 type chainIDWrapper struct {
@@ -45,5 +45,5 @@ func (chainIDWrapper *chainIDWrapper) Set(s string) error {
 }
 
 func (chainIDWrapper chainIDWrapper) Type() string {
-	return ""
+	return "string"
 }

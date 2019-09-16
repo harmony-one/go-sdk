@@ -27,4 +27,9 @@ func init() {
 	if _, enabled := os.LookupEnv("HMY_TX_DEBUG"); enabled != false {
 		DebugTransaction = true
 	}
+	if _, enabled := os.LookupEnv("HMY_ALL_DEBUG"); enabled != false {
+		DebugRPC = true
+		DebugTransaction = true
+	}
+
 }
