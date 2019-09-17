@@ -1,54 +1,59 @@
 package rpc
 
 import (
-	"bytes"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
-	"net/http"
-	"os"
 	"strconv"
+
+	"github.com/valyala/fasthttp"
 
 	"github.com/harmony-one/go-sdk/pkg/common"
 )
 
 var (
 	queryID = 0
+	post    = []byte("POST")
 )
 
-func baseRequest(method RPCMethod, node string, params interface{}) []byte {
+func baseRequest(method RPCMethod, node string, params interface{}) ([]byte, error) {
 	requestBody, _ := json.Marshal(map[string]interface{}{
 		"jsonrpc": common.JSONRPCVersion,
 		"id":      strconv.Itoa(queryID),
 		"method":  method,
 		"params":  params,
 	})
-	resp, err := http.Post(node, "application/json", bytes.NewBuffer(requestBody))
+	const contentType = "application/json"
+	req := fasthttp.AcquireRequest()
+	req.SetBody(requestBody)
+	req.Header.SetMethodBytes(post)
+	req.Header.SetContentType(contentType)
+	req.SetRequestURIBytes([]byte(node))
+	res := fasthttp.AcquireResponse()
+	if err := fasthttp.Do(req, res); err != nil {
+		return nil, err
+	}
+	fasthttp.ReleaseRequest(req)
+	body := res.Body()
+	result := make([]byte, len(body))
+	copy(result, body)
+	fasthttp.ReleaseResponse(res) // Only when you are done with body!
 	if common.DebugRPC {
 		fmt.Printf("URL: %s, Request Body: %s\n\n", node, string(requestBody))
 	}
-	if err != nil {
-		fmt.Println(err)
-		os.Exit(-1)
-	}
-	defer resp.Body.Close()
-	// TODO Need to read the body, fail with the error values that come from ErrorCode list
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		fmt.Println(err)
-		os.Exit(-1)
-	}
-	queryID++
 	if common.DebugRPC {
 		fmt.Printf("URL: %s, Response Body: %s\n\n", node, string(body))
 	}
-	return body
+	queryID++
+	return result, nil
 }
 
 // TODO add the error code usage here, change return signature, make CLI be consumer that checks error
 func Request(method RPCMethod, node string, params interface{}) (map[string]interface{}, error) {
 	rpcJson := make(map[string]interface{})
-	rawReply := baseRequest(method, node, params)
+	rawReply, err := baseRequest(method, node, params)
+	if err != nil {
+		return nil, err
+	}
 	json.Unmarshal(rawReply, &rpcJson)
 	if oops := rpcJson["error"]; oops != nil {
 		errNo := oops.(map[string]interface{})["code"].(float64)
@@ -61,6 +66,6 @@ func Request(method RPCMethod, node string, params interface{}) (map[string]inte
 	return rpcJson, nil
 }
 
-func RawRequest(method RPCMethod, node string, params interface{}) []byte {
+func RawRequest(method RPCMethod, node string, params interface{}) ([]byte, error) {
 	return baseRequest(method, node, params)
 }
