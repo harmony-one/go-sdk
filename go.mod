@@ -18,5 +18,6 @@ require (
 	github.com/steakknife/bloomfilter v0.0.0-20180922174646-6819c0d2a570 // indirect
 	github.com/steakknife/hamming v0.0.0-20180906055917-c99c65617cd3 // indirect
 	github.com/tyler-smith/go-bip39 v1.0.2
+	github.com/valyala/fasthttp v1.2.0
 	golang.org/x/crypto v0.0.0-20190909091759-094676da4a83
 )
