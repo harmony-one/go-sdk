@@ -36,7 +36,12 @@ prepare-dirs:
 	rsync -a $(shell go env GOPATH)/src/github.com/harmony-one/mcl/lib/* ./dist/lib/
 	rsync -a /usr/local/opt/openssl/lib/* ./dist/lib/
 
-.PHONY:clean run-tests
+upload_path := 's3://pub.harmony.one/release/darwin-x86_64/mainnet/hmy'
+# Notice assumes you have correct uploading credentials
+upload-binary:all
+	aws --profile upload s3 cp ./hmy ${upload_path}
+
+.PHONY:clean run-tests upload-binary
 
 clean:
 	@rm -f $(cli)
