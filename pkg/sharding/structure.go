@@ -12,12 +12,15 @@ type RPCRoutes struct {
 	WS      string `json:"ws"`
 }
 
-func Structure(node string) []RPCRoutes {
+func Structure(node string) ([]RPCRoutes, error) {
 	type r struct {
 		Result []RPCRoutes `json:"result"`
 	}
-	payload := rpc.RawRequest(rpc.Method.GetShardingStructure, node, []interface{}{})
+	p, e := rpc.RawRequest(rpc.Method.GetShardingStructure, node, []interface{}{})
+	if e != nil {
+		return nil, e
+	}
 	result := r{}
-	json.Unmarshal(payload, &result)
-	return result.Result
+	json.Unmarshal(p, &result)
+	return result.Result, nil
 }
