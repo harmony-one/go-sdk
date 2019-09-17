@@ -50,6 +50,7 @@ Query Harmony's blockchain for high level metrics, queries
 Inputs of a transaction and r, s, v value of transaction
 `,
 		Run: func(cmd *cobra.Command, args []string) {
+			noLatest = true
 			request(rpc.Method.GetTransactionByHash, []interface{}{args[0]})
 		},
 	}, {
@@ -60,6 +61,7 @@ Inputs of a transaction and r, s, v value of transaction
 High level information about transaction, like blockNumber, blockHash
 `,
 		Run: func(cmd *cobra.Command, args []string) {
+			noLatest = true
 			request(rpc.Method.GetTransactionReceipt, []interface{}{args[0]})
 		},
 	},

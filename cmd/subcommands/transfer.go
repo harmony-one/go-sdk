@@ -27,13 +27,17 @@ var (
 	gasPrice    float64
 )
 
-func handlerForShard(senderShard int, node string) *rpc.HTTPMessenger {
-	for _, shard := range sharding.Structure(node) {
+func handlerForShard(senderShard int, node string) (*rpc.HTTPMessenger, error) {
+	s, err := sharding.Structure(node)
+	if err != nil {
+		return nil, err
+	}
+	for _, shard := range s {
 		if shard.ShardID == senderShard {
-			return rpc.NewHTTPHandler(shard.HTTP)
+			return rpc.NewHTTPHandler(shard.HTTP), nil
 		}
 	}
-	return nil
+	return nil, nil
 }
 
 func opts(ctlr *transaction.Controller) {
@@ -57,7 +61,10 @@ Create a transaction, sign it, and send off to the Harmony blockchain
 `,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			from := fromAddress.String()
-			networkHandler := handlerForShard(fromShardID, node)
+			networkHandler, err := handlerForShard(fromShardID, node)
+			if err != nil {
+				return err
+			}
 			ks := store.FromAddress(from)
 			if ks == nil {
 				return fmt.Errorf("could not open local keystore for %s", from)

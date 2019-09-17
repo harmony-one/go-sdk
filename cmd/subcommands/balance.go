@@ -11,11 +11,14 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func checkAllShards(node, addr string, noPretty bool) string {
+func checkAllShards(node, addr string, noPretty bool) (string, error) {
 	var out bytes.Buffer
 	out.WriteString("[")
 	params := []interface{}{addr, "latest"}
-	s := sharding.Structure(node)
+	s, err := sharding.Structure(node)
+	if err != nil {
+		return "", err
+	}
 	for i, shard := range s {
 		balanceRPCReply, _ := rpc.Request(rpc.Method.GetBalance, shard.HTTP, params)
 		balance, _ := balanceRPCReply["result"].(string)
@@ -30,9 +33,9 @@ func checkAllShards(node, addr string, noPretty bool) string {
 	}
 	out.WriteString("]")
 	if noPretty {
-		return out.String()
+		return out.String(), nil
 	}
-	return common.JSONPrettyFormat(out.String())
+	return common.JSONPrettyFormat(out.String()), nil
 }
 
 func init() {
@@ -41,8 +44,13 @@ func init() {
 		Short: "Check account balance",
 		Long:  `Query for the latest account balance given a Harmony Address`,
 		Args:  cobra.ExactArgs(1),
-		Run: func(cmd *cobra.Command, args []string) {
-			fmt.Println(checkAllShards(node, args[0], noPrettyOutput))
+		RunE: func(cmd *cobra.Command, args []string) error {
+			r, err := checkAllShards(node, args[0], noPrettyOutput)
+			if err != nil {
+				return err
+			}
+			fmt.Println(r)
+			return nil
 		},
 	}
 
