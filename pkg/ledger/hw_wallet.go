@@ -55,7 +55,8 @@ func ProcessAddressCommand() {
 		os.Exit(-1)
 	}
 
-	fmt.Printf("Ledger Nano\t %s\n", oneAddr)
+	fmt.Printf("%-24s\t\t%23s\n", "NAME", "ADDRESS")
+	fmt.Printf("%-48s\t%s\n", "Ledger Nano S",  oneAddr)
 }
 
 // SignTx signs the given transaction with the requested account.
@@ -93,7 +94,7 @@ func SignTx(tx *types.Transaction, chainID *big.Int) ([]byte, string, error) {
 	n := getLedger()
 	sig, err := n.SignTxn(rlpEncodedTx)
 	if err != nil {
-		log.Println("Couldn't sign transaction, error: %s", err)
+		log.Println("Couldn't sign transaction, error:", err)
 		return nil, "", err
 	}
 
@@ -104,7 +105,7 @@ func SignTx(tx *types.Transaction, chainID *big.Int) ([]byte, string, error) {
 
 	pubkey, err := crypto.Ecrecover(hashBytes[:], sig[:])
 	if err != nil {
-		log.Println("Ecrecover failed : %s", err)
+		log.Println("Ecrecover failed :", err)
 		return nil, "", err
 	}
 
