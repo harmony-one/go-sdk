@@ -181,10 +181,6 @@ func (C *Controller) setNewTransactionWithDataAndGas(i string, amount, gasPrice 
 		gPrice,
 		[]byte(i),
 	)
-	if common.DebugTransaction {
-		r, _ := tx.MarshalJSON()
-		fmt.Println(string(r))
-	}
 	C.transactionForRPC.transaction = tx
 }
 
@@ -203,12 +199,17 @@ func (C *Controller) signAndPrepareTxEncodedForSending() {
 	signedTransaction, err :=
 		C.sender.ks.SignTx(*C.sender.account, C.transactionForRPC.transaction, C.chain.Value)
 	if err != nil {
-		fmt.Println(err)
+		C.failure = err
+		return
 	}
 	C.transactionForRPC.transaction = signedTransaction
 	enc, _ := rlp.EncodeToBytes(signedTransaction)
 	hexSignature := hexutil.Encode(enc)
 	C.transactionForRPC.signature = &hexSignature
+	if common.DebugTransaction {
+		r, _ := signedTransaction.MarshalJSON()
+		fmt.Println(string(r))
+	}
 }
 
 func (C *Controller) setShardIDs(fromShard, toShard int) {
