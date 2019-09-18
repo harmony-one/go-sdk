@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"errors"
 	"fmt"
 
 	color "github.com/fatih/color"
@@ -13,7 +12,6 @@ const (
 )
 
 var (
-	unlockErr   = errors.New("could not unlock account with passphrase, perhaps need different phrase")
 	g           = color.New(color.FgGreen).SprintFunc()
 	cookbookDoc = fmt.Sprintf(`
 Cookbook of usage, note that every subcommand recognizes a '--help' flag

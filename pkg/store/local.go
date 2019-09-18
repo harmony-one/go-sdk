@@ -9,7 +9,9 @@ import (
 	"github.com/harmony-one/go-sdk/pkg/address"
 	"github.com/harmony-one/go-sdk/pkg/common"
 	c "github.com/harmony-one/go-sdk/pkg/common"
+	"github.com/harmony-one/harmony/accounts"
 	"github.com/harmony-one/harmony/accounts/keystore"
+	"github.com/pkg/errors"
 
 	homedir "github.com/mitchellh/go-homedir"
 )
@@ -39,7 +41,8 @@ func LocalAccounts() []string {
 }
 
 var (
-	describe = fmt.Sprintf("%-24s\t\t%23s\n", "NAME", "ADDRESS")
+	describe              = fmt.Sprintf("%-24s\t\t%23s\n", "NAME", "ADDRESS")
+	NoUnlockBadPassphrase = errors.New("could not unlock account with passphrase, perhaps need different phrase")
 )
 
 func DescribeLocalAccounts() {
@@ -84,4 +87,20 @@ func FromAccountName(name string) *keystore.KeyStore {
 func DefaultLocation() string {
 	uDir, _ := homedir.Dir()
 	return path.Join(uDir, c.DefaultConfigDirName, c.DefaultConfigAccountAliasesDirName)
+}
+
+func UnlockedKeystore(from, unlockP string) (*keystore.KeyStore, *accounts.Account, error) {
+	sender := address.Parse(from)
+	ks := FromAddress(from)
+	if ks == nil {
+		return nil, nil, fmt.Errorf("could not open local keystore for %s", from)
+	}
+	account, lookupErr := ks.Find(accounts.Account{Address: sender})
+	if lookupErr != nil {
+		return nil, nil, fmt.Errorf("could not find %s in keystore", from)
+	}
+	if unlockError := ks.Unlock(account, unlockP); unlockError != nil {
+		return nil, nil, errors.Wrap(NoUnlockBadPassphrase, unlockError.Error())
+	}
+	return ks, &account, nil
 }

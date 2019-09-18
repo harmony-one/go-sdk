@@ -65,27 +65,16 @@ Create a transaction, sign it, and send off to the Harmony blockchain
 			if err != nil {
 				return err
 			}
-
-			sender := address.Parse(from)
 			var ctrlr *transaction.Controller
 			if useLedgerWallet {
-				account := accounts.Account{Address: sender}
+				account := accounts.Account{Address: address.Parse(from)}
 				ctrlr = transaction.NewController(networkHandler, nil, &account, *chainName.chainID, opts)
-
 			} else {
-				ks := store.FromAddress(from)
-				if ks == nil {
-					return fmt.Errorf("could not open local keystore for %s", from)
+				ks, acct, err := store.UnlockedKeystore(from, unlockP)
+				if err != nil {
+					return err
 				}
-
-				account, lookupErr := ks.Find(accounts.Account{Address: sender})
-				if lookupErr != nil {
-					return fmt.Errorf("could not find %s in keystore", from)
-				}
-				if unlockError := ks.Unlock(account, unlockP); unlockError != nil {
-					return unlockErr
-				}
-				ctrlr = transaction.NewController(networkHandler, ks, &account, *chainName.chainID, opts)
+				ctrlr = transaction.NewController(networkHandler, ks, acct, *chainName.chainID, opts)
 			}
 
 			if transactionFailure := ctrlr.ExecuteTransaction(
