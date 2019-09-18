@@ -2,30 +2,31 @@
 
 source ../harmony/scripts/setup_bls_build_flags.sh
 
-# Decent commit is: b4c9a3264a3639367c9baab168aa8e5c7ab2715f
-# from harmony repo (needed to check balances, etc)
-s='one1tp7xdd9ewwnmyvws96au0e7e7mz6f8hjqr3g3p'
-r='one1spshr72utf6rwxseaz339j09ed8p6f8ke370zj'
+function test_transfer() {
 
-# --node http://s0.b.hmny.io:9500 \
+    local sd='one1yc06ghr2p8xnl2380kpfayweguuhxdtupkhqzw'
+    local rcr='one1q6gkzcap0uruuu8r6sldxuu47pd4ww9w9t7tg6'
+    local lcl='http://localhost:9500'
+    local main='https://api.s0.t.hmny.io/'
+    local beta='https://api.s0.b.hmny.io/'
+    local mainDirect='http://18.237.68.133:9500'
 
-function check_balances() {
-    HMY_RPC_DEBUG=true HMY_TX_DEBUG=true ./hmy_cli account ${s}
-    HMY_RPC_DEBUG=true HMY_TX_DEBUG=true ./hmy_cli account ${r}
+    printf 'Before transfer----\nSender:%s Balance\n' ${sd}
+    ./hmy --node=${main} balance ${sd}
+    printf 'Receiver %s Balance:\n' ${rcr}
+    ./hmy --node=${main} balance ${rcr}
+
+    HMY_RPC_DEBUG=true HMY_TX_DEBUG=true ./hmy --node=${main} \
+    	  transfer --from ${sd} --to ${rcr} \
+    	  --from-shard 0 --to-shard 0 --amount 1 --passphrase=''
+
+    sleep 12
+
+    printf 'After transfer----\nReceiver:%s Balance\n' ${rcr}
+    ./hmy --node=${main} balance ${rcr}
+    printf 'Sender %s Balance:\n' ${sd}
+    ./hmy --node=${main} balance ${sd}
+
 }
 
-printf '======Balances PRIOR to transfer======\n'
-check_balances
-
-HMY_RPC_DEBUG=true HMY_TX_DEBUG=true ./hmy_cli transfer \
-	  --from-address=${s} \
-	  --to-address=${r} \
-	  --from-shard=0 \
-	  --to-shard=2 \
-	  --amount=10 \
-	  --pretty
-
-sleep 5
-
-printf '======Balances AFTER transfer======\n'
-check_balances
+test_transfer
