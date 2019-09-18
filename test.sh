@@ -17,7 +17,7 @@ function test_transfer() {
     ./hmy --node=${main} balance ${rcr}
 
     HMY_RPC_DEBUG=true HMY_TX_DEBUG=true ./hmy --node=${main} \
-    	  transfer --from ${sd} --to ${rcr} \
+    	  transfer --from ${sd} --to ${rcr} --chain-id='mainnet' \
     	  --from-shard 0 --to-shard 0 --amount 1 --passphrase=''
 
     sleep 12
