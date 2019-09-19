@@ -15,7 +15,7 @@ var (
 	post    = []byte("POST")
 )
 
-func baseRequest(method RPCMethod, node string, params interface{}) ([]byte, error) {
+func baseRequest(method string, node string, params interface{}) ([]byte, error) {
 	requestBody, _ := json.Marshal(map[string]interface{}{
 		"jsonrpc": common.JSONRPCVersion,
 		"id":      strconv.Itoa(queryID),
@@ -36,36 +36,37 @@ func baseRequest(method RPCMethod, node string, params interface{}) ([]byte, err
 	body := res.Body()
 	result := make([]byte, len(body))
 	copy(result, body)
-	fasthttp.ReleaseResponse(res) // Only when you are done with body!
+	fasthttp.ReleaseResponse(res)
 	if common.DebugRPC {
 		fmt.Printf("URL: %s, Request Body: %s\n\n", node, string(requestBody))
-	}
-	if common.DebugRPC {
 		fmt.Printf("URL: %s, Response Body: %s\n\n", node, string(body))
 	}
 	queryID++
 	return result, nil
 }
 
-// TODO add the error code usage here, change return signature, make CLI be consumer that checks error
-func Request(method RPCMethod, node string, params interface{}) (map[string]interface{}, error) {
-	rpcJson := make(map[string]interface{})
+// TODO Check if Method known, return error when not known, good intern task
+
+// Request processes
+func Request(method string, node string, params interface{}) (Reply, error) {
+	rpcJSON := make(map[string]interface{})
 	rawReply, err := baseRequest(method, node, params)
 	if err != nil {
 		return nil, err
 	}
-	json.Unmarshal(rawReply, &rpcJson)
-	if oops := rpcJson["error"]; oops != nil {
+	json.Unmarshal(rawReply, &rpcJSON)
+	if oops := rpcJSON["error"]; oops != nil {
 		errNo := oops.(map[string]interface{})["code"].(float64)
 		errMessage := ""
 		if oops.(map[string]interface{})["message"] != nil {
 			errMessage = oops.(map[string]interface{})["message"].(string)
 		}
-		return nil, ErrorNumberToError(errMessage, errNo)
+		return nil, ErrorCodeToError(errMessage, errNo)
 	}
-	return rpcJson, nil
+	return rpcJSON, nil
 }
 
-func RawRequest(method RPCMethod, node string, params interface{}) ([]byte, error) {
+// RawRequest is to sidestep the lifting done by Request
+func RawRequest(method string, node string, params interface{}) ([]byte, error) {
 	return baseRequest(method, node, params)
 }

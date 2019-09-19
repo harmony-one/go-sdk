@@ -3,14 +3,14 @@ package rpc
 type Reply map[string]interface{}
 
 type T interface {
-	SendRPC(RPCMethod, []interface{}) (Reply, error)
+	SendRPC(string, []interface{}) (Reply, error)
 }
 
 type HTTPMessenger struct {
 	node string
 }
 
-func (M *HTTPMessenger) SendRPC(meth RPCMethod, params []interface{}) (Reply, error) {
+func (M *HTTPMessenger) SendRPC(meth string, params []interface{}) (Reply, error) {
 	return Request(meth, M.node, params)
 }
 
