@@ -7,6 +7,8 @@ flags := -gcflags="all=-N -l -c 2"
 ldflags := -X main.version=v${version} -X main.commit=${commit}
 ldflags += -X main.builtAt=${built_at} -X main.builtBy=${built_by}
 cli := ./dist/hmy
+upload-path-darwin := 's3://pub.harmony.one/release/darwin-x86_64/mainnet/hmy'
+upload-path-linux := 's3://pub.harmony.one/release/linux-x86_64/mainnet/hmy'
 
 env := GO111MODULE=on
 
@@ -36,12 +38,14 @@ prepare-dirs:
 	rsync -a $(shell go env GOPATH)/src/github.com/harmony-one/mcl/lib/* ./dist/lib/
 	rsync -a /usr/local/opt/openssl/lib/* ./dist/lib/
 
-upload_path := 's3://pub.harmony.one/release/darwin-x86_64/mainnet/hmy'
 # Notice assumes you have correct uploading credentials
-upload-binary:all
-	aws --profile upload s3 cp ./hmy ${upload_path}
+upload-darwin:all
+	aws --profile upload s3 cp ./hmy ${upload-path-darwin}
 
-.PHONY:clean run-tests upload-binary
+upload-linux:all
+	aws --profile upload s3 cp ./hmy ${upload-path-linux}
+
+.PHONY:clean run-tests upload-darwin upload-linux
 
 clean:
 	@rm -f $(cli)
