@@ -48,7 +48,7 @@ func keysSub() []*cobra.Command {
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if store.DoesNamedAccountExist(args[0]) {
-				return fmt.Errorf("Account %s already exists\n", args[0])
+				return fmt.Errorf("account %s already exists", args[0])
 			}
 			passphrase := c.DefaultPassphrase
 			if userProvidesPassphrase {

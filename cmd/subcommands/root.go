@@ -19,7 +19,7 @@ var (
 	noPrettyOutput  bool
 	node            string
 	keyStoreDir     string
-	request         = func(method rpc.RPCMethod, params []interface{}) {
+	request         = func(method string, params []interface{}) {
 		if !noLatest {
 			params = append(params, "latest")
 		}
@@ -35,6 +35,7 @@ var (
 		}
 		fmt.Print(common.JSONPrettyFormat(string(asJSON)))
 	}
+	// RootCmd is single entry point of the CLI
 	RootCmd = &cobra.Command{
 		Use:          "hmy",
 		Short:        "Harmony blockchain",
@@ -73,6 +74,7 @@ func init() {
 	})
 }
 
+// Execute kicks off the hmy CLI
 func Execute() {
 	if err := RootCmd.Execute(); err != nil {
 		os.Exit(1)
