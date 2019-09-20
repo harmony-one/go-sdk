@@ -32,6 +32,10 @@ func baseRequest(method string, node string, params interface{}) ([]byte, error)
 	if err := fasthttp.Do(req, res); err != nil {
 		return nil, err
 	}
+	c := res.StatusCode()
+	if c != 200 {
+		return nil, fmt.Errorf("http status code not 200, received: %d", c)
+	}
 	fasthttp.ReleaseRequest(req)
 	body := res.Body()
 	result := make([]byte, len(body))

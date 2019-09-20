@@ -36,6 +36,7 @@ type sender struct {
 	account *accounts.Account
 }
 
+// Controller drives the transaction signing process
 type Controller struct {
 	failure           error
 	messenger         rpc.T
@@ -51,6 +52,7 @@ type behavior struct {
 	ConfirmationWaitTime uint32
 }
 
+// NewController initializes a Controller, caller can control behavior via options
 func NewController(
 	handler rpc.T,
 	senderKs *keystore.KeyStore,
@@ -102,8 +104,8 @@ func (C *Controller) verifyBalance(amount float64) {
 	bln := (float64(balance.Uint64()) / denominations.Nano)
 
 	if tns > bln {
-		C.failure = errors.New(
-			fmt.Sprintf("current balance of %.6f is not enough for the requested transfer %.6f", bln, tns),
+		C.failure = fmt.Errorf(
+			"current balance of %.6f is not enough for the requested transfer %.6f", bln, tns,
 		)
 	}
 }
