@@ -14,6 +14,7 @@ import (
 )
 
 var (
+	verbose         bool
 	useLedgerWallet bool
 	noLatest        bool
 	noPrettyOutput  bool
@@ -40,6 +41,11 @@ var (
 		Use:          "hmy",
 		Short:        "Harmony blockchain",
 		SilenceUsage: true,
+		PersistentPreRun: func(cmd *cobra.Command, args []string) {
+			if verbose {
+				common.EnableAllVerbose()
+			}
+		},
 		Long: fmt.Sprintf(`
 CLI interface to the Harmony blockchain
 
@@ -51,6 +57,8 @@ CLI interface to the Harmony blockchain
 )
 
 func init() {
+	vS := "dump out debug information, same as env var HMY_ALL_DEBUG=true"
+	RootCmd.PersistentFlags().BoolVarP(&verbose, "verbose", "v", false, vS)
 	RootCmd.PersistentFlags().StringVarP(&node, "node", "n", defaultNodeAddr, "<host>")
 	RootCmd.PersistentFlags().BoolVar(&noLatest, "no-latest", false, "Do not add 'latest' to RPC params")
 	RootCmd.PersistentFlags().BoolVar(&noPrettyOutput, "no-pretty", false, "Disable pretty print JSON outputs")

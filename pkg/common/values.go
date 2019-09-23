@@ -28,8 +28,12 @@ func init() {
 		DebugTransaction = true
 	}
 	if _, enabled := os.LookupEnv("HMY_ALL_DEBUG"); enabled != false {
-		DebugRPC = true
-		DebugTransaction = true
+		EnableAllVerbose()
 	}
+}
 
+// EnableAllVerbose sets debug vars to true
+func EnableAllVerbose() {
+	DebugRPC = true
+	DebugTransaction = true
 }
