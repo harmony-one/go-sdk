@@ -42,8 +42,10 @@ func baseRequest(method string, node string, params interface{}) ([]byte, error)
 	copy(result, body)
 	fasthttp.ReleaseResponse(res)
 	if common.DebugRPC {
-		fmt.Printf("URL: %s, Request Body: %s\n\n", node, string(requestBody))
-		fmt.Printf("URL: %s, Response Body: %s\n\n", node, string(body))
+		reqB := common.JSONPrettyFormat(string(requestBody))
+		respB := common.JSONPrettyFormat(string(body))
+		fmt.Printf("URL: %s, Request Body: %s\n\n", node, reqB)
+		fmt.Printf("URL: %s, Response Body: %s\n\n", node, respB)
 	}
 	queryID++
 	return result, nil

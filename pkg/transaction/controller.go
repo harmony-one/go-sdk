@@ -210,7 +210,8 @@ func (C *Controller) signAndPrepareTxEncodedForSending() {
 	C.transactionForRPC.signature = &hexSignature
 	if common.DebugTransaction {
 		r, _ := signedTransaction.MarshalJSON()
-		fmt.Println(string(r))
+		fmt.Println("Signed with ChainID:", C.transactionForRPC.transaction.ChainID())
+		fmt.Println(common.JSONPrettyFormat(string(r)))
 	}
 }
 
