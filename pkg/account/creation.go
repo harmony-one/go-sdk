@@ -34,7 +34,8 @@ func CreateNewLocalAccount(candidate *Creation) error {
 	if candidate.Mnemonic == "" {
 		candidate.Mnemonic = mnemonic.Generate()
 	}
-	private, _ := keys.FromMnemonicSeedAndPassphrase(candidate.Mnemonic, candidate.Passphrase)
+	// Hardcoded index of 0 here.
+	private, _ := keys.FromMnemonicSeedAndPassphrase(candidate.Mnemonic, 0)
 	_, err := ks.ImportECDSA(private.ToECDSA(), candidate.Passphrase)
 	if err != nil {
 		return err
