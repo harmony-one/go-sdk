@@ -75,7 +75,7 @@ func keysSub() []*cobra.Command {
 			return nil
 		},
 	}
-	// add.Flags().BoolVar(&recoverFromMnemonic, "recover", false, "create keys from a mnemonic")
+	add.Flags().BoolVar(&recoverFromMnemonic, "recover", false, "create keys from a mnemonic")
 	ppPrompt := fmt.Sprintf("provide own phrase over default: `%s`", c.DefaultPassphrase)
 	add.Flags().BoolVar(&userProvidesPassphrase, "passphrase", false, ppPrompt)
 	cmdImport := &cobra.Command{
