@@ -78,8 +78,8 @@ func keysSub() []*cobra.Command {
 	add.Flags().BoolVar(&recoverFromMnemonic, "recover", false, "create keys from a mnemonic")
 	ppPrompt := fmt.Sprintf("provide own phrase over default: `%s`", c.DefaultPassphrase)
 	add.Flags().BoolVar(&userProvidesPassphrase, "passphrase", false, ppPrompt)
-	cmdImport := &cobra.Command{
-		Use:   "import <ABSOLUTE_PATH_KEYSTORE>",
+	cmdImportKS := &cobra.Command{
+		Use:   "import-ks <ABSOLUTE_PATH_KEYSTORE>",
 		Args:  cobra.ExactArgs(1),
 		Short: "Import an existing keystore key",
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -91,10 +91,23 @@ func keysSub() []*cobra.Command {
 		},
 	}
 	importP := `passphrase of key being imported, default assumes ""`
-	cmdImport.Flags().StringVar(&importPassphrase, "passphrase", "", importP)
-	cmdImport.Flags().BoolVar(&quietImport, "quiet", false, "do not print out imported account name")
+	cmdImportKS.Flags().StringVar(&importPassphrase, "passphrase", "", importP)
+	cmdImportKS.Flags().BoolVar(&quietImport, "quiet", false, "do not print out imported account name")
+	const test = "0xc83827745d4e2e74e0b996b2a31ebff7bde72790bf23db839668223c07fb0299"
+	cmdImportSK := &cobra.Command{
+		Use:   "import-private-key",
+		Short: "Import an existing keystore key (only accept x509 secp256k1)",
+		RunE: func(cmd *cobra.Command, args []string) error {
 
-	return []*cobra.Command{add, cmdImport, {
+			name, err := account.ImportKeyStore(test, importPassphrase)
+			// 	if !quietImport {
+			// 		fmt.Printf("Imported keystore given account alias of `%s`\n", name)
+			// 	}
+			return nil
+		},
+	}
+
+	return []*cobra.Command{add, cmdImportKS, cmdImportSK, {
 		Use:   "mnemonic",
 		Short: "Compute the bip39 mnemonic for some input entropy",
 		Run: func(cmd *cobra.Command, args []string) {
