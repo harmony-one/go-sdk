@@ -1,0 +1,62 @@
+{
+  "SDK_source" : "https://github.com/FireStack-Lab/harmony-sdk-examples",
+  "SDK_commit" : "38252977523295599b26498b68e3f1ac8165c509",
+  "data": [
+    {
+      "phrase": "crouch embrace tree can horn decrease until boil ice edit eagle chimney",
+      "index": 0,
+      "publicKey": "0x030b64624e60c6e6758711fdf00f7e873f40a22e647a6918ba73807fab194d09ba",
+      "privateKey": "0xda4bc68857640103942ce7dd22a9fcdb96f3cfe0380254e81352a94ac8262ed2",
+      "addr": "one1nvvqsc09tgys2a76dhkrqvcgwhknh68v9rdda8"
+    },
+    {
+      "phrase": "jaguar spell animal arrest jungle april patient capital portion annual era memory",
+      "index": 0,
+      "publicKey": "0x037f86182b89d877ac1c1ab85b9dd41e4356958b881199474291050b34e4d9cb56",
+      "privateKey": "0x514a7f7ff8b2380dad74ad4a359c4ec4e66c31a5dd3b0612a6465e33a1b61315",
+      "addr": "one1uma7cmapqhe3vhdxr33dp5tzl3gx6ttq0x5mgj"
+    },
+    {
+      "phrase": "jaguar spell animal arrest jungle april patient capital portion annual era memory",
+      "index": 1,
+      "publicKey": "0x024474383e7df952e544bb6c127e35a3c8784e1ab13f1d5e5735b67cb85ba6f8e9",
+      "privateKey": "0x19fceb2c2df5e6413b1528dd489808c4bab594fade6c907b094eedcfbdafb76a",
+      "addr": "one1yeu978pyngjssf7g9rzav9n3065dz2lwslc5e2"
+    },
+    {
+      "phrase": "jaguar spell animal arrest jungle april patient capital portion annual era memory",
+      "index": 4,
+      "publicKey": "0x02227c128e50dfa2869233efacdb90dcfc8d42fb1fb3b8e8028c095280cba9cadb",
+      "privateKey": "0x7b292d2b5706dbb498b9997f7b793e328804effe889b7db009612971fe9792c9",
+      "addr": "one130ska92rh6sv3l5w2hmyvc9c29x6ekg2t8qx9j"
+    },
+    {
+      "phrase": "sail boring boost decrease until offer mansion uniform three animal manual voice",
+      "index": 0,
+      "publicKey": "0x0200df3b903682f46abf1f88ea0b45b20e7f401edc4ab87908ab7966fe103f216e",
+      "privateKey": "0x6c453ad39e8ab8996bcb2245b654abdeeefba5cf4ce6fe96c5eb4ae30e5d1aec",
+      "addr": "one1vqy47jmxjgxvymm4e3k0n9la5l64k50hp5hfm8"
+    },
+    {
+      "phrase": "sail boring boost decrease until offer mansion uniform three animal manual voice",
+      "index": 3,
+      "publicKey": "0x03bd4b051531a87a627077119358997928dc76bc3152d80fdaaf9adc37eeeb2f98",
+      "privateKey": "0x292495c0aa4b12028f82074c972aaf3c46aee0624a15c07ae7577a38210f6ceb",
+      "addr": "one1je9h0mvdavk638e2kdx4udnv29xuc6lfuuya2k"
+    },
+    {
+      "phrase": "note fuel follow scatter library letter diet more call hurry again index",
+      "index": 0,
+      "publicKey": "0x02fcb643967ba3755690e324d6c03f20865d0f50f53fd77cdea5109b7b72dbfd97",
+      "privateKey": "0x1a2e0f88d32717fe0f9db5a368441136b5bff71c05542593014db865138c36c6",
+      "addr": "one1a6449dptgerj42t8vpe700lqatkfvdnruez3tw"
+    },
+    {
+      "phrase": "album favorite category rescue involve real artwork warrior sad enroll undo noodle",
+      "index": 0,
+      "publicKey": "0x02cbae5b4cb6118655768463c91d32851f8ab71071e5cf4f0da5ee515ee566d5b9",
+      "privateKey": "0x103c747e58fe365f2e5c41313d544cfc6e3770b75af942d1987c3f74e7f839c4",
+      "addr": "one1lzzkh3hygjlvwudx0d4gyfa755s4gdsqpfa90j"
+    }
+  ]
+}
