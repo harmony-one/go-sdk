@@ -17,7 +17,7 @@ import (
 var (
 	// ErrNotAbsPath when keypath not absolute path
 	ErrNotAbsPath   = errors.New("keypath is not absolute path")
-	ErrBadKeyLength = errors.New("Invalid private key (possibly wrong length)")
+	ErrBadKeyLength = errors.New("Invalid private key (wrong length)")
 )
 
 // ImportFromPrivateKey allows import of an ECDSA private key
@@ -26,7 +26,10 @@ func ImportFromPrivateKey(privateKey, name, passphrase string) (string, error) {
 		name = generateName() + "-imported"
 	}
 	privateKeyBytes, err := hex.DecodeString(privateKey)
-	if err != nil || len(privateKeyBytes) != 32 {
+	if err != nil {
+		return "", err
+	}
+	if len(privateKeyBytes) != 32 {
 		return "", ErrBadKeyLength
 	}
 
