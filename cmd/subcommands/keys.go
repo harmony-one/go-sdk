@@ -97,13 +97,18 @@ func keysSub() []*cobra.Command {
 		Use:   "import-private-key",
 		Short: "Import an existing keystore key (only accept x509 secp256k1)",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			name, err := account.ImportFromPrivateKey(args[0])
+			passphrase := c.DefaultPassphrase
+			if userProvidesPassphrase {
+				passphrase = doubleTakePhrase()
+			}
+			name, err := account.ImportFromPrivateKey(args[0], passphrase)
 			if !quietImport {
 				fmt.Printf("Imported keystore given account alias of `%s`\n", name)
 			}
 			return err
 		},
 	}
+	cmdImportSK.Flags().BoolVar(&userProvidesPassphrase, "passphrase", false, ppPrompt)
 
 	return []*cobra.Command{add, cmdImportKS, cmdImportSK, {
 		Use:   "mnemonic",
