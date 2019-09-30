@@ -78,8 +78,8 @@ func keysSub() []*cobra.Command {
 	add.Flags().BoolVar(&recoverFromMnemonic, "recover", false, "create keys from a mnemonic")
 	ppPrompt := fmt.Sprintf("provide own phrase over default: `%s`", c.DefaultPassphrase)
 	add.Flags().BoolVar(&userProvidesPassphrase, "passphrase", false, ppPrompt)
-	cmdImport := &cobra.Command{
-		Use:   "import <ABSOLUTE_PATH_KEYSTORE>",
+	cmdImportKS := &cobra.Command{
+		Use:   "import-ks <ABSOLUTE_PATH_KEYSTORE>",
 		Args:  cobra.ExactArgs(1),
 		Short: "Import an existing keystore key",
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -91,10 +91,31 @@ func keysSub() []*cobra.Command {
 		},
 	}
 	importP := `passphrase of key being imported, default assumes ""`
-	cmdImport.Flags().StringVar(&importPassphrase, "passphrase", "", importP)
-	cmdImport.Flags().BoolVar(&quietImport, "quiet", false, "do not print out imported account name")
+	cmdImportKS.Flags().StringVar(&importPassphrase, "passphrase", "", importP)
+	cmdImportKS.Flags().BoolVar(&quietImport, "quiet", false, "do not print out imported account name")
+	cmdImportSK := &cobra.Command{
+		Use:   "import-private-key <secp256k1_PRIVATE_KEY> [ACCOUNT_NAME]",
+		Short: "Import an existing keystore key (only accept secp256k1 private keys)",
+		Args:  cobra.RangeArgs(1, 2),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			passphrase := c.DefaultPassphrase
+			if userProvidesPassphrase {
+				passphrase = doubleTakePhrase()
+			}
+			userName := ""
+			if len(args) == 2 {
+				userName = args[1]
+			}
+			name, err := account.ImportFromPrivateKey(args[0], userName, passphrase)
+			if !quietImport && err == nil {
+				fmt.Printf("Imported keystore given account alias of `%s`\n", name)
+			}
+			return err
+		},
+	}
+	cmdImportSK.Flags().BoolVar(&userProvidesPassphrase, "passphrase", false, ppPrompt)
 
-	return []*cobra.Command{add, cmdImport, {
+	return []*cobra.Command{add, cmdImportKS, cmdImportSK, {
 		Use:   "mnemonic",
 		Short: "Compute the bip39 mnemonic for some input entropy",
 		Run: func(cmd *cobra.Command, args []string) {

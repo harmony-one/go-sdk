@@ -24,6 +24,7 @@ func init() {
 	}
 }
 
+// LocalAccounts returns a slice of local account alias names
 func LocalAccounts() []string {
 	uDir, _ := homedir.Dir()
 	files, _ := ioutil.ReadDir(path.Join(
