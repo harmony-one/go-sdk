@@ -29,11 +29,11 @@ func ImportFromPrivateKey(privateKey, name, passphrase string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	if len(privateKeyBytes) != 32 {
+	if len(privateKeyBytes) != common.Secp256k1PrivateKeyBytesLength {
 		return "", ErrBadKeyLength
 	}
 
-	// btcec.PrivKeyFromBytes does not return an error
+	// btcec.PrivKeyFromBytes only returns a secret key and public key
 	sk, _ := btcec.PrivKeyFromBytes(btcec.S256(), privateKeyBytes)
 	ks := store.FromAccountName(name)
 	_, err = ks.ImportECDSA(sk.ToECDSA(), passphrase)

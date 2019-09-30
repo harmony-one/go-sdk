@@ -11,6 +11,7 @@ const (
 	DefaultConfigAccountAliasesDirName = "account-keys"
 	DefaultPassphrase                  = "harmony-one"
 	JSONRPCVersion                     = "2.0"
+	Secp256k1PrivateKeyBytesLength     = 32
 )
 
 var (
