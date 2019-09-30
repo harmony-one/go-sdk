@@ -67,7 +67,7 @@ func generateName() string {
 }
 
 // ImportKeyStore imports a keystore along with a password
-func ImportKeyStore(keypath, passphrase string) (string, error) {
+func ImportKeyStore(keypath, name, passphrase string) (string, error) {
 	if !path.IsAbs(keypath) {
 		return "", ErrNotAbsPath
 	}
@@ -75,7 +75,9 @@ func ImportKeyStore(keypath, passphrase string) (string, error) {
 	if readError != nil {
 		return "", readError
 	}
-	name := generateName() + "-imported"
+	if name == "" {
+		name = generateName() + "-imported"
+	}
 	ks := store.FromAccountName(name)
 	_, err := ks.Import(keyJSON, passphrase, common.DefaultPassphrase)
 	if err != nil {

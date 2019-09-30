@@ -79,12 +79,16 @@ func keysSub() []*cobra.Command {
 	ppPrompt := fmt.Sprintf("provide own phrase over default: `%s`", c.DefaultPassphrase)
 	add.Flags().BoolVar(&userProvidesPassphrase, "passphrase", false, ppPrompt)
 	cmdImportKS := &cobra.Command{
-		Use:   "import-ks <ABSOLUTE_PATH_KEYSTORE>",
-		Args:  cobra.ExactArgs(1),
+		Use:   "import-ks <ABSOLUTE_PATH_KEYSTORE> [ACCOUNT_NAME]",
+		Args:  cobra.RangeArgs(1, 2),
 		Short: "Import an existing keystore key",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			name, err := account.ImportKeyStore(args[0], importPassphrase)
-			if !quietImport {
+			userName := ""
+			if len(args) == 2 {
+				userName = args[1]
+			}
+			name, err := account.ImportKeyStore(args[0], userName, importPassphrase)
+			if !quietImport && err == nil {
 				fmt.Printf("Imported keystore given account alias of `%s`\n", name)
 			}
 			return err
