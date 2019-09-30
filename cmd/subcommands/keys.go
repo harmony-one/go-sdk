@@ -96,6 +96,7 @@ func keysSub() []*cobra.Command {
 	cmdImportSK := &cobra.Command{
 		Use:   "import-private-key <secp256k1_PRIVATE_KEY> [ACCOUNT_NAME]",
 		Short: "Import an existing keystore key (only accept secp256k1 private keys)",
+		Args:  cobra.RangeArgs(1, 2),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			passphrase := c.DefaultPassphrase
 			if userProvidesPassphrase {
