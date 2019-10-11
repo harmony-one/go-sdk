@@ -124,6 +124,7 @@ Create a transaction, sign it, and send off to the Harmony blockchain
 				fmt.Println(common.ToJSONUnsafe(ctrlr.Receipt(), !noPrettyOutput))
 			case dryRun:
 				fmt.Println(ctrlr.TransactionToJSON(!noPrettyOutput))
+				fmt.Println("RawTxn:", ctrlr.RawTransaction())
 			}
 			return nil
 		},

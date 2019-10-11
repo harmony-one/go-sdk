@@ -194,6 +194,10 @@ func (C *Controller) TransactionToJSON(pretty bool) string {
 	return string(r)
 }
 
+func (C *Controller) RawTransaction() string {
+	return *C.transactionForRPC.signature
+}
+
 func (C *Controller) signAndPrepareTxEncodedForSending() {
 	if C.failure != nil {
 		return
