@@ -35,7 +35,7 @@ hmy --node="https://api.s0.b.hmny.io/" transfer \
 hmy --node="https://api.s0.b.hmny.io" blockchain transaction-receipt <SOME_TX_HASH>
 
 %s
-hmy keys import <SOME_ABSOLUTE_PATH_TO_KEYSTORE_JSON>.key
+hmy keys import-ks <SOME_ABSOLUTE_PATH_TO_KEYSTORE_JSON>.key
 `,
 		g("1. Check Balances"),
 		g("2. Check completed transaction"),
