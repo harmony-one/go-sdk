@@ -32,12 +32,39 @@ func handlerForShard(senderShard int, node string) (*rpc.HTTPMessenger, error) {
 	if err != nil {
 		return nil, err
 	}
+
 	for _, shard := range s {
 		if shard.ShardID == senderShard {
 			return rpc.NewHTTPHandler(shard.HTTP), nil
 		}
 	}
+
 	return nil, nil
+}
+
+func validateShardIDs(senderShard int, receiverShard int) error {
+	s, err := sharding.Structure(node)
+	if err != nil {
+		return err
+	}
+
+	if !validShard(senderShard, len(s)) {
+		return fmt.Errorf("invalid argument \"%d\" for \"--from-shard\" flag: please specify a valid shard ID using --from-shard and try again!", senderShard)
+	}
+
+	if !validShard(receiverShard, len(s)) {
+		return fmt.Errorf("invalid argument \"%d\" for \"--to-shard\" flag: please specify a valid shard ID using --to-shard and try again!", receiverShard)
+	}
+
+	return nil
+}
+
+func validShard(shardID int, shardCount int) bool {
+	if shardID < 0 || shardID > (shardCount-1) {
+		return false
+	}
+
+	return true
 }
 
 func opts(ctlr *transaction.Controller) {
@@ -61,6 +88,10 @@ Create a transaction, sign it, and send off to the Harmony blockchain
 `,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			from := fromAddress.String()
+			err := validateShardIDs(fromShardID, toShardID)
+			if err != nil {
+				return err
+			}
 			networkHandler, err := handlerForShard(fromShardID, node)
 			if err != nil {
 				return err
