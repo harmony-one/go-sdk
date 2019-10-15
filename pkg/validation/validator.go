@@ -22,11 +22,11 @@ func ValidateAddress(address string) error {
 // ValidateShardIDs validates senderShard and receiverShard against the shardCount
 func ValidShardIDs(senderShard int, receiverShard int, shardCount int) error {
 	if !ValidShardID(senderShard, shardCount) {
-		return fmt.Errorf("invalid argument \"%d\" for \"--from-shard\" flag: please specify a valid shard ID using --from-shard and try again!", senderShard)
+		return fmt.Errorf(`invalid argument "%d" for "--from-shard" flag: please specify a valid shard ID using --from-shard and try again!`, senderShard)
 	}
 
 	if !ValidShardID(receiverShard, shardCount) {
-		return fmt.Errorf("invalid argument \"%d\" for \"--to-shard\" flag: please specify a valid shard ID using --to-shard and try again!", receiverShard)
+		return fmt.Errorf(`invalid argument "%d" for "--to-shard" flag: please specify a valid shard ID using --to-shard and try again!`, receiverShard)
 	}
 
 	return nil

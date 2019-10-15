@@ -28,7 +28,7 @@ func TestIsValidAddress(t *testing.T) {
 		}
 
 		if valid != test.exp {
-			t.Errorf("ValidateAddress(\"%s\") returned %v, expected %v", test.str, valid, test.exp)
+			t.Errorf(`ValidateAddress("%s") returned %v, expected %v`, test.str, valid, test.exp)
 		}
 	}
 }
