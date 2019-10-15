@@ -9,6 +9,7 @@ import (
 	"github.com/harmony-one/go-sdk/pkg/sharding"
 	"github.com/harmony-one/go-sdk/pkg/store"
 	"github.com/harmony-one/go-sdk/pkg/transaction"
+	"github.com/harmony-one/go-sdk/pkg/validation"
 	"github.com/harmony-one/harmony/accounts"
 
 	"github.com/spf13/cobra"
@@ -42,31 +43,6 @@ func handlerForShard(senderShard int, node string) (*rpc.HTTPMessenger, error) {
 	return nil, nil
 }
 
-func validateShardIDs(senderShard int, receiverShard int) error {
-	s, err := sharding.Structure(node)
-	if err != nil {
-		return err
-	}
-
-	if !validShard(senderShard, len(s)) {
-		return fmt.Errorf("invalid argument \"%d\" for \"--from-shard\" flag: please specify a valid shard ID using --from-shard and try again!", senderShard)
-	}
-
-	if !validShard(receiverShard, len(s)) {
-		return fmt.Errorf("invalid argument \"%d\" for \"--to-shard\" flag: please specify a valid shard ID using --to-shard and try again!", receiverShard)
-	}
-
-	return nil
-}
-
-func validShard(shardID int, shardCount int) bool {
-	if shardID < 0 || shardID > (shardCount-1) {
-		return false
-	}
-
-	return true
-}
-
 func opts(ctlr *transaction.Controller) {
 	if dryRun {
 		ctlr.Behavior.DryRun = true
@@ -88,7 +64,11 @@ Create a transaction, sign it, and send off to the Harmony blockchain
 `,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			from := fromAddress.String()
-			err := validateShardIDs(fromShardID, toShardID)
+			s, err := sharding.Structure(node)
+			if err != nil {
+				return err
+			}
+			err = validation.ValidShardIDs(fromShardID, toShardID, len(s))
 			if err != nil {
 				return err
 			}

@@ -3,6 +3,7 @@ package cmd
 import (
 	"github.com/harmony-one/go-sdk/pkg/address"
 	"github.com/harmony-one/go-sdk/pkg/common"
+	"github.com/harmony-one/go-sdk/pkg/validation"
 	"github.com/pkg/errors"
 )
 
@@ -15,7 +16,12 @@ func (oneAddress oneAddress) String() string {
 }
 
 func (oneAddress *oneAddress) Set(s string) error {
-	_, err := address.Bech32ToAddress(s)
+	err := validation.ValidateAddress(s)
+	if err != nil {
+		return err
+	}
+
+	_, err = address.Bech32ToAddress(s)
 	if err != nil {
 		return errors.Wrap(err, "not a valid one address")
 	}
