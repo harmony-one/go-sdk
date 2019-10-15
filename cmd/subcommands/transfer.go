@@ -19,8 +19,8 @@ var (
 	fromAddress oneAddress
 	toAddress   oneAddress
 	amount      float64
-	fromShardID int
-	toShardID   int
+	fromShardID uint32
+	toShardID   uint32
 	confirmWait uint32
 	chainName   = chainIDWrapper{chainID: &common.Chain.TestNet}
 	dryRun      bool
@@ -28,14 +28,14 @@ var (
 	gasPrice    float64
 )
 
-func handlerForShard(senderShard int, node string) (*rpc.HTTPMessenger, error) {
+func handlerForShard(senderShard uint32, node string) (*rpc.HTTPMessenger, error) {
 	s, err := sharding.Structure(node)
 	if err != nil {
 		return nil, err
 	}
 
 	for _, shard := range s {
-		if shard.ShardID == senderShard {
+		if uint32(shard.ShardID) == senderShard {
 			return rpc.NewHTTPHandler(shard.HTTP), nil
 		}
 	}
@@ -68,7 +68,7 @@ Create a transaction, sign it, and send off to the Harmony blockchain
 			if err != nil {
 				return err
 			}
-			err = validation.ValidShardIDs(fromShardID, toShardID, len(s))
+			err = validation.ValidShardIDs(fromShardID, toShardID, uint32(len(s)))
 			if err != nil {
 				return err
 			}
@@ -92,8 +92,8 @@ Create a transaction, sign it, and send off to the Harmony blockchain
 				toAddress.String(),
 				"",
 				amount, gasPrice,
-				fromShardID,
-				toShardID,
+				int(fromShardID),
+				int(toShardID),
 			); transactionFailure != nil {
 				return transactionFailure
 			}
@@ -116,8 +116,8 @@ Create a transaction, sign it, and send off to the Harmony blockchain
 	cmdTransfer.Flags().BoolVar(&dryRun, "dry-run", false, "do not send signed transaction")
 	cmdTransfer.Flags().Float64Var(&amount, "amount", 0.0, "amount")
 	cmdTransfer.Flags().Float64Var(&gasPrice, "gas-price", 0.0, "gas price to pay")
-	cmdTransfer.Flags().IntVar(&fromShardID, "from-shard", -1, "source shard id")
-	cmdTransfer.Flags().IntVar(&toShardID, "to-shard", -1, "target shard id")
+	cmdTransfer.Flags().Uint32Var(&fromShardID, "from-shard", 0, "source shard id")
+	cmdTransfer.Flags().Uint32Var(&toShardID, "to-shard", 0, "target shard id")
 	cmdTransfer.Flags().Var(&chainName, "chain-id", "what chain ID to target")
 	cmdTransfer.Flags().Uint32Var(&confirmWait, "wait-for-confirm", 0, "only waits if non-zero value, in seconds")
 	cmdTransfer.Flags().StringVar(&unlockP,

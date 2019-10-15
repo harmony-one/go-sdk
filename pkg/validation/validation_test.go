@@ -37,17 +37,17 @@ func TestIsValidShard(t *testing.T) {
 	s, _ := sharding.Structure("http://localhost:9500")
 
 	tests := []struct {
-		shardID int
+		shardID uint32
 		exp     bool
 	}{
 		{0, true},
 		{1, true},
-		{-1, false},
+		{98, false},
 		{99, false},
 	}
 
 	for _, test := range tests {
-		valid := ValidShardID(test.shardID, len(s))
+		valid := ValidShardID(test.shardID, uint32(len(s)))
 
 		if valid != test.exp {
 			t.Errorf("ValidShardID(%d) returned %v, expected %v", test.shardID, valid, test.exp)

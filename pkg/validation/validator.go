@@ -20,7 +20,7 @@ func ValidateAddress(address string) error {
 }
 
 // ValidateShardIDs validates senderShard and receiverShard against the shardCount
-func ValidShardIDs(senderShard int, receiverShard int, shardCount int) error {
+func ValidShardIDs(senderShard uint32, receiverShard uint32, shardCount uint32) error {
 	if !ValidShardID(senderShard, shardCount) {
 		return fmt.Errorf(`invalid argument "%d" for "--from-shard" flag: please specify a valid shard ID using --from-shard and try again!`, senderShard)
 	}
@@ -33,8 +33,8 @@ func ValidShardIDs(senderShard int, receiverShard int, shardCount int) error {
 }
 
 // ValidateShard validates that a shardID is within the bounds of the shardCount
-func ValidShardID(shardID int, shardCount int) bool {
-	if shardID < 0 || shardID > (shardCount-1) {
+func ValidShardID(shardID uint32, shardCount uint32) bool {
+	if shardID > (shardCount - 1) {
 		return false
 	}
 
