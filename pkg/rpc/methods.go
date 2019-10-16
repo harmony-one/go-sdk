@@ -46,6 +46,7 @@ type rpcEnumList struct {
 	ProtocolVersion                     method
 	GetNodeMetadata                     method
 	GetLatestBlockHeader                method
+	SendRawStakingTransaction           method
 }
 
 // Method is a list of known RPC methods
@@ -84,6 +85,7 @@ var Method = rpcEnumList{
 	UnSubscribe:                         "hmy_unsubscribe",
 	NetVersion:                          "net_version",
 	ProtocolVersion:                     "hmy_protocolVersion",
+	SendRawStakingTransaction:           "hmy_sendRawStakingTransaction",
 }
 
 // TODO Use Reflection here to avoid typing out the cases
