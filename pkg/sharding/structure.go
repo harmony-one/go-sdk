@@ -31,16 +31,22 @@ func Structure(node string) ([]RPCRoutes, error) {
 	return result.Result, nil
 }
 
-func CheckAllShards(node, addr string, noPretty bool) (string, error) {
+func CheckAllShards(node, oneAddr string, noPretty bool) (string, error) {
 	var out bytes.Buffer
 	out.WriteString("[")
-	params := []interface{}{addr, "latest"}
+	params := []interface{}{oneAddr, "latest"}
 	s, err := Structure(node)
 	if err != nil {
 		return "", err
 	}
 	for i, shard := range s {
-		balanceRPCReply, _ := rpc.Request(rpc.Method.GetBalance, shard.HTTP, params)
+		balanceRPCReply, err := rpc.Request(rpc.Method.GetBalance, shard.HTTP, params)
+		if err != nil {
+			if common.DebugRPC {
+				fmt.Printf("NOTE: Route %s failed.", shard.HTTP)
+			}
+			continue
+		}
 		balance, _ := balanceRPCReply["result"].(string)
 		bln, _ := big.NewInt(0).SetString(balance[2:], 16)
 		out.WriteString(fmt.Sprintf(`{"shard":%d, "amount":%s}`,
