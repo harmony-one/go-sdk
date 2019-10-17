@@ -22,7 +22,7 @@ import (
 )
 
 const (
-	BLS_PUB_KEY_SIZE       = 48
+	blsPubKeySize       = 48
 )
 
 var (
@@ -125,34 +125,29 @@ func stakingSubCommands() []*cobra.Command {
 		Long: `
 Create a new validator"
 `,
-		Run: func(cmd *cobra.Command, args []string)  {
+		RunE: func(cmd *cobra.Command, args []string)  error {
 			networkHandler, err := handlerForShard(0, node)
 			if err != nil {
-				fmt.Println(err)
-				return
+				return err
 			}
 
 			commisionRate, err := numeric.NewDecFromStr(commisionRateStr)
 			if err != nil {
-				fmt.Println(err)
-				return
+				return err
 			}
 
 			commisionMaxRate, err := numeric.NewDecFromStr(commisionMaxRateStr)
 			if err != nil {
-				fmt.Println(err)
-				return
+				return err
 			}
 
 			commisionMaxChangeRate, err := numeric.NewDecFromStr(commisionMaxChangeRateStr)
 			if err != nil {
-				fmt.Println(err)
-				return
+				return err
 			}
 
-			if len(stakingBlsPubKey) != BLS_PUB_KEY_SIZE {
-				fmt.Println("staking BLS pubkey key size should be ", BLS_PUB_KEY_SIZE, " bytes")
-				return
+			if len(stakingBlsPubKey) != blsPubKeySize {
+				return errors.New("staking BLS pubkey key size should be 48 bytes")
 			}
 
 			delegateStakePayloadMaker := func() (staking.Directive, interface{}) {
@@ -187,15 +182,14 @@ Create a new validator"
 
 			stakingTx, err := createStakingTransaction(getNextNonce(networkHandler), delegateStakePayloadMaker)
 			if err != nil {
-				fmt.Println(err)
-				return
+				return err
 			}
 
 			err = handleStakingTransaction(stakingTx, networkHandler, stakingAddress)
 			if err != nil {
-				fmt.Println(err)
-				return
+				return err
 			}
+			return nil
 		},
 	}
 
@@ -228,19 +222,17 @@ Create a new validator"
 		Use:   "editvalidator",
 		Short: "edit a validator",
 		Long: `
-Edit an existing validatoa validator"
+Edit an existing validator"
 `,
-		Run: func(cmd *cobra.Command, args []string)  {
+		RunE: func(cmd *cobra.Command, args []string)  error {
 			networkHandler, err := handlerForShard(0, node)
 			if err != nil {
-				fmt.Println(err)
-				return
+				return err
 			}
 
 			commisionRate, err := numeric.NewDecFromStr(commisionRateStr)
 			if err != nil {
-				fmt.Println(err)
-				return
+				return err
 			}
 
 			delegateStakePayloadMaker := func() (staking.Directive, interface{}) {
@@ -264,15 +256,14 @@ Edit an existing validatoa validator"
 
 			stakingTx, err := createStakingTransaction(getNextNonce(networkHandler), delegateStakePayloadMaker)
 			if err != nil {
-				fmt.Println(err)
-				return
+				return err
 			}
 
 			err = handleStakingTransaction(stakingTx, networkHandler, stakingAddress)
 			if err != nil {
-				fmt.Println(err)
-				return
+				return err
 			}
+			return nil
 		},
 	}
 
@@ -303,11 +294,10 @@ Edit an existing validatoa validator"
 		Long: `
 Delegating to a validator
 `,
-		Run: func(cmd *cobra.Command, args []string)  {
+		RunE: func(cmd *cobra.Command, args []string) error {
 			networkHandler, err := handlerForShard(0, node)
 			if err != nil {
-				fmt.Println(err)
-				return
+				return err
 			}
 
 			delegateStakePayloadMaker := func() (staking.Directive, interface{}) {
@@ -323,15 +313,14 @@ Delegating to a validator
 
 			stakingTx, err := createStakingTransaction(getNextNonce(networkHandler), delegateStakePayloadMaker)
 			if err != nil {
-				fmt.Println(err)
-				return
+				return err
 			}
 
 			err = handleStakingTransaction(stakingTx, networkHandler, delegatorAddress)
 			if err != nil {
-				fmt.Println(err)
-				return
+				return err
 			}
+			return nil
 		},
 	}
 
@@ -355,11 +344,10 @@ Delegating to a validator
 		Long: `
 Remove delegating to a validator
 `,
-		Run: func(cmd *cobra.Command, args []string)  {
+		RunE: func(cmd *cobra.Command, args []string) error  {
 			networkHandler, err := handlerForShard(0, node)
 			if err != nil {
-				fmt.Println(err)
-				return
+				return err
 			}
 
 			delegateStakePayloadMaker := func() (staking.Directive, interface{}) {
@@ -375,15 +363,14 @@ Remove delegating to a validator
 
 			stakingTx, err := createStakingTransaction(getNextNonce(networkHandler), delegateStakePayloadMaker)
 			if err != nil {
-				fmt.Println(err)
-				return
+				return err
 			}
 
 			err = handleStakingTransaction(stakingTx, networkHandler, delegatorAddress)
 			if err != nil {
-				fmt.Println(err)
-				return
+				return err
 			}
+			return nil
 		},
 	}
 
@@ -407,11 +394,10 @@ Remove delegating to a validator
 		Long: `
 Re-delegating to a validator
 `,
-		Run: func(cmd *cobra.Command, args []string)  {
+		RunE: func(cmd *cobra.Command, args []string) error {
 			networkHandler, err := handlerForShard(0, node)
 			if err != nil {
-				fmt.Println(err)
-				return
+				return err
 			}
 
 			delegateStakePayloadMaker := func() (staking.Directive, interface{}) {
@@ -428,15 +414,14 @@ Re-delegating to a validator
 
 			stakingTx, err := createStakingTransaction(getNextNonce(networkHandler), delegateStakePayloadMaker)
 			if err != nil {
-				fmt.Println(err)
-				return
+				return err
 			}
 
 			err = handleStakingTransaction(stakingTx, networkHandler, delegatorAddress)
 			if err != nil {
-				fmt.Println(err)
-				return
+				return err
 			}
+			return nil
 		},
 	}
 
@@ -471,8 +456,9 @@ func init() {
 		Long: `
 Create a staking transaction, sign it, and send off to the Harmony blockchain
 `,
-		Run: func(cmd *cobra.Command, args []string) {
+		RunE: func(cmd *cobra.Command, args []string) error {
 			cmd.Help()
+			return nil
 		},
 	}
 
