@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"errors"
 	"fmt"
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/ethereum/go-ethereum/core"
@@ -38,13 +39,10 @@ func getNextNonce(messenger rpc.T) uint64 {
 
 	transactionCount, _ := transactionCountRPCReply["result"].(string)
 	nonce, _ := big.NewInt(0).SetString(transactionCount[2:], 16)
-	fmt.Println("Nonce = ", nonce.String())
 	return nonce.Uint64()
 }
 
-func createDelegateStakingTransaction(nonce uint64) (*staking.StakingTransaction, error) {
-	amountBigInt := big.NewInt(int64(stakingAmount * denominations.Nano))
-	amt := amountBigInt.Mul(amountBigInt, big.NewInt(denominations.Nano))
+func createStakingTransaction(nonce uint64, f staking.StakeMsgFulfiller) (*staking.StakingTransaction, error) {
 	gasPrice := big.NewInt(int64(gasPrice))
 	gasPrice = gasPrice.Mul(gasPrice, big.NewInt(denominations.Nano))
 
@@ -54,16 +52,53 @@ func createDelegateStakingTransaction(nonce uint64) (*staking.StakingTransaction
 		return nil, err
 	}
 
-	stakePayloadMaker := func() (staking.Directive, interface{}) {
-		return staking.DirectiveDelegate, staking.Delegate{
-			accounts.ParseAddrH(delegatorAddress.String()),
-			accounts.ParseAddrH(validatorAddress.String()),
-			amt,
+	stakingTx, err := staking.NewStakingTransaction(nonce, gasLimit, gasPrice, f)
+	return stakingTx, err
+}
+
+func handleStakingTransaction(stakingTx *staking.StakingTransaction, networkHandler *rpc.HTTPMessenger) error {
+	var ks      *keystore.KeyStore
+	var acct    *accounts.Account
+	var signed  *staking.StakingTransaction
+	var err      error
+
+	from := delegatorAddress.String()
+
+	if useLedgerWallet {
+		var signerAddr string
+		signed, signerAddr, err = ledger.SignStakingTx(stakingTx,  chainName.chainID.Value)
+		if err != nil {
+			return err
 		}
+
+		if strings.Compare(signerAddr, delegatorAddress.String()) != 0 {
+			return errors.New("error : delegator address doesn't match with ledger hardware addresss")
+		}
+	} else {
+		ks, acct, err = store.UnlockedKeystore(from, unlockP)
+		if err != nil {
+			return err
+		}
+		signed, err = ks.SignStakingTx(*acct, stakingTx, chainName.chainID.Value)
 	}
 
-	stakingTx, err := staking.NewStakingTransaction(nonce, gasLimit, gasPrice, stakePayloadMaker)
-	return stakingTx, err
+	if err != nil {
+		return err
+	}
+
+	enc, err := rlp.EncodeToBytes(signed)
+	if err != nil {
+		return err
+	}
+
+	hexSignature := hexutil.Encode(enc)
+	reply, err := networkHandler.SendRPC(rpc.Method.SendRawStakingTransaction, []interface{}{hexSignature})
+	if err != nil {
+		return err
+	}
+	r, _ := reply["result"].(string)
+	fmt.Println(fmt.Sprintf(`{"transaction-receipt":"%s"}`, r))
+	return nil
 }
 
 func stakingSubCommands() []*cobra.Command {
@@ -74,59 +109,34 @@ func stakingSubCommands() []*cobra.Command {
 Delegating to a validator
 `,
 		Run: func(cmd *cobra.Command, args []string)  {
-			var ks      *keystore.KeyStore
-			var acct    *accounts.Account
-			var signed  *staking.StakingTransaction
-
 			networkHandler, err := handlerForShard(0, node)
-
-			from := delegatorAddress.String()
-			stakingTx, err := createDelegateStakingTransaction(getNextNonce(networkHandler))
 			if err != nil {
 				fmt.Println(err)
 				return
 			}
 
-			if useLedgerWallet {
-				var signerAddr string
-				signed, signerAddr, err = ledger.SignStakingTx(stakingTx,  chainName.chainID.Value)
-				if err != nil {
-					fmt.Println(err)
-					return
+			delegateStakePayloadMaker := func() (staking.Directive, interface{}) {
+				amountBigInt := big.NewInt(int64(stakingAmount * denominations.Nano))
+				amt := amountBigInt.Mul(amountBigInt, big.NewInt(denominations.Nano))
+
+				return staking.DirectiveDelegate, staking.Delegate{
+					accounts.ParseAddrH(delegatorAddress.String()),
+					accounts.ParseAddrH(validatorAddress.String()),
+					amt,
 				}
-
-				if strings.Compare(signerAddr, delegatorAddress.String()) != 0 {
-					fmt.Println("signature verification failed : delegator address doesn't match with ledger hardware addresss")
-					return
-				}
-			} else {
-				ks, acct, err = store.UnlockedKeystore(from, unlockP)
-				if err != nil {
-					fmt.Println(err)
-					return
-				}
-				signed, err = ks.SignStakingTx(*acct, stakingTx, chainName.chainID.Value)
 			}
 
+			stakingTx, err := createStakingTransaction(getNextNonce(networkHandler), delegateStakePayloadMaker)
 			if err != nil {
 				fmt.Println(err)
 				return
 			}
 
-			enc, err := rlp.EncodeToBytes(signed)
+			err = handleStakingTransaction(stakingTx, networkHandler)
 			if err != nil {
 				fmt.Println(err)
 				return
 			}
-
-			hexSignature := hexutil.Encode(enc)
-			reply, err := networkHandler.SendRPC(rpc.Method.SendRawStakingTransaction, []interface{}{hexSignature})
-			if err != nil {
-				fmt.Println(err)
-				return
-			}
-			r, _ := reply["result"].(string)
-			fmt.Println(fmt.Sprintf(`{"transaction-receipt":"%s"}`, r))
 		},
 	}
 
@@ -140,14 +150,45 @@ Delegating to a validator
 		"passphrase to unlock delegator's keystore",
 	)
 
+	for _, flagName := range [...]string{"delegator", "validator", "staking-amount"} {
+		subCmdDelegate.MarkFlagRequired(flagName)
+	}
+
 	subCmdUnDelegate := &cobra.Command{
 		Use:   "undelegate",
 		Short: "un-delegate staking",
 		Long: `
 Remove delegating to a validator
 `,
-		Args:  cobra.ExactArgs(1),
 		Run: func(cmd *cobra.Command, args []string)  {
+			networkHandler, err := handlerForShard(0, node)
+			if err != nil {
+				fmt.Println(err)
+				return
+			}
+
+			delegateStakePayloadMaker := func() (staking.Directive, interface{}) {
+				amountBigInt := big.NewInt(int64(stakingAmount * denominations.Nano))
+				amt := amountBigInt.Mul(amountBigInt, big.NewInt(denominations.Nano))
+
+				return staking.DirectiveUndelegate, staking.Undelegate{
+					accounts.ParseAddrH(delegatorAddress.String()),
+					accounts.ParseAddrH(validatorAddress.String()),
+					amt,
+				}
+			}
+
+			stakingTx, err := createStakingTransaction(getNextNonce(networkHandler), delegateStakePayloadMaker)
+			if err != nil {
+				fmt.Println(err)
+				return
+			}
+
+			err = handleStakingTransaction(stakingTx, networkHandler)
+			if err != nil {
+				fmt.Println(err)
+				return
+			}
 		},
 	}
 
@@ -160,6 +201,11 @@ Remove delegating to a validator
 		"passphrase", common.DefaultPassphrase,
 		"passphrase to unlock delegator's keystore",
 	)
+
+	for _, flagName := range [...]string{"delegator", "validator", "staking-amount"} {
+		subCmdUnDelegate.MarkFlagRequired(flagName)
+	}
+
 	subCmdReDelegate := &cobra.Command{
 		Use:   "redelegate",
 		Short: "re-delegate staking",
@@ -167,6 +213,35 @@ Remove delegating to a validator
 Re-delegating to a validator
 `,
 		Run: func(cmd *cobra.Command, args []string)  {
+			networkHandler, err := handlerForShard(0, node)
+			if err != nil {
+				fmt.Println(err)
+				return
+			}
+
+			delegateStakePayloadMaker := func() (staking.Directive, interface{}) {
+				amountBigInt := big.NewInt(int64(stakingAmount * denominations.Nano))
+				amt := amountBigInt.Mul(amountBigInt, big.NewInt(denominations.Nano))
+
+				return staking.DirectiveUndelegate, staking.Redelegate{
+					accounts.ParseAddrH(delegatorAddress.String()),
+					accounts.ParseAddrH(validatorSrcAddress.String()),
+					accounts.ParseAddrH(validatorDstAddress.String()),
+					amt,
+				}
+			}
+
+			stakingTx, err := createStakingTransaction(getNextNonce(networkHandler), delegateStakePayloadMaker)
+			if err != nil {
+				fmt.Println(err)
+				return
+			}
+
+			err = handleStakingTransaction(stakingTx, networkHandler)
+			if err != nil {
+				fmt.Println(err)
+				return
+			}
 		},
 	}
 
@@ -181,6 +256,10 @@ Re-delegating to a validator
 		"passphrase to unlock delegator's keystore",
 	)
 
+	for _, flagName := range [...]string{"delegator", "src-validator", "dest-validator", "staking-amount"} {
+		subCmdReDelegate.MarkFlagRequired(flagName)
+	}
+
 	return []*cobra.Command{subCmdDelegate,
 		subCmdUnDelegate,
 		subCmdReDelegate,
@@ -190,7 +269,7 @@ Re-delegating to a validator
 func init() {
 	cmdStaking := &cobra.Command{
 		Use:   "staking",
-		Short: "Stake, delegate or undelegate",
+		Short: "Delegate, undelegate or redelegate",
 		Long: `
 Create a staking transaction, sign it, and send off to the Harmony blockchain
 `,
