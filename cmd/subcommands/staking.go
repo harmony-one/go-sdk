@@ -15,18 +15,34 @@ import (
 	"github.com/harmony-one/harmony/accounts"
 	"github.com/harmony-one/harmony/accounts/keystore"
 	"github.com/harmony-one/harmony/common/denominations"
+	"github.com/harmony-one/harmony/numeric"
 	staking "github.com/harmony-one/harmony/staking/types"
 	"github.com/spf13/cobra"
 	"math/big"
 )
 
+const (
+	BLS_PUB_KEY_SIZE       = 48
+)
+
 var (
-	delegatorAddress    oneAddress
-	validatorAddress    oneAddress
-	validatorSrcAddress oneAddress
-	validatorDstAddress oneAddress
-	senderAddress       oneAddress
-	stakingAmount       float64
+	validatorName             string
+	validatorIdentity         string
+	validatorWebsite          string
+	validatorSecurityContact  string
+	validatorDetails          string
+	commisionRateStr        string
+	commisionMaxRateStr       string
+	commisionMaxChangeRateStr string
+	minSelfDelegation         float64
+	stakingBlsPubKey          string
+	stakingAddress            oneAddress
+	delegatorAddress          oneAddress
+	validatorAddress          oneAddress
+	validatorSrcAddress       oneAddress
+	validatorDstAddress       oneAddress
+	senderAddress             oneAddress
+	stakingAmount             float64
 )
 
 func getNextNonce(messenger rpc.T) uint64 {
@@ -56,13 +72,13 @@ func createStakingTransaction(nonce uint64, f staking.StakeMsgFulfiller) (*staki
 	return stakingTx, err
 }
 
-func handleStakingTransaction(stakingTx *staking.StakingTransaction, networkHandler *rpc.HTTPMessenger) error {
+func handleStakingTransaction(stakingTx *staking.StakingTransaction, networkHandler *rpc.HTTPMessenger, signerAddress oneAddress) error {
 	var ks      *keystore.KeyStore
 	var acct    *accounts.Account
 	var signed  *staking.StakingTransaction
 	var err      error
 
-	from := delegatorAddress.String()
+	from := signerAddress.String()
 
 	if useLedgerWallet {
 		var signerAddr string
@@ -102,6 +118,185 @@ func handleStakingTransaction(stakingTx *staking.StakingTransaction, networkHand
 }
 
 func stakingSubCommands() []*cobra.Command {
+
+	subCmdNewValidator := &cobra.Command{
+		Use:   "newvalidator",
+		Short: "create a new validator",
+		Long: `
+Create a new validator"
+`,
+		Run: func(cmd *cobra.Command, args []string)  {
+			networkHandler, err := handlerForShard(0, node)
+			if err != nil {
+				fmt.Println(err)
+				return
+			}
+
+			commisionRate, err := numeric.NewDecFromStr(commisionRateStr)
+			if err != nil {
+				fmt.Println(err)
+				return
+			}
+
+			commisionMaxRate, err := numeric.NewDecFromStr(commisionMaxRateStr)
+			if err != nil {
+				fmt.Println(err)
+				return
+			}
+
+			commisionMaxChangeRate, err := numeric.NewDecFromStr(commisionMaxChangeRateStr)
+			if err != nil {
+				fmt.Println(err)
+				return
+			}
+
+			if len(stakingBlsPubKey) != BLS_PUB_KEY_SIZE {
+				fmt.Println("staking BLS pubkey key size should be ", BLS_PUB_KEY_SIZE, " bytes")
+				return
+			}
+
+			delegateStakePayloadMaker := func() (staking.Directive, interface{}) {
+				amountBigInt := big.NewInt(int64(stakingAmount * denominations.Nano))
+				amt := amountBigInt.Mul(amountBigInt, big.NewInt(denominations.Nano))
+
+				minSelfDelegationBigInt := big.NewInt(int64(minSelfDelegation * denominations.Nano))
+				minSelfDel := minSelfDelegationBigInt.Mul(minSelfDelegationBigInt, big.NewInt(denominations.Nano))
+
+				blsPubKey := [48]byte{}
+				copy(blsPubKey[:], []byte(stakingBlsPubKey))
+
+				return staking.DirectiveNewValidator, staking.NewValidator{
+					staking.Description {
+						validatorName,
+						validatorIdentity,
+						validatorWebsite,
+						validatorSecurityContact,
+						validatorDetails,
+					},
+					staking.CommissionRates {
+						commisionRate,
+						commisionMaxRate,
+						commisionMaxChangeRate },
+					minSelfDel,
+					accounts.ParseAddrH(stakingAddress.String()),
+					blsPubKey,
+					amt,
+				}
+
+			}
+
+			stakingTx, err := createStakingTransaction(getNextNonce(networkHandler), delegateStakePayloadMaker)
+			if err != nil {
+				fmt.Println(err)
+				return
+			}
+
+			err = handleStakingTransaction(stakingTx, networkHandler, stakingAddress)
+			if err != nil {
+				fmt.Println(err)
+				return
+			}
+		},
+	}
+
+
+	subCmdNewValidator.Flags().StringVar(&validatorName, "name", "","validator's name")
+	subCmdNewValidator.Flags().StringVar(&validatorIdentity, "identity", "", "validator's identity")
+	subCmdNewValidator.Flags().StringVar(&validatorWebsite, "website", "", "validator's website")
+	subCmdNewValidator.Flags().StringVar(&validatorSecurityContact, "security-contact", "","validator's security contact")
+	subCmdNewValidator.Flags().StringVar(&validatorDetails, "details", "", "validator's details")
+	subCmdNewValidator.Flags().StringVar(&commisionRateStr, "rate",  "","commission rate")
+	subCmdNewValidator.Flags().StringVar(&commisionMaxRateStr, "max-rate","","commision max rate")
+	subCmdNewValidator.Flags().StringVar(&commisionMaxChangeRateStr, "max-change-rate","","commission max change amount")
+	subCmdNewValidator.Flags().Float64Var(&minSelfDelegation, "min-self-delegation", 0.0, "minimal self delegation")
+	subCmdNewValidator.Flags().Var(&stakingAddress, "staking-addr", "validator's staking address")
+	subCmdNewValidator.Flags().StringVar(&stakingBlsPubKey, "pubkey", "","validator's public BLS key address")
+	subCmdNewValidator.Flags().Float64Var(&stakingAmount, "amount", 0.0, "staking amount")
+	subCmdNewValidator.Flags().Float64Var(&gasPrice, "gas-price", 0.0, "gas price to pay")
+	subCmdNewValidator.Flags().Var(&chainName, "chain-id", "what chain ID to target")
+	subCmdNewValidator.Flags().StringVar(&unlockP,
+		"passphrase", common.DefaultPassphrase,
+		"passphrase to unlock delegator's keystore",
+	)
+
+	for _, flagName := range [...]string{"name", "identity", "website", "security-contact", "details", "rate", "max-rate",
+		"max-change-rate", "min-self-delegation","staking-addr", "pubkey", "amount", } {
+		subCmdNewValidator.MarkFlagRequired(flagName)
+	}
+
+	subCmdEditValidator := &cobra.Command{
+		Use:   "editvalidator",
+		Short: "edit a validator",
+		Long: `
+Edit an existing validatoa validator"
+`,
+		Run: func(cmd *cobra.Command, args []string)  {
+			networkHandler, err := handlerForShard(0, node)
+			if err != nil {
+				fmt.Println(err)
+				return
+			}
+
+			commisionRate, err := numeric.NewDecFromStr(commisionRateStr)
+			if err != nil {
+				fmt.Println(err)
+				return
+			}
+
+			delegateStakePayloadMaker := func() (staking.Directive, interface{}) {
+				minSelfDelegationBigInt := big.NewInt(int64(minSelfDelegation * denominations.Nano))
+				minSelfDel := minSelfDelegationBigInt.Mul(minSelfDelegationBigInt, big.NewInt(denominations.Nano))
+
+				return staking.DirectiveEditValidator, staking.EditValidator{
+					staking.Description {
+						validatorName,
+						validatorIdentity,
+						validatorWebsite,
+						validatorSecurityContact,
+						validatorDetails,
+					},
+					accounts.ParseAddrH(stakingAddress.String()),
+					commisionRate,
+					minSelfDel,
+				}
+
+			}
+
+			stakingTx, err := createStakingTransaction(getNextNonce(networkHandler), delegateStakePayloadMaker)
+			if err != nil {
+				fmt.Println(err)
+				return
+			}
+
+			err = handleStakingTransaction(stakingTx, networkHandler, stakingAddress)
+			if err != nil {
+				fmt.Println(err)
+				return
+			}
+		},
+	}
+
+
+	subCmdEditValidator.Flags().StringVar(&validatorName, "name", "","validator's name")
+	subCmdEditValidator.Flags().StringVar(&validatorIdentity, "identity", "", "validator's identity")
+	subCmdEditValidator.Flags().StringVar(&validatorWebsite, "website", "", "validator's website")
+	subCmdEditValidator.Flags().StringVar(&validatorSecurityContact, "security-contact", "","validator's security contact")
+	subCmdEditValidator.Flags().StringVar(&validatorDetails, "details", "", "validator's details")
+	subCmdEditValidator.Flags().StringVar(&commisionRateStr, "rate",  "","commission rate")
+	subCmdEditValidator.Flags().Float64Var(&minSelfDelegation, "min-self-delegation", 0.0, "minimal self delegation")
+	subCmdEditValidator.Flags().Var(&stakingAddress, "staking-addr", "validator's staking address")
+	subCmdEditValidator.Flags().Float64Var(&gasPrice, "gas-price", 0.0, "gas price to pay")
+	subCmdEditValidator.Flags().Var(&chainName, "chain-id", "what chain ID to target")
+	subCmdEditValidator.Flags().StringVar(&unlockP,
+		"passphrase", common.DefaultPassphrase,
+		"passphrase to unlock delegator's keystore",
+	)
+
+	for _, flagName := range [...]string{"name", "identity", "website", "security-contact", "details", "rate",
+		"min-self-delegation","staking-addr", } {
+		subCmdEditValidator.MarkFlagRequired(flagName)
+	}
+
 	subCmdDelegate := &cobra.Command{
 		Use:   "delegate",
 		Short: "delegate staking",
@@ -132,7 +327,7 @@ Delegating to a validator
 				return
 			}
 
-			err = handleStakingTransaction(stakingTx, networkHandler)
+			err = handleStakingTransaction(stakingTx, networkHandler, delegatorAddress)
 			if err != nil {
 				fmt.Println(err)
 				return
@@ -142,7 +337,7 @@ Delegating to a validator
 
 	subCmdDelegate.Flags().Var(&delegatorAddress, "delegator", "delegator's address")
 	subCmdDelegate.Flags().Var(&validatorAddress, "validator", "validator's address")
-	subCmdDelegate.Flags().Float64Var(&stakingAmount, "staking-amount", 0.0, "staking amount")
+	subCmdDelegate.Flags().Float64Var(&stakingAmount, "amount", 0.0, "staking amount")
 	subCmdDelegate.Flags().Float64Var(&gasPrice, "gas-price", 0.0, "gas price to pay")
 	subCmdDelegate.Flags().Var(&chainName, "chain-id", "what chain ID to target")
 	subCmdDelegate.Flags().StringVar(&unlockP,
@@ -150,7 +345,7 @@ Delegating to a validator
 		"passphrase to unlock delegator's keystore",
 	)
 
-	for _, flagName := range [...]string{"delegator", "validator", "staking-amount"} {
+	for _, flagName := range [...]string{"delegator", "validator", "amount"} {
 		subCmdDelegate.MarkFlagRequired(flagName)
 	}
 
@@ -184,7 +379,7 @@ Remove delegating to a validator
 				return
 			}
 
-			err = handleStakingTransaction(stakingTx, networkHandler)
+			err = handleStakingTransaction(stakingTx, networkHandler, delegatorAddress)
 			if err != nil {
 				fmt.Println(err)
 				return
@@ -194,7 +389,7 @@ Remove delegating to a validator
 
 	subCmdUnDelegate.Flags().Var(&delegatorAddress, "delegator", "delegator's address")
 	subCmdUnDelegate.Flags().Var(&validatorAddress, "validator", "source validator's address")
-	subCmdUnDelegate.Flags().Float64Var(&stakingAmount, "staking-amount", 0.0, "staking amount")
+	subCmdUnDelegate.Flags().Float64Var(&stakingAmount, "amount", 0.0, "staking amount")
 	subCmdUnDelegate.Flags().Float64Var(&gasPrice, "gas-price", 0.0, "gas price to pay")
 	subCmdUnDelegate.Flags().Var(&chainName, "chain-id", "what chain ID to target")
 	subCmdUnDelegate.Flags().StringVar(&unlockP,
@@ -202,7 +397,7 @@ Remove delegating to a validator
 		"passphrase to unlock delegator's keystore",
 	)
 
-	for _, flagName := range [...]string{"delegator", "validator", "staking-amount"} {
+	for _, flagName := range [...]string{"delegator", "validator", "amount"} {
 		subCmdUnDelegate.MarkFlagRequired(flagName)
 	}
 
@@ -237,7 +432,7 @@ Re-delegating to a validator
 				return
 			}
 
-			err = handleStakingTransaction(stakingTx, networkHandler)
+			err = handleStakingTransaction(stakingTx, networkHandler, delegatorAddress)
 			if err != nil {
 				fmt.Println(err)
 				return
@@ -246,7 +441,7 @@ Re-delegating to a validator
 	}
 
 	subCmdReDelegate.Flags().Var(&delegatorAddress, "delegator", "delegator's address")
-	subCmdReDelegate.Flags().Float64Var(&stakingAmount, "staking-amount", 0.0, "staking amount")
+	subCmdReDelegate.Flags().Float64Var(&stakingAmount, "amount", 0.0, "staking amount")
 	subCmdReDelegate.Flags().Var(&validatorSrcAddress, "src-validator", "source validator's address")
 	subCmdReDelegate.Flags().Var(&validatorDstAddress, "dest-validator", "destination validator's address")
 	subCmdReDelegate.Flags().Float64Var(&gasPrice, "gas-price", 0.0, "gas price to pay")
@@ -256,11 +451,14 @@ Re-delegating to a validator
 		"passphrase to unlock delegator's keystore",
 	)
 
-	for _, flagName := range [...]string{"delegator", "src-validator", "dest-validator", "staking-amount"} {
+	for _, flagName := range [...]string{"delegator", "src-validator", "dest-validator", "amount"} {
 		subCmdReDelegate.MarkFlagRequired(flagName)
 	}
 
-	return []*cobra.Command{subCmdDelegate,
+	return []*cobra.Command{
+		subCmdNewValidator,
+		subCmdEditValidator,
+		subCmdDelegate,
 		subCmdUnDelegate,
 		subCmdReDelegate,
 	}
@@ -269,7 +467,7 @@ Re-delegating to a validator
 func init() {
 	cmdStaking := &cobra.Command{
 		Use:   "staking",
-		Short: "Delegate, undelegate or redelegate",
+		Short: "newvalidator, editvalidator, delegate, undelegate or redelegate",
 		Long: `
 Create a staking transaction, sign it, and send off to the Harmony blockchain
 `,
