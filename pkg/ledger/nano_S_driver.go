@@ -168,7 +168,7 @@ func (n *NanoS) Exchange(cmd byte, p1, p2 byte, data []byte) (resp []byte, err e
 const (
 	cmdGetVersion   = 0x01
 	cmdGetPublicKey = 0x02
-	cmdSignHash     = 0x04
+	cmdSignStaking  = 0x04
 	cmdSignTx       = 0x08
 
 	p1More  = 0x80
@@ -201,26 +201,28 @@ func (n *NanoS) GetAddress() (oneAddr string, err error) {
 	return string(pubkey[:]), nil
 }
 
-func (n *NanoS) SignHash(hash [32]byte) (sig [65]byte, err error) {
-	resp, err := n.Exchange(cmdSignHash, 0, 0, hash[:])
-	if err != nil {
-		return [65]byte{}, err
-	}
-
-	if copy(sig[:], resp) != len(sig) {
-		return [65]byte{}, errors.New("signature has wrong length")
-	}
-
-
-	//crypto.Sign(hash[:],
-	return sig, nil
-}
-
 func (n *NanoS) SignTxn(txn []byte) (sig [65]byte, err error) {
 	var resp []byte
 
 	var p1 byte = p1More
 	resp, err = n.Exchange(cmdSignTx, p1, p2SignHash, txn)
+	if err != nil {
+		return [65]byte{}, err
+	}
+
+	copy(sig[:], resp)
+
+	if copy(sig[:], resp) != len(sig) {
+		return [65]byte{}, errors.New("signature has wrong length")
+	}
+	return
+}
+
+func (n *NanoS) SignStaking(stake []byte) (sig [65]byte, err error) {
+	var resp []byte
+
+	var p1 byte = p1More
+	resp, err = n.Exchange(cmdSignStaking, p1, p2SignHash, stake)
 	if err != nil {
 		return [65]byte{}, err
 	}
