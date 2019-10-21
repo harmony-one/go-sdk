@@ -1,3 +1,4 @@
+SHELL := /bin/bash
 version := $(shell git rev-list --count HEAD)
 commit := $(shell git describe --always --long --dirty)
 built_at := $(shell date +%FT%T%z)
@@ -15,14 +16,13 @@ env := GO111MODULE=on
 DIR := ${CURDIR}
 export CGO_LDFLAGS=-L$(DIR)/dist/lib -Wl,-rpath -Wl,\$ORIGIN/lib
 
-all:prepare-dirs
-	$(env) go build -o $(cli) -ldflags="$(ldflags)" cmd/main.go
+all:
+	source $(shell go env GOPATH)/src/github.com/harmony-one/harmony/scripts/setup_bls_build_flags.sh && $(env) go build -o $(cli) -ldflags="$(ldflags)" cmd/main.go
 	cp $(cli) hmy
 
-debug:prepare-dirs
-	$(env) go build $(flags) -o $(cli) -ldflags="$(ldflags)" cmd/main.go
+debug:
+	source $(shell go env GOPATH)/src/github.com/harmony-one/harmony/scripts/setup_bls_build_flags.sh && $(env) go build $(flags) -o $(cli) -ldflags="$(ldflags)" cmd/main.go
 	cp $(cli) hmy
-
 
 run-tests: test-rpc test-key;
 
@@ -31,12 +31,6 @@ test-key:
 
 test-rpc:
 	go test ./pkg/rpc -cover -v
-
-prepare-dirs:
-	mkdir -p dist
-	rsync -a $(shell go env GOPATH)/src/github.com/harmony-one/bls/lib/* ./dist/lib/
-	rsync -a $(shell go env GOPATH)/src/github.com/harmony-one/mcl/lib/* ./dist/lib/
-	rsync -a /usr/local/opt/openssl/lib/* ./dist/lib/
 
 # Notice assumes you have correct uploading credentials
 upload-darwin:all
