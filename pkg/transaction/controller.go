@@ -143,6 +143,8 @@ func (C *Controller) setIntrinsicGas(rawInput string) {
 		return
 	}
 	inputData, _ := base64.StdEncoding.DecodeString(rawInput)
+	// NOTE Need to add more intrisicGas
+	// in order to include more data in inputData
 	gas, _ := core.IntrinsicGas(inputData, false, true)
 	C.transactionForRPC.params["gas"] = gas
 }
