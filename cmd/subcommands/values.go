@@ -14,7 +14,12 @@ const (
 var (
 	g           = color.New(color.FgGreen).SprintFunc()
 	cookbookDoc = fmt.Sprintf(`
-Cookbook of usage, note that every subcommand recognizes a '--help' flag
+Cookbook of usage
+
+note: 
+
+1) Every subcommand recognizes a '--help' flag
+2) These examples use shard 1 of testnet as argument for --node
 
 %s
 hmy --node="https://api.s1.b.hmny.io/" balance <SOME_ONE_ADDRESS>
