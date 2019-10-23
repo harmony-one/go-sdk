@@ -76,7 +76,10 @@ func keysSub() []*cobra.Command {
 		},
 	}
 	add.Flags().BoolVar(&recoverFromMnemonic, "recover", false, "create keys from a mnemonic")
-	ppPrompt := fmt.Sprintf("provide own phrase over default: `%s`", c.DefaultPassphrase)
+	ppPrompt := fmt.Sprintf(
+		"provide own keystore encryption phrase, default: `%s`", c.DefaultPassphrase,
+	)
+
 	add.Flags().BoolVar(&userProvidesPassphrase, "passphrase", false, ppPrompt)
 	cmdImportKS := &cobra.Command{
 		Use:   "import-ks <ABSOLUTE_PATH_KEYSTORE> [ACCOUNT_NAME]",
