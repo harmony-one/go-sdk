@@ -25,7 +25,7 @@ var (
 	chainName   = chainIDWrapper{chainID: &common.Chain.TestNet}
 	dryRun      bool
 	unlockP     string
-	gasPrice    float64
+	gasPrice    int64
 )
 
 func handlerForShard(senderShard uint32, node string) (*rpc.HTTPMessenger, error) {
@@ -115,7 +115,7 @@ Create a transaction, sign it, and send off to the Harmony blockchain
 	cmdTransfer.Flags().Var(&toAddress, "to", "the destination one address")
 	cmdTransfer.Flags().BoolVar(&dryRun, "dry-run", false, "do not send signed transaction")
 	cmdTransfer.Flags().Float64Var(&amount, "amount", 0.0, "amount")
-	cmdTransfer.Flags().Float64Var(&gasPrice, "gas-price", 0.0, "gas price to pay")
+	cmdTransfer.Flags().Int64Var(&gasPrice, "gas-price", 1, "gas price to pay")
 	cmdTransfer.Flags().Uint32Var(&fromShardID, "from-shard", 0, "source shard id")
 	cmdTransfer.Flags().Uint32Var(&toShardID, "to-shard", 0, "target shard id")
 	cmdTransfer.Flags().Var(&chainName, "chain-id", "what chain ID to target")

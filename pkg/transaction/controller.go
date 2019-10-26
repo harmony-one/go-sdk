@@ -166,13 +166,13 @@ func (C *Controller) setReceiver(receiver string) {
 	C.transactionForRPC.params["receiver"] = address.Parse(receiver)
 }
 
-func (C *Controller) setNewTransactionWithDataAndGas(i string, amount, gasPrice float64) {
+func (C *Controller) setNewTransactionWithDataAndGas(i string, amount float64, gasPrice int64) {
 	if C.failure != nil {
 		return
 	}
 	amountBigInt := big.NewInt(int64(amount * denominations.Nano))
 	amt := amountBigInt.Mul(amountBigInt, big.NewInt(denominations.Nano))
-	gPrice := big.NewInt(int64(gasPrice))
+	gPrice := big.NewInt(gasPrice)
 	gPrice = gPrice.Mul(gPrice, big.NewInt(denominations.Nano))
 
 	tx := NewTransaction(
@@ -188,6 +188,7 @@ func (C *Controller) setNewTransactionWithDataAndGas(i string, amount, gasPrice 
 	C.transactionForRPC.transaction = tx
 }
 
+// TransactionToJSON dumps JSON rep
 func (C *Controller) TransactionToJSON(pretty bool) string {
 	r, _ := C.transactionForRPC.transaction.MarshalJSON()
 	if pretty {
@@ -196,6 +197,7 @@ func (C *Controller) TransactionToJSON(pretty bool) string {
 	return string(r)
 }
 
+// RawTransaction dumps the signature as string
 func (C *Controller) RawTransaction() string {
 	return *C.transactionForRPC.signature
 }
@@ -276,9 +278,12 @@ func (C *Controller) txConfirmation() {
 	}
 }
 
+// ExecuteTransaction is the single entrypoint to execute a transaction.
+// Each step in transaction creation, execution probably includes a mutation
+// Each becomes a no-op if failure occured in any previous step
 func (C *Controller) ExecuteTransaction(
 	to, inputData string,
-	amount, gPrice float64,
+	amount float64, gPrice int64,
 	fromShard, toShard int,
 ) error {
 	// WARNING Order of execution matters
