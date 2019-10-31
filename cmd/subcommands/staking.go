@@ -44,7 +44,6 @@ var (
 	minSelfDelegation         float64
 	maxTotalDelegation        float64
 	stakingBlsPubKeys         []string
-	stakingAddress            oneAddress
 	delegatorAddress          oneAddress
 	validatorAddress          oneAddress
 	stakingAmount             float64
@@ -188,7 +187,7 @@ Create a new validator"
 						commisionMaxChangeRate},
 					minSelfDel,
 					maxTotalDel,
-					address.Parse(stakingAddress.String()),
+					address.Parse(validatorAddress.String()),
 					blsPubKeys,
 					amt,
 				}
@@ -200,7 +199,7 @@ Create a new validator"
 				return err
 			}
 
-			err = handleStakingTransaction(stakingTx, networkHandler, stakingAddress)
+			err = handleStakingTransaction(stakingTx, networkHandler, validatorAddress)
 			if err != nil {
 				return err
 			}
@@ -218,7 +217,7 @@ Create a new validator"
 	subCmdNewValidator.Flags().StringVar(&commisionMaxChangeRateStr, "max-change-rate", "", "commission max change amount")
 	subCmdNewValidator.Flags().Float64Var(&minSelfDelegation, "min-self-delegation", 0.0, "minimal self delegation")
 	subCmdNewValidator.Flags().Float64Var(&maxTotalDelegation, "max-total-delegation", 0.0, "maximal total delegation")
-	subCmdNewValidator.Flags().Var(&stakingAddress, "validator-addr", "validator's staking address")
+	subCmdNewValidator.Flags().Var(&validatorAddress, "validator-addr", "validator's staking address")
 	subCmdNewValidator.Flags().StringSliceVar(&stakingBlsPubKeys, "bls-pubkeys", []string{}, "validator's list of public BLS key addresses")
 	subCmdNewValidator.Flags().Float64Var(&stakingAmount, "amount", 0.0, "staking amount")
 	subCmdNewValidator.Flags().Int64Var(&gasPrice, "gas-price", 1, "gas price to pay")
@@ -276,7 +275,7 @@ Edit an existing validator"
 				maxTotalDel := minSelfDelegationBigInt.Mul(maxTotalDelegationBigInt, big.NewInt(denominations.Nano))
 
 				return staking.DirectiveEditValidator, staking.EditValidator{
-					address.Parse(stakingAddress.String()),
+					address.Parse(validatorAddress.String()),
 					&staking.Description{
 						validatorName,
 						validatorIdentity,
@@ -298,7 +297,7 @@ Edit an existing validator"
 				return err
 			}
 
-			err = handleStakingTransaction(stakingTx, networkHandler, stakingAddress)
+			err = handleStakingTransaction(stakingTx, networkHandler, validatorAddress)
 			if err != nil {
 				return err
 			}
@@ -317,7 +316,7 @@ Edit an existing validator"
 	subCmdEditValidator.Flags().StringVar(&commisionMaxChangeRateStr, "max-change-rate", "", "commission max change amount")
 	subCmdEditValidator.Flags().Float64Var(&minSelfDelegation, "min-self-delegation", 0.0, "minimal self delegation")
 	subCmdEditValidator.Flags().Float64Var(&maxTotalDelegation, "max-total-delegation", 0.0, "maximal total delegation")
-	subCmdEditValidator.Flags().Var(&stakingAddress, "validator-addr", "validator's staking address")
+	subCmdEditValidator.Flags().Var(&validatorAddress, "validator-addr", "validator's staking address")
 	subCmdEditValidator.Flags().StringVar(&slotKeyToAdd, "add-bls-key", "","add BLS pubkey to slot")
 	subCmdEditValidator.Flags().StringVar(&slotKeyToRemove, "remove-bls-key", "","remove BLS pubkey from slot")
 
@@ -369,8 +368,8 @@ Delegating to a validator
 		},
 	}
 
-	subCmdDelegate.Flags().Var(&delegatorAddress, "delegator", "delegator's address")
-	subCmdDelegate.Flags().Var(&validatorAddress, "validator", "validator's address")
+	subCmdDelegate.Flags().Var(&delegatorAddress, "delegator-addr", "delegator's address")
+	subCmdDelegate.Flags().Var(&validatorAddress, "validator-addr", "validator's address")
 	subCmdDelegate.Flags().Float64Var(&stakingAmount, "amount", 0.0, "staking amount")
 	subCmdDelegate.Flags().Int64Var(&gasPrice, "gas-price", 1, "gas price to pay")
 	subCmdDelegate.Flags().Var(&chainName, "chain-id", "what chain ID to target")
@@ -379,7 +378,7 @@ Delegating to a validator
 		"passphrase to unlock delegator's keystore",
 	)
 
-	for _, flagName := range [...]string{"delegator", "validator", "amount"} {
+	for _, flagName := range [...]string{"delegator-addr", "validator-addr", "amount"} {
 		subCmdDelegate.MarkFlagRequired(flagName)
 	}
 
@@ -419,8 +418,8 @@ Delegating to a validator
 		},
 	}
 
-	subCmdUnDelegate.Flags().Var(&delegatorAddress, "delegator", "delegator's address")
-	subCmdUnDelegate.Flags().Var(&validatorAddress, "validator", "source validator's address")
+	subCmdUnDelegate.Flags().Var(&delegatorAddress, "delegator-addr", "delegator's address")
+	subCmdUnDelegate.Flags().Var(&validatorAddress, "validator-addr", "source validator's address")
 	subCmdUnDelegate.Flags().Float64Var(&stakingAmount, "amount", 0.0, "staking amount")
 	subCmdUnDelegate.Flags().Int64Var(&gasPrice, "gas-price", 1, "gas price to pay")
 	subCmdUnDelegate.Flags().Var(&chainName, "chain-id", "what chain ID to target")
@@ -429,7 +428,7 @@ Delegating to a validator
 		"passphrase to unlock delegator's keystore",
 	)
 
-	for _, flagName := range [...]string{"delegator", "validator", "amount"} {
+	for _, flagName := range [...]string{"delegator-addr", "validator-addr", "amount"} {
 		subCmdUnDelegate.MarkFlagRequired(flagName)
 	}
 
@@ -464,7 +463,7 @@ Collect token rewards
 		},
 	}
 
-	subCmdCollectRewards.Flags().Var(&delegatorAddress, "delegator", "delegator's address")
+	subCmdCollectRewards.Flags().Var(&delegatorAddress, "delegator-addr", "delegator's address")
 	subCmdCollectRewards.Flags().Int64Var(&gasPrice, "gas-price", 1, "gas price to pay")
 	subCmdCollectRewards.Flags().Var(&chainName, "chain-id", "what chain ID to target")
 	subCmdCollectRewards.Flags().StringVar(&unlockP,
@@ -472,7 +471,7 @@ Collect token rewards
 		"passphrase to unlock delegator's keystore",
 	)
 
-	for _, flagName := range [...]string{"delegator", "src-validator", "dest-validator", "amount"} {
+	for _, flagName := range [...]string{"delegator-addr"} {
 		subCmdCollectRewards.MarkFlagRequired(flagName)
 	}
 
