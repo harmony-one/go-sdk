@@ -174,6 +174,8 @@ github.com/harmony-one/harmony v0.0.0-20191016204525-3e8309423cc8 h1:CxgIl19Hjos
 github.com/harmony-one/harmony v0.0.0-20191016204525-3e8309423cc8/go.mod h1:F9/4Jj858j4th+pDeTAR434vS07nVz87TOFLYrpxJpc=
 github.com/harmony-one/harmony v0.0.0-20191029195210-b3eeed6b4152 h1:e2a+OdqAqWdJIUlc2K8cixif8j5GJhlmCXKUutuosQo=
 github.com/harmony-one/harmony v0.0.0-20191029195210-b3eeed6b4152/go.mod h1:F9/4Jj858j4th+pDeTAR434vS07nVz87TOFLYrpxJpc=
+github.com/harmony-one/harmony v0.0.0-20191106012056-10f5d6274891 h1:B1/1g9IK4KeRmxmBrW7/9oK1xCr5KY1q2Enjo0oc+Ko=
+github.com/harmony-one/harmony v0.0.0-20191106012056-10f5d6274891/go.mod h1:F9/4Jj858j4th+pDeTAR434vS07nVz87TOFLYrpxJpc=
 github.com/harmony-one/taggedrlp v0.1.2 h1:lAHV4UhBE45W+i7duAAWOgaQNUjDIG6rUydz/5Oqric=
 github.com/harmony-one/taggedrlp v0.1.2/go.mod h1:AK7o802368ESS3v4WZI5DzaHv9q0CsdgR9jPVJ6zleg=
 github.com/harmony-one/vdf v0.0.0-20190924175951-620379da8849/go.mod h1:EgNU7X5HLNBBho+OqCm1A1NrpD6xb1SHfi9pMCYaKKw=
