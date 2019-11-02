@@ -20,6 +20,12 @@ all:
 	source $(shell go env GOPATH)/src/github.com/harmony-one/harmony/scripts/setup_bls_build_flags.sh && $(env) go build -o $(cli) -ldflags="$(ldflags)" cmd/main.go
 	cp $(cli) hmy
 
+static:
+	make -C $(shell go env GOPATH)/src/github.com/harmony-one/mcl
+	make -C $(shell go env GOPATH)/src/github.com/harmony-one/bls minimised_static BLS_SWAP_G=1
+	source $(shell go env GOPATH)/src/github.com/harmony-one/harmony/scripts/setup_bls_build_flags.sh && $(env) go build -o $(cli) -ldflags="$(ldflags) -w -extldflags \"-static\"" cmd/main.go
+	cp $(cli) hmy
+
 debug:
 	source $(shell go env GOPATH)/src/github.com/harmony-one/harmony/scripts/setup_bls_build_flags.sh && $(env) go build $(flags) -o $(cli) -ldflags="$(ldflags)" cmd/main.go
 	cp $(cli) hmy
@@ -37,6 +43,9 @@ upload-darwin:all
 	aws --profile upload s3 cp ./hmy ${upload-path-darwin}
 
 upload-linux:all
+	aws --profile upload s3 cp ./hmy ${upload-path-linux}
+
+upload-linux-static:static
 	aws --profile upload s3 cp ./hmy ${upload-path-linux}
 
 .PHONY:clean run-tests upload-darwin upload-linux
