@@ -45,6 +45,9 @@ upload-darwin:all
 upload-linux:all
 	aws --profile upload s3 cp ./hmy ${upload-path-linux}
 
+upload-linux-static:static
+	aws --profile upload s3 cp ./hmy ${upload-path-linux}
+
 .PHONY:clean run-tests upload-darwin upload-linux
 
 clean:
