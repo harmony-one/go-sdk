@@ -25,6 +25,9 @@ func ImportFromPrivateKey(privateKey, name, passphrase string) (string, error) {
 	if name == "" {
 		name = generateName() + "-imported"
 	}
+	if privateKey[:2] == "0x" {
+		privateKey = privateKey[2:]
+	}
 	privateKeyBytes, err := hex.DecodeString(privateKey)
 	if err != nil {
 		return "", err
