@@ -122,7 +122,35 @@ func keysSub() []*cobra.Command {
 	}
 	cmdImportSK.Flags().BoolVar(&userProvidesPassphrase, "passphrase", false, ppPrompt)
 
-	return []*cobra.Command{add, cmdImportKS, cmdImportSK, {
+	cmdExportSK := &cobra.Command{
+		Use:   "export-private-key <ACCOUNT_ADDRESS>",
+		Short: "Export the secp256k1 private key",
+		Args:  cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			err := account.ExportPrivateKey(args[0], unlockP)
+			return err
+		},
+	}
+	cmdExportSK.Flags().StringVar(&unlockP,
+		"passphrase", c.DefaultPassphrase,
+		"passphrase to unlock sender's keystore",
+	)
+
+	cmdExportKS := &cobra.Command{
+		Use:   "export-ks <ACCOUNT_ADDRESS>",
+		Short: "Export the keystore file contents",
+		Args:  cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			err := account.ExportKeystore(args[0], unlockP)
+			return err
+		},
+	}
+	cmdExportKS.Flags().StringVar(&unlockP,
+		"passphrase", c.DefaultPassphrase,
+		"passphrase to unlock sender's keystore",
+	)
+
+	return []*cobra.Command{add, cmdImportKS, cmdImportSK, cmdExportKS, cmdExportSK, {
 		Use:   "mnemonic",
 		Short: "Compute the bip39 mnemonic for some input entropy",
 		Run: func(cmd *cobra.Command, args []string) {
