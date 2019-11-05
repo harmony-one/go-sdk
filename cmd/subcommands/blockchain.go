@@ -24,8 +24,9 @@ Query Harmony's blockchain for completed transaction, historic records
 		Use:   "block-by-number",
 		Short: "Get a harmony blockchain block by block number",
 		Args:  cobra.ExactArgs(1),
-		Run: func(cmd *cobra.Command, args []string) {
-			request(rpc.Method.GetBlockByNumber, []interface{}{args[0], true})
+		RunE: func(cmd *cobra.Command, args []string) error {
+			noLatest = true
+			return request(rpc.Method.GetBlockByNumber, []interface{}{args[0], true})
 		},
 	}, {
 		Use:   "known-chains",
@@ -39,8 +40,8 @@ Query Harmony's blockchain for completed transaction, historic records
 		Long: `
 Query Harmony's blockchain for high level metrics, queries
 `,
-		Run: func(cmd *cobra.Command, args []string) {
-			request(rpc.Method.ProtocolVersion, []interface{}{})
+		RunE: func(cmd *cobra.Command, args []string) error {
+			return request(rpc.Method.ProtocolVersion, []interface{}{})
 		},
 	}, {
 		Use:   "transaction-by-hash",
@@ -49,9 +50,9 @@ Query Harmony's blockchain for high level metrics, queries
 		Long: `
 Inputs of a transaction and r, s, v value of transaction
 `,
-		Run: func(cmd *cobra.Command, args []string) {
+		RunE: func(cmd *cobra.Command, args []string) error {
 			noLatest = true
-			request(rpc.Method.GetTransactionByHash, []interface{}{args[0]})
+			return request(rpc.Method.GetTransactionByHash, []interface{}{args[0]})
 		},
 	}, {
 		Use:   "transaction-receipt",
@@ -60,9 +61,9 @@ Inputs of a transaction and r, s, v value of transaction
 		Long: `
 High level information about transaction, like blockNumber, blockHash
 `,
-		Run: func(cmd *cobra.Command, args []string) {
+		RunE: func(cmd *cobra.Command, args []string) error {
 			noLatest = true
-			request(rpc.Method.GetTransactionReceipt, []interface{}{args[0]})
+			return request(rpc.Method.GetTransactionReceipt, []interface{}{args[0]})
 		},
 	},
 	}

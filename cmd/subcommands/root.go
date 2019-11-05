@@ -20,21 +20,21 @@ var (
 	noPrettyOutput  bool
 	node            string
 	keyStoreDir     string
-	request         = func(method string, params []interface{}) {
+	request         = func(method string, params []interface{}) error {
 		if !noLatest {
 			params = append(params, "latest")
 		}
 		success, failure := rpc.Request(method, node, params)
 		if failure != nil {
-			fmt.Println(failure)
-			os.Exit(-1)
+			return failure
 		}
 		asJSON, _ := json.Marshal(success)
 		if noPrettyOutput {
 			fmt.Print(string(asJSON))
-			return
+			return nil
 		}
 		fmt.Print(common.JSONPrettyFormat(string(asJSON)))
+		return nil
 	}
 	// RootCmd is single entry point of the CLI
 	RootCmd = &cobra.Command{
