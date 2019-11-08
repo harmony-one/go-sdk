@@ -93,7 +93,7 @@ func handleStakingTransaction(
 			return err
 		}
 
-		if strings.Compare(signerAddr, delegatorAddress.String()) != 0 {
+		if strings.Compare(signerAddr, from) != 0 {
 			return errors.New("error : delegator address doesn't match with ledger hardware addresss")
 		}
 	} else {
@@ -171,9 +171,10 @@ Create a new validator"
 				minSelfDel := minSelfDelegationBigInt.Mul(minSelfDelegationBigInt, big.NewInt(denominations.Nano))
 
 				maxTotalDelegationBigInt := big.NewInt(int64(maxTotalDelegation * denominations.Nano))
-				maxTotalDel := minSelfDelegationBigInt.Mul(maxTotalDelegationBigInt, big.NewInt(denominations.Nano))
+				maxTotalDel := maxTotalDelegationBigInt.Mul(maxTotalDelegationBigInt, big.NewInt(denominations.Nano))
 
 				return staking.DirectiveCreateValidator, staking.CreateValidator{
+					address.Parse(validatorAddress.String()),
 					&staking.Description{
 						validatorName,
 						validatorIdentity,
@@ -187,7 +188,6 @@ Create a new validator"
 						commisionMaxChangeRate},
 					minSelfDel,
 					maxTotalDel,
-					address.Parse(validatorAddress.String()),
 					blsPubKeys,
 					amt,
 				}
@@ -272,7 +272,7 @@ Edit an existing validator"
 				minSelfDel := minSelfDelegationBigInt.Mul(minSelfDelegationBigInt, big.NewInt(denominations.Nano))
 
 				maxTotalDelegationBigInt := big.NewInt(int64(maxTotalDelegation * denominations.Nano))
-				maxTotalDel := minSelfDelegationBigInt.Mul(maxTotalDelegationBigInt, big.NewInt(denominations.Nano))
+				maxTotalDel := maxTotalDelegationBigInt.Mul(maxTotalDelegationBigInt, big.NewInt(denominations.Nano))
 
 				return staking.DirectiveEditValidator, staking.EditValidator{
 					address.Parse(validatorAddress.String()),
@@ -312,8 +312,6 @@ Edit an existing validator"
 	subCmdEditValidator.Flags().StringVar(&validatorSecurityContact, "security-contact", "", "validator's security contact")
 	subCmdEditValidator.Flags().StringVar(&validatorDetails, "details", "", "validator's details")
 	subCmdEditValidator.Flags().StringVar(&commisionRateStr, "rate", "", "commission rate")
-	subCmdEditValidator.Flags().StringVar(&commisionMaxRateStr, "max-rate", "", "commision max rate")
-	subCmdEditValidator.Flags().StringVar(&commisionMaxChangeRateStr, "max-change-rate", "", "commission max change amount")
 	subCmdEditValidator.Flags().Float64Var(&minSelfDelegation, "min-self-delegation", 0.0, "minimal self delegation")
 	subCmdEditValidator.Flags().Float64Var(&maxTotalDelegation, "max-total-delegation", 0.0, "maximal total delegation")
 	subCmdEditValidator.Flags().Var(&validatorAddress, "validator-addr", "validator's staking address")
@@ -327,8 +325,8 @@ Edit an existing validator"
 		"passphrase to unlock delegator's keystore",
 	)
 
-	for _, flagName := range [...]string{"name", "identity", "website", "security-contact", "details", "rate", "max-rate",
-		"max-change-rate", "min-self-delegation", "max-total-delegation", "validator-addr", "remove-bls-key", "add-bls-key"} {
+	for _, flagName := range [...]string{"name", "identity", "website", "security-contact", "details", "rate",
+		"min-self-delegation", "max-total-delegation", "validator-addr", "remove-bls-key", "add-bls-key"} {
 		subCmdEditValidator.MarkFlagRequired(flagName)
 	}
 

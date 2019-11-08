@@ -10,6 +10,11 @@ import (
 	"github.com/karalabe/hid"
 )
 
+const (
+	signatureSize int = 65
+	packetSize    int = 255
+)
+
 var DEBUG bool
 
 type hidFramer struct {
@@ -98,7 +103,7 @@ func (hf *hidFramer) Read(p []byte) (int, error) {
 
 
 func (af *apduFramer) Exchange(apdu APDU) ([]byte, error) {
-	if len(apdu.Payload) > 255 {
+	if len(apdu.Payload) > packetSize {
 		panic("APDU payload cannot exceed 255 bytes")
 	}
 	af.hf.Reset()
@@ -171,11 +176,13 @@ const (
 	cmdSignStaking  = 0x04
 	cmdSignTx       = 0x08
 
-	p1More  = 0x80
+	p1First         = 0x0
+	p1More          = 0x80
 
 	p2DisplayAddress = 0x00
 	p2DisplayHash    = 0x00
 	p2SignHash       = 0x01
+	p2Finish         = 0x02
 )
 
 func (n *NanoS) GetVersion() (version string, err error) {
@@ -201,36 +208,48 @@ func (n *NanoS) GetAddress() (oneAddr string, err error) {
 	return string(pubkey[:]), nil
 }
 
-func (n *NanoS) SignTxn(txn []byte) (sig [65]byte, err error) {
+func (n *NanoS) SignTxn(txn []byte) (sig [signatureSize]byte, err error) {
 	var resp []byte
 
 	var p1 byte = p1More
 	resp, err = n.Exchange(cmdSignTx, p1, p2SignHash, txn)
 	if err != nil {
-		return [65]byte{}, err
+		return [signatureSize]byte{}, err
 	}
 
 	copy(sig[:], resp)
 
 	if copy(sig[:], resp) != len(sig) {
-		return [65]byte{}, errors.New("signature has wrong length")
+		return [signatureSize]byte{}, errors.New("signature has wrong length")
 	}
 	return
 }
 
-func (n *NanoS) SignStaking(stake []byte) (sig [65]byte, err error) {
+func (n *NanoS) SignStaking(stake []byte) (sig [signatureSize]byte, err error) {
+	buf := bytes.NewBuffer(stake)
 	var resp []byte
 
-	var p1 byte = p1More
-	resp, err = n.Exchange(cmdSignStaking, p1, p2SignHash, stake)
-	if err != nil {
-		return [65]byte{}, err
+	for buf.Len() > 0 {
+		var p1 byte = p1More
+		var p2 byte = p2SignHash
+		if resp == nil {
+			p1 = p1First
+		}
+
+		if buf.Len() < packetSize {
+			p2  = p2Finish
+		}
+
+		resp, err = n.Exchange(cmdSignStaking, p1, p2, buf.Next(packetSize))
+		if err != nil {
+			return [signatureSize]byte{}, err
+		}
 	}
 
 	copy(sig[:], resp)
 
 	if copy(sig[:], resp) != len(sig) {
-		return [65]byte{}, errors.New("signature has wrong length")
+		return [signatureSize]byte{}, errors.New("signature has wrong length")
 	}
 	return
 }

@@ -12,7 +12,7 @@ require (
 	github.com/ethereum/go-ethereum v1.8.27
 	github.com/fatih/color v1.7.0
 	github.com/harmony-one/bls v0.0.5
-	github.com/harmony-one/harmony v0.0.0-20191029195210-b3eeed6b4152
+	github.com/harmony-one/harmony v0.0.0-20191106012056-10f5d6274891
 	github.com/harmony-one/vdf v1.0.0 // indirect
 	github.com/hashicorp/golang-lru v0.5.3 // indirect
 	github.com/karalabe/hid v1.0.0
