@@ -126,7 +126,7 @@ func handleStakingTransaction(
 func stakingSubCommands() []*cobra.Command {
 
 	subCmdNewValidator := &cobra.Command{
-		Use:   "createvalidator",
+		Use:   "create-validator",
 		Short: "create a new validator",
 		Long: `
 Create a new validator"
@@ -153,7 +153,7 @@ Create a new validator"
 			}
 
 			blsPubKeys := make([]shard.BlsPublicKey, len(stakingBlsPubKeys))
-			for i :=0; i< len(stakingBlsPubKeys); i++ {
+			for i := 0; i < len(stakingBlsPubKeys); i++ {
 				blsPubKey := new(bls.PublicKey)
 				err = blsPubKey.DeserializeHexStr(stakingBlsPubKeys[i])
 				if err != nil {
@@ -233,7 +233,7 @@ Create a new validator"
 	}
 
 	subCmdEditValidator := &cobra.Command{
-		Use:   "editvalidator",
+		Use:   "edit-validator",
 		Short: "edit a validator",
 		Long: `
 Edit an existing validator"
@@ -305,7 +305,6 @@ Edit an existing validator"
 		},
 	}
 
-
 	subCmdEditValidator.Flags().StringVar(&validatorName, "name", "", "validator's name")
 	subCmdEditValidator.Flags().StringVar(&validatorIdentity, "identity", "", "validator's identity")
 	subCmdEditValidator.Flags().StringVar(&validatorWebsite, "website", "", "validator's website")
@@ -315,8 +314,8 @@ Edit an existing validator"
 	subCmdEditValidator.Flags().Float64Var(&minSelfDelegation, "min-self-delegation", 0.0, "minimal self delegation")
 	subCmdEditValidator.Flags().Float64Var(&maxTotalDelegation, "max-total-delegation", 0.0, "maximal total delegation")
 	subCmdEditValidator.Flags().Var(&validatorAddress, "validator-addr", "validator's staking address")
-	subCmdEditValidator.Flags().StringVar(&slotKeyToAdd, "add-bls-key", "","add BLS pubkey to slot")
-	subCmdEditValidator.Flags().StringVar(&slotKeyToRemove, "remove-bls-key", "","remove BLS pubkey from slot")
+	subCmdEditValidator.Flags().StringVar(&slotKeyToAdd, "add-bls-key", "", "add BLS pubkey to slot")
+	subCmdEditValidator.Flags().StringVar(&slotKeyToRemove, "remove-bls-key", "", "remove BLS pubkey from slot")
 
 	subCmdEditValidator.Flags().Int64Var(&gasPrice, "gas-price", 1, "gas price to pay")
 	subCmdEditValidator.Flags().Var(&chainName, "chain-id", "what chain ID to target")
@@ -431,7 +430,7 @@ Delegating to a validator
 	}
 
 	subCmdCollectRewards := &cobra.Command{
-		Use:   "collectrewards",
+		Use:   "collect-rewards",
 		Short: "collect token rewards",
 		Long: `
 Collect token rewards
