@@ -5,10 +5,11 @@ import (
 	"fmt"
 	"os"
 
-	color "github.com/fatih/color"
+	"github.com/fatih/color"
 	"github.com/harmony-one/go-sdk/pkg/account"
 	c "github.com/harmony-one/go-sdk/pkg/common"
 
+	"github.com/harmony-one/go-sdk/pkg/keys"
 	"github.com/harmony-one/go-sdk/pkg/ledger"
 	"github.com/harmony-one/go-sdk/pkg/mnemonic"
 	"github.com/harmony-one/go-sdk/pkg/store"
@@ -18,8 +19,8 @@ import (
 )
 
 const (
-	seedPhraseWarning = ("**Important** write this seed phrase in a safe place, " +
-		"it is the only way to recover your account if you ever forget your password\n\n")
+	seedPhraseWarning = "**Important** write this seed phrase in a safe place, " +
+		"it is the only way to recover your account if you ever forget your password\n\n"
 )
 
 var (
@@ -27,6 +28,7 @@ var (
 	recoverFromMnemonic    bool
 	userProvidesPassphrase bool
 	importPassphrase       string
+	blsFilePath            string
 )
 
 func doubleTakePhrase() string {
@@ -150,7 +152,19 @@ func keysSub() []*cobra.Command {
 		"passphrase to unlock sender's keystore",
 	)
 
-	return []*cobra.Command{add, cmdImportKS, cmdImportSK, cmdExportKS, cmdExportSK, {
+	cmdGenerateBlsKey := &cobra.Command{
+		Use:   "generate-bls-key",
+		Short: "generate bls keys with a requested passphrase",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			passphrase := doubleTakePhrase()
+			return keys.GenBlsKeys(passphrase, blsFilePath)
+		},
+	}
+	cmdGenerateBlsKey.Flags().StringVar(&blsFilePath, "bls-file-path", "",
+		"absolute path of where to save encrypted bls private key")
+
+	// TODO: cleanup these functions...
+	return []*cobra.Command{add, cmdImportKS, cmdImportSK, cmdExportKS, cmdExportSK, cmdGenerateBlsKey, {
 		Use:   "mnemonic",
 		Short: "Compute the bip39 mnemonic for some input entropy",
 		Run: func(cmd *cobra.Command, args []string) {
