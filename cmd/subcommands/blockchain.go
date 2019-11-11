@@ -65,6 +65,13 @@ High level information about transaction, like blockNumber, blockHash
 			noLatest = true
 			return request(rpc.Method.GetTransactionReceipt, []interface{}{args[0]})
 		},
+	}, {
+		Use:   "latest-header",
+		Short: "Get the latest header",
+		RunE: func(cmd *cobra.Command, arg []string) error {
+			noLatest = true
+			return request(rpc.Method.GetLatestBlockHeader, []interface{}{})
+		},
 	},
 	}
 	cmdBlockchain.AddCommand(subCommands[:]...)
