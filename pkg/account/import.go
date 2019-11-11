@@ -14,12 +14,6 @@ import (
 	"github.com/pkg/errors"
 )
 
-var (
-	// ErrNotAbsPath when keypath not absolute path
-	ErrNotAbsPath   = errors.New("keypath is not absolute path")
-	ErrBadKeyLength = errors.New("Invalid private key (wrong length)")
-)
-
 // ImportFromPrivateKey allows import of an ECDSA private key
 func ImportFromPrivateKey(privateKey, name, passphrase string) (string, error) {
 	if name == "" {
@@ -33,7 +27,7 @@ func ImportFromPrivateKey(privateKey, name, passphrase string) (string, error) {
 		return "", err
 	}
 	if len(privateKeyBytes) != common.Secp256k1PrivateKeyBytesLength {
-		return "", ErrBadKeyLength
+		return "", common.ErrBadKeyLength
 	}
 
 	// btcec.PrivKeyFromBytes only returns a secret key and public key
@@ -72,7 +66,7 @@ func generateName() string {
 // ImportKeyStore imports a keystore along with a password
 func ImportKeyStore(keypath, name, passphrase string) (string, error) {
 	if !path.IsAbs(keypath) {
-		return "", ErrNotAbsPath
+		return "", common.ErrNotAbsPath
 	}
 	keyJSON, readError := ioutil.ReadFile(keypath)
 	if readError != nil {

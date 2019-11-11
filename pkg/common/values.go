@@ -1,6 +1,7 @@
 package common
 
 import (
+	"errors"
 	"os"
 
 	"github.com/harmony-one/harmony/accounts/keystore"
@@ -19,6 +20,8 @@ var (
 	ScryptP          = keystore.StandardScryptP
 	DebugRPC         = false
 	DebugTransaction = false
+	ErrNotAbsPath    = errors.New("keypath is not absolute path")
+	ErrBadKeyLength  = errors.New("Invalid private key (wrong length)")
 )
 
 func init() {
