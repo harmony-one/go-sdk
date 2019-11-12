@@ -155,7 +155,7 @@ Create a new validator"
 			blsPubKeys := make([]shard.BlsPublicKey, len(stakingBlsPubKeys))
 			for i := 0; i < len(stakingBlsPubKeys); i++ {
 				blsPubKey := new(bls.PublicKey)
-				err = blsPubKey.DeserializeHexStr(stakingBlsPubKeys[i])
+				err = blsPubKey.DeserializeHexStr(strings.TrimPrefix(stakingBlsPubKeys[i], "0x"))
 				if err != nil {
 					return err
 				}
