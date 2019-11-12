@@ -52,11 +52,10 @@ hmy keys export-private-key <ACCOUNT_ADDRESS> --passphrase harmony-one
 hmy keys generate-bls-key --bls-file-path /tmp/file.key
 
 %s
-hmy staking create-validator --amount 10 --validator-addr one103q7qe5t2505lypvltkqtddaef5tzfxwsse4z7 \
-    --bls-pubkeys 678ec9670899bf6af85b877058bea4fc1301a5a3a376987e826e3ca150b80e3eaadffedad0fedfa111576fa76ded980c \
-        6757ebfbbc53a167e4c069cdf2beecd1428316306145c8d6d97c6c6babb3ec34e7003b3db8ccfc7d79a412aec7c68c97 \
+hmy staking create-validator --amount 10 --validator-addr <SOME_ONE_ADDRESS> \
+    --bls-pubkeys <BLS_KEY_1>,<BLS_KEY_2>,<BLS_KEY_3> \
     --identity foo --details bar --name baz --max-change-rate 10 --max-rate 10 --max-total-delegation 10 \ 
-    --min-self-delegation 10 --rate 10 --security-contact Leo  --website harmony.one --passphrase=''
+    --min-self-delegation 10 --rate 10 --security-contact Leo  --website harmony.one --passphrase harmony-one
 
 `,
 		g("1.  Check Balances"),
