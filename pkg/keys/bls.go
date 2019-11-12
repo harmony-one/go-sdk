@@ -8,9 +8,11 @@ import (
 	"encoding/hex"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"os"
 	"path"
 
+	ffiBls "github.com/harmony-one/bls/ffi/go/bls"
 	"github.com/harmony-one/go-sdk/pkg/common"
 	"github.com/harmony-one/harmony/crypto/bls"
 )
@@ -41,6 +43,34 @@ func GenBlsKeys(passphrase, filePath string) error {
 		publicKeyHex, privateKeyHex, filePath)
 	fmt.Println(common.JSONPrettyFormat(out))
 	return nil
+}
+
+func RecoverBlsKeyFromFile(passphrase, filePath string) error {
+	if !path.IsAbs(filePath) {
+		return common.ErrNotAbsPath
+	}
+	encryptedPrivateKeyBytes, err := ioutil.ReadFile(filePath)
+	if err != nil {
+		return err
+	}
+	decryptedBytes, err := decrypt(encryptedPrivateKeyBytes, passphrase)
+	if err != nil {
+		return err
+	}
+	privateKey := &ffiBls.SecretKey{}
+	err = privateKey.DeserializeHexStr(string(decryptedBytes))
+	if err != nil {
+		return err
+	}
+	publicKey := privateKey.GetPublicKey()
+	publicKeyHex := publicKey.SerializeToHexStr()
+	privateKeyHex := privateKey.SerializeToHexStr()
+	out := fmt.Sprintf(`
+{"public-key" : "0x%s", "private-key" : "0x%s"`,
+		publicKeyHex, privateKeyHex)
+	fmt.Println(common.JSONPrettyFormat(out))
+	return nil
+
 }
 
 func writeToFile(filename string, data string) error {

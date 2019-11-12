@@ -46,7 +46,7 @@ func doubleTakePhrase() string {
 func keysSub() []*cobra.Command {
 	add := &cobra.Command{
 		Use:   "add <ACCOUNT_NAME>",
-		Short: "Create a new key",
+		Short: "Create a new keystore key",
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if store.DoesNamedAccountExist(args[0]) {
@@ -163,30 +163,44 @@ func keysSub() []*cobra.Command {
 	cmdGenerateBlsKey.Flags().StringVar(&blsFilePath, "bls-file-path", "",
 		"absolute path of where to save encrypted bls private key")
 
+	cmdRecoverBlsKey := &cobra.Command{
+		Use:   "recover-bls-key <ABSOLUTE_PATH_BLS_KEY>",
+		Short: "recover bls keys from an encrypted bls key file",
+		Args:  cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			return keys.RecoverBlsKeyFromFile(unlockP, args[0])
+		},
+	}
+	cmdRecoverBlsKey.Flags().StringVar(&unlockP,
+		"passphrase", c.DefaultPassphrase,
+		"passphrase to unlock sender's keystore",
+	)
+
 	// TODO: cleanup these functions...
-	return []*cobra.Command{add, cmdImportKS, cmdImportSK, cmdExportKS, cmdExportSK, cmdGenerateBlsKey, {
-		Use:   "mnemonic",
-		Short: "Compute the bip39 mnemonic for some input entropy",
-		Run: func(cmd *cobra.Command, args []string) {
-			fmt.Println(mnemonic.Generate())
+	return []*cobra.Command{add, cmdImportKS, cmdImportSK, cmdExportKS, cmdExportSK,
+		cmdGenerateBlsKey, cmdRecoverBlsKey, {
+			Use:   "mnemonic",
+			Short: "Compute the bip39 mnemonic for some input entropy",
+			Run: func(cmd *cobra.Command, args []string) {
+				fmt.Println(mnemonic.Generate())
+			},
+		}, {
+			Use:   "list",
+			Short: "List all the local accounts",
+			Run: func(cmd *cobra.Command, args []string) {
+				if useLedgerWallet {
+					ledger.ProcessAddressCommand()
+					return
+				}
+				store.DescribeLocalAccounts()
+			},
+		}, {
+			Use:   "location",
+			Short: "Show where `hmy` keeps accounts & their keys",
+			Run: func(cmd *cobra.Command, args []string) {
+				fmt.Println(store.DefaultLocation())
+			},
 		},
-	}, {
-		Use:   "list",
-		Short: "List all the local accounts",
-		Run: func(cmd *cobra.Command, args []string) {
-			if useLedgerWallet {
-				ledger.ProcessAddressCommand()
-				return
-			}
-			store.DescribeLocalAccounts()
-		},
-	}, {
-		Use:   "location",
-		Short: "Show where `hmy` keeps accounts & their keys",
-		Run: func(cmd *cobra.Command, args []string) {
-			fmt.Println(store.DefaultLocation())
-		},
-	},
 	}
 }
 
