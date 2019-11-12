@@ -21,6 +21,7 @@ func GenBlsKeys(passphrase, filePath string) error {
 	privateKey := bls.RandPrivateKey()
 	publicKey := privateKey.GetPublicKey()
 	publicKeyHex := publicKey.SerializeToHexStr()
+	privateKeyHex := privateKey.SerializeToHexStr()
 
 	if filePath == "" {
 		cwd, _ := os.Getwd()
@@ -29,7 +30,6 @@ func GenBlsKeys(passphrase, filePath string) error {
 	if !path.IsAbs(filePath) {
 		return common.ErrNotAbsPath
 	}
-	privateKeyHex := privateKey.SerializeToHexStr()
 	encryptedPrivateKeyStr, err := encrypt([]byte(privateKeyHex), passphrase)
 	if err != nil {
 		return err
@@ -53,12 +53,11 @@ func RecoverBlsKeyFromFile(passphrase, filePath string) error {
 	if err != nil {
 		return err
 	}
-	decryptedBytes, err := decrypt(encryptedPrivateKeyBytes, passphrase)
+	decryptedPrivateKeyBytes, err := decrypt(encryptedPrivateKeyBytes, passphrase)
 	if err != nil {
 		return err
 	}
-	privateKey := &ffiBls.SecretKey{}
-	err = privateKey.DeserializeHexStr(string(decryptedBytes))
+	privateKey, err := getBlsKey(string(decryptedPrivateKeyBytes))
 	if err != nil {
 		return err
 	}
@@ -66,11 +65,61 @@ func RecoverBlsKeyFromFile(passphrase, filePath string) error {
 	publicKeyHex := publicKey.SerializeToHexStr()
 	privateKeyHex := privateKey.SerializeToHexStr()
 	out := fmt.Sprintf(`
-{"public-key" : "0x%s", "private-key" : "0x%s"`,
+{"public-key" : "0x%s", "private-key" : "0x%s"}`,
 		publicKeyHex, privateKeyHex)
 	fmt.Println(common.JSONPrettyFormat(out))
 	return nil
 
+}
+
+func SaveBlsKey(passphrase, filePath, privateKeyHex string) error {
+	privateKey, err := getBlsKey(privateKeyHex)
+	if err != nil {
+		return err
+	}
+	if filePath == "" {
+		cwd, _ := os.Getwd()
+		filePath = fmt.Sprintf("%s/%s.key", cwd, privateKey.GetPublicKey().SerializeToHexStr())
+	}
+	if !path.IsAbs(filePath) {
+		return common.ErrNotAbsPath
+	}
+	encryptedPrivateKeyStr, err := encrypt([]byte(privateKeyHex), passphrase)
+	if err != nil {
+		return err
+	}
+	err = writeToFile(filePath, encryptedPrivateKeyStr)
+	if err != nil {
+		return err
+	}
+	fmt.Printf("Encrypted and saved bls key to: %s\n", filePath)
+	return nil
+}
+
+func GetPublicBlsKey(privateKeyHex string) error {
+	privateKey, err := getBlsKey(privateKeyHex)
+	if err != nil {
+		return err
+	}
+	publicKeyHex := privateKey.GetPublicKey().SerializeToHexStr()
+	out := fmt.Sprintf(`
+{"public-key" : "0x%s", "private-key" : "0x%s"}`,
+		publicKeyHex, privateKeyHex)
+	fmt.Println(common.JSONPrettyFormat(out))
+	return nil
+
+}
+
+func getBlsKey(privateKeyHex string) (*ffiBls.SecretKey, error) {
+	privateKey := &ffiBls.SecretKey{}
+	if privateKeyHex[:2] == "0x" {
+		privateKeyHex = privateKeyHex[2:]
+	}
+	err := privateKey.DeserializeHexStr(string(privateKeyHex))
+	if err != nil {
+		return privateKey, err
+	}
+	return privateKey, nil
 }
 
 func writeToFile(filename string, data string) error {

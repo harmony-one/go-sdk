@@ -32,7 +32,7 @@ var (
 )
 
 func doubleTakePhrase() string {
-	fmt.Println("Enter passphrase for account")
+	fmt.Println("Enter passphrase")
 	pass, _ := terminal.ReadPassword(int(os.Stdin.Fd()))
 	fmt.Println("Repeat the passphrase:")
 	repeatPass, _ := terminal.ReadPassword(int(os.Stdin.Fd()))
@@ -44,7 +44,27 @@ func doubleTakePhrase() string {
 }
 
 func keysSub() []*cobra.Command {
-	add := &cobra.Command{
+	cmdList := &cobra.Command{
+		Use:   "list",
+		Short: "List all the local accounts",
+		Run: func(cmd *cobra.Command, args []string) {
+			if useLedgerWallet {
+				ledger.ProcessAddressCommand()
+				return
+			}
+			store.DescribeLocalAccounts()
+		},
+	}
+
+	cmdLocation := &cobra.Command{
+		Use:   "location",
+		Short: "Show where `hmy` keeps accounts & their keys",
+		Run: func(cmd *cobra.Command, args []string) {
+			fmt.Println(store.DefaultLocation())
+		},
+	}
+
+	cmdAdd := &cobra.Command{
 		Use:   "add <ACCOUNT_NAME>",
 		Short: "Create a new keystore key",
 		Args:  cobra.ExactArgs(1),
@@ -77,12 +97,20 @@ func keysSub() []*cobra.Command {
 			return nil
 		},
 	}
-	add.Flags().BoolVar(&recoverFromMnemonic, "recover", false, "create keys from a mnemonic")
+	cmdAdd.Flags().BoolVar(&recoverFromMnemonic, "recover", false, "create keys from a mnemonic")
 	ppPrompt := fmt.Sprintf(
 		"provide own keystore encryption phrase, default: `%s`", c.DefaultPassphrase,
 	)
+	cmdAdd.Flags().BoolVar(&userProvidesPassphrase, "passphrase", false, ppPrompt)
 
-	add.Flags().BoolVar(&userProvidesPassphrase, "passphrase", false, ppPrompt)
+	cmdMnemonic := &cobra.Command{
+		Use:   "mnemonic",
+		Short: "Compute the bip39 mnemonic for some input entropy",
+		Run: func(cmd *cobra.Command, args []string) {
+			fmt.Println(mnemonic.Generate())
+		},
+	}
+
 	cmdImportKS := &cobra.Command{
 		Use:   "import-ks <ABSOLUTE_PATH_KEYSTORE> [ACCOUNT_NAME]",
 		Args:  cobra.RangeArgs(1, 2),
@@ -102,6 +130,7 @@ func keysSub() []*cobra.Command {
 	importP := `passphrase of key being imported, default assumes ""`
 	cmdImportKS.Flags().StringVar(&importPassphrase, "passphrase", "", importP)
 	cmdImportKS.Flags().BoolVar(&quietImport, "quiet", false, "do not print out imported account name")
+
 	cmdImportSK := &cobra.Command{
 		Use:   "import-private-key <secp256k1_PRIVATE_KEY> [ACCOUNT_NAME]",
 		Short: "Import an existing keystore key (only accept secp256k1 private keys)",
@@ -154,7 +183,7 @@ func keysSub() []*cobra.Command {
 
 	cmdGenerateBlsKey := &cobra.Command{
 		Use:   "generate-bls-key",
-		Short: "generate bls keys with a requested passphrase",
+		Short: "Generate bls keys then encrypt and save the private key with a requested passphrase",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			passphrase := doubleTakePhrase()
 			return keys.GenBlsKeys(passphrase, blsFilePath)
@@ -165,7 +194,7 @@ func keysSub() []*cobra.Command {
 
 	cmdRecoverBlsKey := &cobra.Command{
 		Use:   "recover-bls-key <ABSOLUTE_PATH_BLS_KEY>",
-		Short: "recover bls keys from an encrypted bls key file",
+		Short: "Recover bls keys from an encrypted bls key file",
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return keys.RecoverBlsKeyFromFile(unlockP, args[0])
@@ -176,32 +205,29 @@ func keysSub() []*cobra.Command {
 		"passphrase to unlock sender's keystore",
 	)
 
-	// TODO: cleanup these functions...
-	return []*cobra.Command{add, cmdImportKS, cmdImportSK, cmdExportKS, cmdExportSK,
-		cmdGenerateBlsKey, cmdRecoverBlsKey, {
-			Use:   "mnemonic",
-			Short: "Compute the bip39 mnemonic for some input entropy",
-			Run: func(cmd *cobra.Command, args []string) {
-				fmt.Println(mnemonic.Generate())
-			},
-		}, {
-			Use:   "list",
-			Short: "List all the local accounts",
-			Run: func(cmd *cobra.Command, args []string) {
-				if useLedgerWallet {
-					ledger.ProcessAddressCommand()
-					return
-				}
-				store.DescribeLocalAccounts()
-			},
-		}, {
-			Use:   "location",
-			Short: "Show where `hmy` keeps accounts & their keys",
-			Run: func(cmd *cobra.Command, args []string) {
-				fmt.Println(store.DefaultLocation())
-			},
+	cmdSaveBlsKey := &cobra.Command{
+		Use:   "save-bls-key <PRIVATE_BLS_KEY>",
+		Short: "Encrypt and save the bls private key with a requested passphrase",
+		Args:  cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			passphrase := doubleTakePhrase()
+			return keys.SaveBlsKey(passphrase, blsFilePath, args[0])
 		},
 	}
+	cmdSaveBlsKey.Flags().StringVar(&blsFilePath, "bls-file-path", "",
+		"absolute path of where to save encrypted bls private key")
+
+	GetPublicBlsKey := &cobra.Command{
+		Use:   "get-public-bls-key <PRIVATE_BLS_KEY>",
+		Short: "Get the public bls key associated with the provided private bls key",
+		Args:  cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			return keys.GetPublicBlsKey(args[0])
+		},
+	}
+
+	return []*cobra.Command{cmdList, cmdLocation, cmdAdd, cmdMnemonic, cmdImportKS, cmdImportSK,
+		cmdExportKS, cmdExportSK, cmdGenerateBlsKey, cmdRecoverBlsKey, cmdSaveBlsKey, GetPublicBlsKey}
 }
 
 func init() {
