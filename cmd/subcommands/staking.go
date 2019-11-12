@@ -155,7 +155,7 @@ Create a new validator"
 			blsPubKeys := make([]shard.BlsPublicKey, len(stakingBlsPubKeys))
 			for i := 0; i < len(stakingBlsPubKeys); i++ {
 				blsPubKey := new(bls.PublicKey)
-				err = blsPubKey.DeserializeHexStr(stakingBlsPubKeys[i])
+				err = blsPubKey.DeserializeHexStr(strings.TrimPrefix(stakingBlsPubKeys[i], "0x"))
 				if err != nil {
 					return err
 				}
@@ -250,7 +250,7 @@ Edit an existing validator"
 			}
 
 			blsPubKeyRemove := new(bls.PublicKey)
-			err = blsPubKeyRemove.DeserializeHexStr(slotKeyToRemove)
+			err = blsPubKeyRemove.DeserializeHexStr(strings.TrimPrefix(slotKeyToRemove, "0x"))
 			if err != nil {
 				return err
 			}
@@ -259,7 +259,7 @@ Edit an existing validator"
 			shardPubKeyRemove.FromLibBLSPublicKey(blsPubKeyRemove)
 
 			blsPubKeyAdd := new(bls.PublicKey)
-			err = blsPubKeyAdd.DeserializeHexStr(slotKeyToAdd)
+			err = blsPubKeyAdd.DeserializeHexStr(strings.TrimPrefix(slotKeyToAdd, "0x"))
 			if err != nil {
 				return err
 			}
