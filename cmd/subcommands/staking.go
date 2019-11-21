@@ -49,6 +49,15 @@ var (
 	stakingAmount             float64
 )
 
+var (
+	errInvalidSelfDelegation     = errors.New("amount value should be between min_self_delegation and max_total_delegation")
+	errInvalidTotalDelegation    = errors.New("total delegation can not be bigger than max_total_delegation")
+	errMinSelfDelegationTooSmall = errors.New("min_self_delegation has to be greater than 1 ONE")
+	errInvalidMaxTotalDelegation = errors.New("max_total_delegation can not be less than min_self_delegation")
+	errCommissionRateTooLarge    = errors.New("commission rate and change rate can not be larger than max commission rate")
+	errInvalidComissionRate      = errors.New("commission rate, change rate and max rate should be within 0-100 percent")
+)
+
 func getNextNonce(messenger rpc.T) uint64 {
 	transactionCountRPCReply, err :=
 		messenger.SendRPC(rpc.Method.GetTransactionCount, []interface{}{address.Parse(delegatorAddress.String()), "latest"})
@@ -123,6 +132,52 @@ func handleStakingTransaction(
 	return nil
 }
 
+func delegationAmountSanityCheck(minSelfDelegation *big.Int , maxTotalDelegation *big.Int, amount *big.Int) error {
+	// MinSelfDelegation must be >= 1 ONE
+	if minSelfDelegation.Cmp(big.NewInt(denominations.One)) < 0 {
+		return errMinSelfDelegationTooSmall
+	}
+
+	// MaxTotalDelegation must not be less than MinSelfDelegation
+	if maxTotalDelegation.Cmp(minSelfDelegation) < 0 {
+		return errInvalidMaxTotalDelegation
+	}
+
+	// Amount must be >= MinSelfDelegation
+	if (amount != nil) && ((amount.Cmp(maxTotalDelegation) > 0) || (amount.Cmp(minSelfDelegation) < 0)) {
+		return errInvalidSelfDelegation
+	}
+
+	return nil
+}
+
+func rateSanityCheck(rate numeric.Dec, maxRate numeric.Dec, maxChangeRate numeric.Dec) error {
+	hundredPercent := numeric.NewDec(1)
+	zeroPercent := numeric.NewDec(0)
+
+	if rate.LT(zeroPercent) || rate.GT(hundredPercent) {
+		return errInvalidComissionRate
+	}
+
+	if maxRate.LT(zeroPercent) || maxRate.GT(hundredPercent) {
+		return errInvalidComissionRate
+	}
+
+	if maxChangeRate.LT(zeroPercent) || maxChangeRate.GT(hundredPercent) {
+		return errInvalidComissionRate
+	}
+
+	if rate.GT(maxRate) {
+		return errCommissionRateTooLarge
+	}
+
+	if maxChangeRate.GT(maxRate) {
+		return errCommissionRateTooLarge
+	}
+
+	return nil
+}
+
 func stakingSubCommands() []*cobra.Command {
 
 	subCmdNewValidator := &cobra.Command{
@@ -163,16 +218,26 @@ Create a new validator"
 				blsPubKeys[i].FromLibBLSPublicKey(blsPubKey)
 			}
 
+			amountBigInt := big.NewInt(int64(stakingAmount * denominations.Nano))
+			amt := amountBigInt.Mul(amountBigInt, big.NewInt(denominations.Nano))
+
+			minSelfDelegationBigInt := big.NewInt(int64(minSelfDelegation * denominations.Nano))
+			minSelfDel := minSelfDelegationBigInt.Mul(minSelfDelegationBigInt, big.NewInt(denominations.Nano))
+
+			maxTotalDelegationBigInt := big.NewInt(int64(maxTotalDelegation * denominations.Nano))
+			maxTotalDel := maxTotalDelegationBigInt.Mul(maxTotalDelegationBigInt, big.NewInt(denominations.Nano))
+
+			err = delegationAmountSanityCheck(minSelfDel, maxTotalDel, amt)
+			if err != nil {
+				return err
+			}
+
+			err = rateSanityCheck(commisionRate,commisionMaxRate, commisionMaxChangeRate)
+			if err != nil {
+				return err
+			}
+
 			delegateStakePayloadMaker := func() (staking.Directive, interface{}) {
-				amountBigInt := big.NewInt(int64(stakingAmount * denominations.Nano))
-				amt := amountBigInt.Mul(amountBigInt, big.NewInt(denominations.Nano))
-
-				minSelfDelegationBigInt := big.NewInt(int64(minSelfDelegation * denominations.Nano))
-				minSelfDel := minSelfDelegationBigInt.Mul(minSelfDelegationBigInt, big.NewInt(denominations.Nano))
-
-				maxTotalDelegationBigInt := big.NewInt(int64(maxTotalDelegation * denominations.Nano))
-				maxTotalDel := maxTotalDelegationBigInt.Mul(maxTotalDelegationBigInt, big.NewInt(denominations.Nano))
-
 				return staking.DirectiveCreateValidator, staking.CreateValidator{
 					address.Parse(validatorAddress.String()),
 					&staking.Description{
@@ -191,7 +256,6 @@ Create a new validator"
 					blsPubKeys,
 					amt,
 				}
-
 			}
 
 			stakingTx, err := createStakingTransaction(getNextNonce(networkHandler), delegateStakePayloadMaker)
@@ -267,13 +331,18 @@ Edit an existing validator"
 			shardPubKeyAdd := shard.BlsPublicKey{}
 			shardPubKeyAdd.FromLibBLSPublicKey(blsPubKeyAdd)
 
+			minSelfDelegationBigInt := big.NewInt(int64(minSelfDelegation * denominations.Nano))
+			minSelfDel := minSelfDelegationBigInt.Mul(minSelfDelegationBigInt, big.NewInt(denominations.Nano))
+
+			maxTotalDelegationBigInt := big.NewInt(int64(maxTotalDelegation * denominations.Nano))
+			maxTotalDel := maxTotalDelegationBigInt.Mul(maxTotalDelegationBigInt, big.NewInt(denominations.Nano))
+
+			err = delegationAmountSanityCheck(minSelfDel, maxTotalDel, nil)
+			if err != nil {
+				return err
+			}
+
 			delegateStakePayloadMaker := func() (staking.Directive, interface{}) {
-				minSelfDelegationBigInt := big.NewInt(int64(minSelfDelegation * denominations.Nano))
-				minSelfDel := minSelfDelegationBigInt.Mul(minSelfDelegationBigInt, big.NewInt(denominations.Nano))
-
-				maxTotalDelegationBigInt := big.NewInt(int64(maxTotalDelegation * denominations.Nano))
-				maxTotalDel := maxTotalDelegationBigInt.Mul(maxTotalDelegationBigInt, big.NewInt(denominations.Nano))
-
 				return staking.DirectiveEditValidator, staking.EditValidator{
 					address.Parse(validatorAddress.String()),
 					&staking.Description{
