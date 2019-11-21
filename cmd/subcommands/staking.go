@@ -75,8 +75,13 @@ func createStakingTransaction(nonce uint64, f staking.StakeMsgFulfiller) (*staki
 	gasPrice := big.NewInt(gasPrice)
 	gasPrice = gasPrice.Mul(gasPrice, big.NewInt(denominations.Nano))
 
-	//TODO: modify the gas limit calculation algorithm
-	gasLimit, err := core.IntrinsicGas(nil, false, true)
+	_, payload := f()
+	data, err := rlp.EncodeToBytes(payload)
+	if (err != nil) {
+		return nil, err
+	}
+	
+	gasLimit, err := core.IntrinsicGas(data, false, true)
 	if err != nil {
 		return nil, err
 	}
