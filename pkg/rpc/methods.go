@@ -47,6 +47,11 @@ type rpcEnumList struct {
 	GetNodeMetadata                     method
 	GetLatestBlockHeader                method
 	SendRawStakingTransaction           method
+	GetActiveValidatorAddresses         method
+	GetAllValidatorAddresses            method
+	GetValidatorInformation             method
+	GetDelegationsByDelegator           method
+	GetDelegationsByValidator           method
 }
 
 // Method is a list of known RPC methods
@@ -86,6 +91,11 @@ var Method = rpcEnumList{
 	NetVersion:                          "net_version",
 	ProtocolVersion:                     "hmy_protocolVersion",
 	SendRawStakingTransaction:           "hmy_sendRawStakingTransaction",
+	GetActiveValidatorAddresses:         "hmy_getActiveValidatorAddresses",
+	GetAllValidatorAddresses:            "hmy_getAllValidatorAddresses",
+	GetValidatorInformation:             "hmy_getValidatorInformation",
+	GetDelegationsByDelegator:           "hmy_getDelegationsByDelegator",
+	GetDelegationsByValidator:           "hmy_getDelegationsByValidator",
 }
 
 // TODO Use Reflection here to avoid typing out the cases

@@ -9,6 +9,28 @@ import (
 )
 
 func init() {
+	cmdValidator := &cobra.Command{
+		Use:   "validator",
+		Short: "information about validators",
+		Long: `
+Look up information about validator information
+`,
+		Run: func(cmd *cobra.Command, args []string) {
+			cmd.Help()
+		},
+	}
+
+	cmdDelegation := &cobra.Command{
+		Use:   "delegation",
+		Short: "information about delegations",
+		Long: `
+Look up information about delegation
+`,
+		Run: func(cmd *cobra.Command, args []string) {
+			cmd.Help()
+		},
+	}
+
 	cmdBlockchain := &cobra.Command{
 		Use:   "blockchain",
 		Short: "Interact with the Harmony.one Blockchain",
@@ -74,6 +96,14 @@ High level information about transaction, like blockNumber, blockHash
 		},
 	},
 	}
+
+	cmdBlockchain.AddCommand(cmdValidator)
+	cmdBlockchain.AddCommand(cmdDelegation)
+
+	cmdValidator.AddCommand(validatorSubCmds[:]...)
+	cmdDelegation.AddCommand(delegationSubCmds[:]...)
+
 	cmdBlockchain.AddCommand(subCommands[:]...)
+
 	RootCmd.AddCommand(cmdBlockchain)
 }
