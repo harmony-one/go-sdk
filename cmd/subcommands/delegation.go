@@ -18,7 +18,7 @@ var (
 		Short: "Get a harmony blockchain block by block number",
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return request(rpc.Method.GetActiveValidatorAddresses, []interface{}{})
+			return request(rpc.Method.GetDelegationsByValidator, []interface{}{})
 		},
 	}}
 )
