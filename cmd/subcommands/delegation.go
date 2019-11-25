@@ -8,17 +8,27 @@ import (
 var (
 	delegationSubCmds = []*cobra.Command{{
 		Use:   "by-delegator",
-		Short: "Print out the known chain-ids",
-		Long:  "123",
-		RunE: func(cmd *cobra.Command, args []string) error {
-			return request(rpc.Method.GetDelegationsByDelegator, []interface{}{})
-		},
-	}, {
-		Use:   "block-by-number",
-		Short: "Get a harmony blockchain block by block number",
+		Short: "Get all delegations by a delegator",
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return request(rpc.Method.GetDelegationsByValidator, []interface{}{})
+			noLatest = true
+			addr := oneAddress{}
+			if err := addr.Set(args[0]); err != nil {
+				return err
+			}
+			return request(rpc.Method.GetDelegationsByDelegator, []interface{}{args[0]})
+		},
+	}, {
+		Use:   "by-validator",
+		Short: "Get all delegations for a validator",
+		Args:  cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			noLatest = true
+			addr := oneAddress{}
+			if err := addr.Set(args[0]); err != nil {
+				return err
+			}
+			return request(rpc.Method.GetDelegationsByValidator, []interface{}{args[0]})
 		},
 	}}
 )

@@ -9,7 +9,6 @@ var (
 	validatorSubCmds = []*cobra.Command{{
 		Use:   "all-active",
 		Short: "all validators marked as active",
-		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			noLatest = true
 			return request(rpc.Method.GetActiveValidatorAddresses, []interface{}{})

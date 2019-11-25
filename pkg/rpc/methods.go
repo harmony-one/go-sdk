@@ -94,7 +94,7 @@ var Method = rpcEnumList{
 	GetActiveValidatorAddresses:         "hmy_getActiveValidatorAddresses",
 	GetAllValidatorAddresses:            "hmy_getAllValidatorAddresses",
 	GetValidatorInformation:             "hmy_getValidatorInformation",
-	GetDelegationsByDelegator:           "hmy_getValidatorInformation",
+	GetDelegationsByDelegator:           "hmy_getDelegationsByDelegator",
 	GetDelegationsByValidator:           "hmy_getDelegationsByValidator",
 }
 
