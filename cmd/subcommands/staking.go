@@ -3,8 +3,9 @@ package cmd
 import (
 	"errors"
 	"fmt"
-	"github.com/harmony-one/bls/ffi/go/bls"
 	"strings"
+
+	"github.com/harmony-one/bls/ffi/go/bls"
 
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/ethereum/go-ethereum/core"
@@ -58,9 +59,9 @@ var (
 	errInvalidComissionRate      = errors.New("commission rate, change rate and max rate should be within 0-100 percent")
 )
 
-func getNextNonce(messenger rpc.T) uint64 {
+func getNextNonce(addr oneAddress, messenger rpc.T) uint64 {
 	transactionCountRPCReply, err :=
-		messenger.SendRPC(rpc.Method.GetTransactionCount, []interface{}{address.Parse(delegatorAddress.String()), "latest"})
+		messenger.SendRPC(rpc.Method.GetTransactionCount, []interface{}{address.Parse(addr.String()), "latest"})
 
 	if err != nil {
 		return 0
@@ -77,10 +78,10 @@ func createStakingTransaction(nonce uint64, f staking.StakeMsgFulfiller) (*staki
 
 	_, payload := f()
 	data, err := rlp.EncodeToBytes(payload)
-	if (err != nil) {
+	if err != nil {
 		return nil, err
 	}
-	
+
 	gasLimit, err := core.IntrinsicGas(data, false, true)
 	if err != nil {
 		return nil, err
@@ -137,7 +138,7 @@ func handleStakingTransaction(
 	return nil
 }
 
-func delegationAmountSanityCheck(minSelfDelegation *big.Int , maxTotalDelegation *big.Int, amount *big.Int) error {
+func delegationAmountSanityCheck(minSelfDelegation *big.Int, maxTotalDelegation *big.Int, amount *big.Int) error {
 	// MinSelfDelegation must be >= 1 ONE
 	if minSelfDelegation.Cmp(big.NewInt(denominations.One)) < 0 {
 		return errMinSelfDelegationTooSmall
@@ -237,7 +238,7 @@ Create a new validator"
 				return err
 			}
 
-			err = rateSanityCheck(commisionRate,commisionMaxRate, commisionMaxChangeRate)
+			err = rateSanityCheck(commisionRate, commisionMaxRate, commisionMaxChangeRate)
 			if err != nil {
 				return err
 			}
@@ -263,7 +264,7 @@ Create a new validator"
 				}
 			}
 
-			stakingTx, err := createStakingTransaction(getNextNonce(networkHandler), delegateStakePayloadMaker)
+			stakingTx, err := createStakingTransaction(getNextNonce(validatorAddress, networkHandler), delegateStakePayloadMaker)
 			if err != nil {
 				return err
 			}
@@ -366,7 +367,7 @@ Edit an existing validator"
 
 			}
 
-			stakingTx, err := createStakingTransaction(getNextNonce(networkHandler), delegateStakePayloadMaker)
+			stakingTx, err := createStakingTransaction(getNextNonce(validatorAddress, networkHandler), delegateStakePayloadMaker)
 			if err != nil {
 				return err
 			}
@@ -426,7 +427,7 @@ Delegating to a validator
 				}
 			}
 
-			stakingTx, err := createStakingTransaction(getNextNonce(networkHandler), delegateStakePayloadMaker)
+			stakingTx, err := createStakingTransaction(getNextNonce(delegatorAddress, networkHandler), delegateStakePayloadMaker)
 			if err != nil {
 				return err
 			}
@@ -476,7 +477,7 @@ Delegating to a validator
 				}
 			}
 
-			stakingTx, err := createStakingTransaction(getNextNonce(networkHandler), delegateStakePayloadMaker)
+			stakingTx, err := createStakingTransaction(getNextNonce(delegatorAddress, networkHandler), delegateStakePayloadMaker)
 			if err != nil {
 				return err
 			}
@@ -521,7 +522,7 @@ Collect token rewards
 				}
 			}
 
-			stakingTx, err := createStakingTransaction(getNextNonce(networkHandler), delegateStakePayloadMaker)
+			stakingTx, err := createStakingTransaction(getNextNonce(delegatorAddress, networkHandler), delegateStakePayloadMaker)
 			if err != nil {
 				return err
 			}
