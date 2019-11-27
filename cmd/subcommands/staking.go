@@ -399,8 +399,7 @@ Edit an existing validator"
 		"passphrase to unlock delegator's keystore",
 	)
 
-	for _, flagName := range [...]string{"name", "identity", "website", "security-contact", "details", "rate",
-		"min-self-delegation", "max-total-delegation", "validator-addr", "remove-bls-key", "add-bls-key"} {
+	for _, flagName := range [...]string{"name", "identity", "website", "security-contact", "details",  "validator-addr" } {
 		subCmdEditValidator.MarkFlagRequired(flagName)
 	}
 
