@@ -314,31 +314,47 @@ Edit an existing validator"
 				return err
 			}
 
+			if (len(commisionRateStr) == 0) {
+				commisionRateStr = "0";
+			}
+
 			commisionRate, err := numeric.NewDecFromStr(commisionRateStr)
 			if err != nil {
 				return err
 			}
 
-			blsPubKeyRemove := new(bls.PublicKey)
-			err = blsPubKeyRemove.DeserializeHexStr(strings.TrimPrefix(slotKeyToRemove, "0x"))
-			if err != nil {
-				return err
-			}
-
 			shardPubKeyRemove := shard.BlsPublicKey{}
-			shardPubKeyRemove.FromLibBLSPublicKey(blsPubKeyRemove)
+			if (len(slotKeyToRemove) > 0 ) {
+				blsPubKeyRemove := new(bls.PublicKey)
+				err = blsPubKeyRemove.DeserializeHexStr(strings.TrimPrefix(slotKeyToRemove, "0x"))
+				if err != nil {
+					return err
+				}
 
-			blsPubKeyAdd := new(bls.PublicKey)
-			err = blsPubKeyAdd.DeserializeHexStr(strings.TrimPrefix(slotKeyToAdd, "0x"))
-			if err != nil {
-				return err
+				shardPubKeyRemove.FromLibBLSPublicKey(blsPubKeyRemove)
 			}
 
 			shardPubKeyAdd := shard.BlsPublicKey{}
-			shardPubKeyAdd.FromLibBLSPublicKey(blsPubKeyAdd)
+			if (len(slotKeyToAdd) > 0) {
+				blsPubKeyAdd := new(bls.PublicKey)
+				err = blsPubKeyAdd.DeserializeHexStr(strings.TrimPrefix(slotKeyToAdd, "0x"))
+				if err != nil {
+					return err
+				}
+
+				shardPubKeyAdd.FromLibBLSPublicKey(blsPubKeyAdd)
+			}
+
+			if (minSelfDelegation == 0 ) {
+				minSelfDelegation = 1;
+			}
 
 			minSelfDelegationBigInt := big.NewInt(int64(minSelfDelegation * denominations.Nano))
 			minSelfDel := minSelfDelegationBigInt.Mul(minSelfDelegationBigInt, big.NewInt(denominations.Nano))
+
+			if (maxTotalDelegation == 0) {
+				maxTotalDelegation = minSelfDelegation;
+			}
 
 			maxTotalDelegationBigInt := big.NewInt(int64(maxTotalDelegation * denominations.Nano))
 			maxTotalDel := maxTotalDelegationBigInt.Mul(maxTotalDelegationBigInt, big.NewInt(denominations.Nano))
