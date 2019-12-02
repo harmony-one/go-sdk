@@ -28,7 +28,12 @@ import (
 )
 
 const (
-	blsPubKeySize = 48
+	blsPubKeySize            = 48
+	MaxNameLength            = 70
+	MaxIdentityLength        = 3000
+	MaxWebsiteLength         = 140
+	MaxSecurityContactLength = 140
+	MaxDetailsLength         = 280
 )
 
 var (
@@ -51,12 +56,17 @@ var (
 )
 
 var (
-	errInvalidSelfDelegation     = errors.New("amount value should be between min_self_delegation and max_total_delegation")
-	errInvalidTotalDelegation    = errors.New("total delegation can not be bigger than max_total_delegation")
-	errMinSelfDelegationTooSmall = errors.New("min_self_delegation has to be greater than 1 ONE")
-	errInvalidMaxTotalDelegation = errors.New("max_total_delegation can not be less than min_self_delegation")
-	errCommissionRateTooLarge    = errors.New("commission rate and change rate can not be larger than max commission rate")
-	errInvalidComissionRate      = errors.New("commission rate, change rate and max rate should be within 0-100 percent")
+	errInvalidSelfDelegation           = errors.New("amount value should be between min_self_delegation and max_total_delegation")
+	errInvalidTotalDelegation          = errors.New("total delegation can not be bigger than max_total_delegation")
+	errMinSelfDelegationTooSmall       = errors.New("min_self_delegation has to be greater than 1 ONE")
+	errInvalidMaxTotalDelegation       = errors.New("max_total_delegation can not be less than min_self_delegation")
+	errCommissionRateTooLarge          = errors.New("commission rate and change rate can not be larger than max commission rate")
+	errInvalidComissionRate            = errors.New("commission rate, change rate and max rate should be within 0-100 percent")
+	errInvalidDescFieldName            = errors.New("exceeds maximum length of 70 characters for description field name")
+	errInvalidDescFieldIdentity        = errors.New("exceeds maximum length of 3000 characters for description field identity")
+	errInvalidDescFieldWebsite         = errors.New("exceeds maximum length of 140 characters for description field website")
+	errInvalidDescFieldSecurityContact = errors.New("exceeds maximum length of 140 characters for description field security-contact")
+	errInvalidDescFieldDetails         = errors.New("exceeds maximum length of 280 characters for description field details")
 )
 
 func getNextNonce(addr oneAddress, messenger rpc.T) uint64 {
@@ -184,6 +194,26 @@ func rateSanityCheck(rate numeric.Dec, maxRate numeric.Dec, maxChangeRate numeri
 	return nil
 }
 
+func ensureLength(d staking.Description) (staking.Description, error) {
+	if len(d.Name) > MaxNameLength {
+		return d, errInvalidDescFieldName
+	}
+	if len(d.Identity) > MaxIdentityLength {
+		return d, errInvalidDescFieldIdentity
+	}
+	if len(d.Website) > MaxWebsiteLength {
+		return d, errInvalidDescFieldWebsite
+	}
+	if len(d.SecurityContact) > MaxSecurityContactLength {
+		return d, errInvalidDescFieldSecurityContact
+	}
+	if len(d.Details) > MaxDetailsLength {
+		return d, errInvalidDescFieldDetails
+	}
+
+	return d, nil
+}
+
 func stakingSubCommands() []*cobra.Command {
 
 	subCmdNewValidator := &cobra.Command{
@@ -243,16 +273,21 @@ Create a new validator"
 				return err
 			}
 
+			desc, err := ensureLength(staking.Description{
+				validatorName,
+				validatorIdentity,
+				validatorWebsite,
+				validatorSecurityContact,
+				validatorDetails,
+			})
+			if err != nil {
+				return err
+			}
+
 			delegateStakePayloadMaker := func() (staking.Directive, interface{}) {
 				return staking.DirectiveCreateValidator, staking.CreateValidator{
 					address.Parse(validatorAddress.String()),
-					&staking.Description{
-						validatorName,
-						validatorIdentity,
-						validatorWebsite,
-						validatorSecurityContact,
-						validatorDetails,
-					},
+					&desc,
 					staking.CommissionRates{
 						commisionRate,
 						commisionMaxRate,
@@ -348,16 +383,21 @@ Edit an existing validator"
 				return err
 			}
 
+			desc, err := ensureLength(staking.Description{
+				validatorName,
+				validatorIdentity,
+				validatorWebsite,
+				validatorSecurityContact,
+				validatorDetails,
+			})
+			if err != nil {
+				return err
+			}
+
 			delegateStakePayloadMaker := func() (staking.Directive, interface{}) {
 				return staking.DirectiveEditValidator, staking.EditValidator{
 					address.Parse(validatorAddress.String()),
-					&staking.Description{
-						validatorName,
-						validatorIdentity,
-						validatorWebsite,
-						validatorSecurityContact,
-						validatorDetails,
-					},
+					&desc,
 					&commisionRate,
 					minSelfDel,
 					maxTotalDel,
