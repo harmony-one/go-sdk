@@ -16,7 +16,7 @@ var (
 	cookbookDoc = fmt.Sprintf(`
 Cookbook of usage
 
-note: 
+note:
 
 1) Every subcommand recognizes a '--help' flag
 2) These examples use shard 1 of testnet as argument for --node
@@ -54,8 +54,8 @@ hmy keys generate-bls-key --bls-file-path /tmp/file.key
 %s
 hmy staking create-validator --amount 10 --validator-addr <SOME_ONE_ADDRESS> \
     --bls-pubkeys <BLS_KEY_1>,<BLS_KEY_2>,<BLS_KEY_3> \
-    --identity foo --details bar --name baz --max-change-rate 10 --max-rate 10 --max-total-delegation 10 \ 
-    --min-self-delegation 10 --rate 10 --security-contact Leo  --website harmony.one --passphrase harmony-one
+    --identity foo --details bar --name baz --max-change-rate 0.1 --max-rate 0.1 --max-total-delegation 10 \
+    --min-self-delegation 10 --rate 0.1 --security-contact Leo  --website harmony.one --passphrase harmony-one
 
 `,
 		g("1.  Check Balances"),
