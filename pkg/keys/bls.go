@@ -19,6 +19,7 @@ import (
 	"github.com/harmony-one/go-sdk/pkg/common"
 	"github.com/harmony-one/harmony/crypto/bls"
 	"github.com/harmony-one/harmony/crypto/hash"
+	"github.com/harmony-one/harmony/shard"
 	"golang.org/x/crypto/ssh/terminal"
 )
 
@@ -115,8 +116,8 @@ func GetPublicBlsKey(privateKeyHex string) error {
 
 }
 
-func VerifyBLSKeys(blsPubKeys []string) ([]string, error) {
-	blsSigs := make([]string, len(blsPubKeys))
+func VerifyBLSKeys(blsPubKeys []string) ([]shard.BlsSignature, error) {
+	blsSigs := make([]shard.BlsSignature, len(blsPubKeys))
 	for i := 0; i < len(blsPubKeys); i++ {
 		sig, err := VerifyBLS(strings.TrimPrefix(blsPubKeys[i], "0x"))
 		if err != nil {
@@ -127,7 +128,8 @@ func VerifyBLSKeys(blsPubKeys []string) ([]string, error) {
 	return blsSigs, nil
 }
 
-func VerifyBLS(blsPubKey string) (string, error) {
+func VerifyBLS(blsPubKey string) (shard.BlsSignature, error) {
+	var sig shard.BlsSignature
 	// look for key file in the current directory
 	// if not ask for the absolute path
 	cwd, _ := os.Getwd()
@@ -139,12 +141,12 @@ func VerifyBLS(blsPubKey string) (string, error) {
 		fmt.Println("Enter the absolute path to the encrypted bls private key file:")
 		filePath, _ := reader.ReadString('\n')
 		if !path.IsAbs(filePath) {
-			return "", common.ErrNotAbsPath
+			return sig, common.ErrNotAbsPath
 		}
 		filePath = strings.TrimSpace(filePath)
 		encryptedPrivateKeyBytes, err = ioutil.ReadFile(filePath)
 		if err != nil {
-			return "", err
+			return sig, err
 		}
 	}
 	// ask passphrase for bls key twice
@@ -159,24 +161,29 @@ func VerifyBLS(blsPubKey string) (string, error) {
 
 	decryptedPrivateKeyBytes, err := decrypt(encryptedPrivateKeyBytes, string(repeatPass))
 	if err != nil {
-		return "", err
+		return sig, err
 	}
 	privateKey, err := getBlsKey(string(decryptedPrivateKeyBytes))
 	if err != nil {
-		return "", err
+		return sig, err
 	}
 	publicKey := privateKey.GetPublicKey()
 	publicKeyHex := publicKey.SerializeToHexStr()
 
 	if publicKeyHex != blsPubKey {
-		return "", errors.New("bls key could not be verified")
+		return sig, errors.New("bls key could not be verified")
 	}
 
 	messageBytes := []byte("harmony-one")
 	msgHash := hash.Keccak256(messageBytes)
 	signature := privateKey.SignHash(msgHash[:])
 
-	return signature.SerializeToHexStr(), nil
+	bytes := signature.Serialize()
+	if len(bytes) != shard.BlsSignatureSizeInBytes {
+		return sig, errors.New("bls key length is not 96 bytes")
+	}
+	copy(sig[:], bytes)
+	return sig, nil
 }
 
 func getBlsKey(privateKeyHex string) (*ffiBls.SecretKey, error) {
