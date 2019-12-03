@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/harmony-one/bls/ffi/go/bls"
+	"github.com/harmony-one/go-sdk/pkg/keys"
 
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/ethereum/go-ethereum/core"
@@ -254,6 +255,11 @@ Create a new validator"
 				blsPubKeys[i].FromLibBLSPublicKey(blsPubKey)
 			}
 
+			blsSigs, err := keys.VerifyBLSKeys(stakingBlsPubKeys)
+			if err != nil {
+				return err
+			}
+
 			amountBigInt := big.NewInt(int64(stakingAmount * denominations.Nano))
 			amt := amountBigInt.Mul(amountBigInt, big.NewInt(denominations.Nano))
 
@@ -295,6 +301,7 @@ Create a new validator"
 					minSelfDel,
 					maxTotalDel,
 					blsPubKeys,
+					blsSigs,
 					amt,
 				}
 			}
@@ -372,6 +379,11 @@ Edit an existing validator"
 			shardPubKeyAdd := shard.BlsPublicKey{}
 			shardPubKeyAdd.FromLibBLSPublicKey(blsPubKeyAdd)
 
+			sigBls, err := keys.VerifyBLS(slotKeyToAdd)
+			if err != nil {
+				return err
+			}
+
 			minSelfDelegationBigInt := big.NewInt(int64(minSelfDelegation * denominations.Nano))
 			minSelfDel := minSelfDelegationBigInt.Mul(minSelfDelegationBigInt, big.NewInt(denominations.Nano))
 
@@ -403,6 +415,7 @@ Edit an existing validator"
 					maxTotalDel,
 					&shardPubKeyRemove,
 					&shardPubKeyAdd,
+					sigBls,
 				}
 
 			}
