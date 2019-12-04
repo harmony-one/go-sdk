@@ -20,6 +20,7 @@ import (
 	"github.com/harmony-one/harmony/crypto/bls"
 	"github.com/harmony-one/harmony/crypto/hash"
 	"github.com/harmony-one/harmony/shard"
+	"github.com/harmony-one/harmony/staking/types"
 	"golang.org/x/crypto/ssh/terminal"
 )
 
@@ -174,7 +175,7 @@ func VerifyBLS(blsPubKey string) (shard.BlsSignature, error) {
 		return sig, errors.New("bls key could not be verified")
 	}
 
-	messageBytes := []byte("harmony-one")
+	messageBytes := []byte(types.BlsVerificationStr)
 	msgHash := hash.Keccak256(messageBytes)
 	signature := privateKey.SignHash(msgHash[:])
 
