@@ -356,10 +356,6 @@ Edit an existing validator"
 				return err
 			}
 
-			if (len(commisionRateStr) == 0) {
-				commisionRateStr = "0";
-			}
-
 			commisionRate, err := numeric.NewDecFromStr(commisionRateStr)
 			if err != nil {
 				return err
@@ -468,7 +464,7 @@ Edit an existing validator"
 		"passphrase to unlock delegator's keystore",
 	)
 
-	for _, flagName := range [...]string{"name", "identity", "website", "security-contact", "details",  "validator-addr" } {
+	for _, flagName := range [...]string{"name", "identity", "website", "security-contact", "details",  "validator-addr", "rate" } {
 		subCmdEditValidator.MarkFlagRequired(flagName)
 	}
 
