@@ -12,7 +12,7 @@ require (
 	github.com/ethereum/go-ethereum v1.8.27
 	github.com/fatih/color v1.7.0
 	github.com/harmony-one/bls v0.0.5
-	github.com/harmony-one/harmony v0.0.0-20191106012056-10f5d6274891
+	github.com/harmony-one/harmony v0.0.0-20191204004318-b5d272a16456
 	github.com/harmony-one/vdf v1.0.0 // indirect
 	github.com/hashicorp/golang-lru v0.5.3 // indirect
 	github.com/karalabe/hid v1.0.0
@@ -26,5 +26,5 @@ require (
 	github.com/steakknife/hamming v0.0.0-20180906055917-c99c65617cd3 // indirect
 	github.com/tyler-smith/go-bip39 v1.0.2
 	github.com/valyala/fasthttp v1.2.0
-	golang.org/x/crypto v0.0.0-20190909091759-094676da4a83
+	golang.org/x/crypto v0.0.0-20191011191535-87dc89f01550
 )
