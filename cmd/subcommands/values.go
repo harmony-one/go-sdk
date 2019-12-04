@@ -22,7 +22,7 @@ note:
 2) These examples use shard 1 of testnet as argument for --node
 
 %s
-hmy --node="https://api.s1.b.hmny.io/" balance <SOME_ONE_ADDRESS>
+hmy --node="https://api.s1.b.hmny.io/" balances <SOME_ONE_ADDRESS>
 
 %s
 hmy --node="https://api.s1.b.hmny.io" blockchain transaction-by-hash <SOME_TX_HASH>
