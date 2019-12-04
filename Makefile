@@ -42,10 +42,7 @@ test-rpc:
 upload-darwin:all
 	aws --profile upload s3 cp ./hmy ${upload-path-darwin}
 
-upload-linux:all
-	aws --profile upload s3 cp ./hmy ${upload-path-linux}
-
-upload-linux-static:static
+upload-linux:static
 	aws --profile upload s3 cp ./hmy ${upload-path-linux}
 
 .PHONY:clean run-tests upload-darwin upload-linux
