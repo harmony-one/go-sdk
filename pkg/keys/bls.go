@@ -1,20 +1,27 @@
 package keys
 
 import (
+	"bufio"
 	"crypto/aes"
 	"crypto/cipher"
 	"crypto/md5"
 	"crypto/rand"
 	"encoding/hex"
+	"errors"
 	"fmt"
 	"io"
 	"io/ioutil"
 	"os"
 	"path"
+	"strings"
 
 	ffiBls "github.com/harmony-one/bls/ffi/go/bls"
 	"github.com/harmony-one/go-sdk/pkg/common"
 	"github.com/harmony-one/harmony/crypto/bls"
+	"github.com/harmony-one/harmony/crypto/hash"
+	"github.com/harmony-one/harmony/shard"
+	"github.com/harmony-one/harmony/staking/types"
+	"golang.org/x/crypto/ssh/terminal"
 )
 
 func GenBlsKeys(passphrase, filePath string) error {
@@ -108,6 +115,76 @@ func GetPublicBlsKey(privateKeyHex string) error {
 	fmt.Println(common.JSONPrettyFormat(out))
 	return nil
 
+}
+
+func VerifyBLSKeys(blsPubKeys []string) ([]shard.BlsSignature, error) {
+	blsSigs := make([]shard.BlsSignature, len(blsPubKeys))
+	for i := 0; i < len(blsPubKeys); i++ {
+		sig, err := VerifyBLS(strings.TrimPrefix(blsPubKeys[i], "0x"))
+		if err != nil {
+			return nil, err
+		}
+		blsSigs[i] = sig
+	}
+	return blsSigs, nil
+}
+
+func VerifyBLS(blsPubKey string) (shard.BlsSignature, error) {
+	var sig shard.BlsSignature
+	// look for key file in the current directory
+	// if not ask for the absolute path
+	cwd, _ := os.Getwd()
+	filePath := fmt.Sprintf("%s/%s.key", cwd, blsPubKey)
+	encryptedPrivateKeyBytes, err := ioutil.ReadFile(filePath)
+	if err != nil {
+		reader := bufio.NewReader(os.Stdin)
+		fmt.Printf("For bls public key: %s\n", blsPubKey)
+		fmt.Println("Enter the absolute path to the encrypted bls private key file:")
+		filePath, _ := reader.ReadString('\n')
+		if !path.IsAbs(filePath) {
+			return sig, common.ErrNotAbsPath
+		}
+		filePath = strings.TrimSpace(filePath)
+		encryptedPrivateKeyBytes, err = ioutil.ReadFile(filePath)
+		if err != nil {
+			return sig, err
+		}
+	}
+	// ask passphrase for bls key twice
+	fmt.Println("Enter the bls passphrase:")
+	pass, _ := terminal.ReadPassword(int(os.Stdin.Fd()))
+	fmt.Println("Repeat the bls passphrase:")
+	repeatPass, _ := terminal.ReadPassword(int(os.Stdin.Fd()))
+	if string(repeatPass) != string(pass) {
+		fmt.Println("BLS passphrases do not match")
+		os.Exit(-1)
+	}
+
+	decryptedPrivateKeyBytes, err := decrypt(encryptedPrivateKeyBytes, string(repeatPass))
+	if err != nil {
+		return sig, err
+	}
+	privateKey, err := getBlsKey(string(decryptedPrivateKeyBytes))
+	if err != nil {
+		return sig, err
+	}
+	publicKey := privateKey.GetPublicKey()
+	publicKeyHex := publicKey.SerializeToHexStr()
+
+	if publicKeyHex != blsPubKey {
+		return sig, errors.New("bls key could not be verified")
+	}
+
+	messageBytes := []byte(types.BlsVerificationStr)
+	msgHash := hash.Keccak256(messageBytes)
+	signature := privateKey.SignHash(msgHash[:])
+
+	bytes := signature.Serialize()
+	if len(bytes) != shard.BlsSignatureSizeInBytes {
+		return sig, errors.New("bls key length is not 96 bytes")
+	}
+	copy(sig[:], bytes)
+	return sig, nil
 }
 
 func getBlsKey(privateKeyHex string) (*ffiBls.SecretKey, error) {
