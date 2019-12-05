@@ -8,7 +8,7 @@ import (
 
 	"github.com/harmony-one/go-sdk/pkg/common"
 	"github.com/harmony-one/go-sdk/pkg/rpc"
-
+	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"github.com/spf13/cobra/doc"
 )
@@ -60,8 +60,12 @@ func init() {
 	vS := "dump out debug information, same as env var HMY_ALL_DEBUG=true"
 	RootCmd.PersistentFlags().BoolVarP(&verbose, "verbose", "v", false, vS)
 	RootCmd.PersistentFlags().StringVarP(&node, "node", "n", defaultNodeAddr, "<host>")
-	RootCmd.PersistentFlags().BoolVar(&noLatest, "no-latest", false, "Do not add 'latest' to RPC params")
-	RootCmd.PersistentFlags().BoolVar(&noPrettyOutput, "no-pretty", false, "Disable pretty print JSON outputs")
+	RootCmd.PersistentFlags().BoolVar(
+		&noLatest, "no-latest", false, "Do not add 'latest' to RPC params",
+	)
+	RootCmd.PersistentFlags().BoolVar(
+		&noPrettyOutput, "no-pretty", false, "Disable pretty print JSON outputs",
+	)
 	RootCmd.AddCommand(&cobra.Command{
 		Use:   "cookbook",
 		Short: "Example usages of the most important, frequently used commands",
@@ -82,9 +86,15 @@ func init() {
 	})
 }
 
+var (
+	// VersionWrapDump meant to be set from main.go
+	VersionWrapDump = ""
+)
+
 // Execute kicks off the hmy CLI
 func Execute() {
 	if err := RootCmd.Execute(); err != nil {
+		fmt.Println(errors.Wrapf(err, VersionWrapDump).Error())
 		os.Exit(1)
 	}
 }
