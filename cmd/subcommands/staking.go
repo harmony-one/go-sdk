@@ -277,9 +277,9 @@ Create a new validator"
 				return e2
 			}
 
-			amt = amt.Mul(nanoAsDec)
-			minSelfDel = minSelfDel.Mul(nanoAsDec)
-			maxTotalDel = maxTotalDel.Mul(nanoAsDec)
+			amt = amt.Mul(oneAsDec)
+			minSelfDel = minSelfDel.Mul(oneAsDec)
+			maxTotalDel = maxTotalDel.Mul(oneAsDec)
 
 			err = delegationAmountSanityCheck(minSelfDel, maxTotalDel, &amt)
 			if err != nil {
@@ -406,8 +406,8 @@ Create a new validator"
 				return e2
 			}
 
-			minSelfDel = minSelfDel.Mul(nanoAsDec)
-			maxTotalDel = maxTotalDel.Mul(nanoAsDec)
+			minSelfDel = minSelfDel.Mul(oneAsDec)
+			maxTotalDel = maxTotalDel.Mul(oneAsDec)
 
 			err = delegationAmountSanityCheck(minSelfDel, maxTotalDel, nil)
 			if err != nil {
