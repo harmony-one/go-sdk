@@ -156,7 +156,8 @@ func delegationAmountSanityCheck(minSelfDelegation *big.Int, maxTotalDelegation 
 	}
 
 	// MaxTotalDelegation must not be less than MinSelfDelegation
-	if maxTotalDelegation.Cmp(minSelfDelegation) < 0 {
+	if maxTotalDelegation.Cmp(big.NewInt(0)) == 1 &&
+		maxTotalDelegation.Cmp(minSelfDelegation) < 0 {
 		return errInvalidMaxTotalDelegation
 	}
 
