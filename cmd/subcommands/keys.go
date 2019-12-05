@@ -32,7 +32,7 @@ var (
 )
 
 func doubleTakePhrase() string {
-	fmt.Println("Enter passphrase")
+	fmt.Println("Enter passphrase:")
 	pass, _ := terminal.ReadPassword(int(os.Stdin.Fd()))
 	fmt.Println("Repeat the passphrase:")
 	repeatPass, _ := terminal.ReadPassword(int(os.Stdin.Fd()))
@@ -99,9 +99,9 @@ func keysSub() []*cobra.Command {
 	}
 	cmdAdd.Flags().BoolVar(&recoverFromMnemonic, "recover", false, "create keys from a mnemonic")
 	ppPrompt := fmt.Sprintf(
-		"provide own keystore encryption phrase, default: `%s`", c.DefaultPassphrase,
+		"prompt user for passphrase, otherwise default passphrase: \"`%s`\"", c.DefaultPassphrase,
 	)
-	cmdAdd.Flags().BoolVar(&userProvidesPassphrase, "passphrase", false, ppPrompt)
+	cmdAdd.Flags().BoolVar(&userProvidesPassphrase, "use-own-passphrase", false, ppPrompt)
 
 	cmdMnemonic := &cobra.Command{
 		Use:   "mnemonic",
@@ -130,6 +130,7 @@ func keysSub() []*cobra.Command {
 	importP := `passphrase of key being imported, default assumes ""`
 	cmdImportKS.Flags().StringVar(&importPassphrase, "passphrase", "", importP)
 	cmdImportKS.Flags().BoolVar(&quietImport, "quiet", false, "do not print out imported account name")
+	cmdImportKS.MarkFlagRequired("passphrase")
 
 	cmdImportSK := &cobra.Command{
 		Use:   "import-private-key <secp256k1_PRIVATE_KEY> [ACCOUNT_NAME]",
