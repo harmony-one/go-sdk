@@ -10,7 +10,7 @@ import (
 const (
 	DefaultConfigDirName               = ".hmy_cli"
 	DefaultConfigAccountAliasesDirName = "account-keys"
-	DefaultPassphrase                  = "harmony-one"
+	DefaultPassphrase                  = ""
 	JSONRPCVersion                     = "2.0"
 	Secp256k1PrivateKeyBytesLength     = 32
 )
