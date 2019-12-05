@@ -3,22 +3,19 @@ package cmd
 import (
 	"errors"
 	"fmt"
+	"math/big"
 	"strings"
-
-	"github.com/harmony-one/bls/ffi/go/bls"
-	"github.com/harmony-one/go-sdk/pkg/keys"
 
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/ethereum/go-ethereum/core"
 	"github.com/ethereum/go-ethereum/rlp"
+	"github.com/harmony-one/bls/ffi/go/bls"
 	"github.com/harmony-one/go-sdk/pkg/address"
 	"github.com/harmony-one/go-sdk/pkg/common"
+	"github.com/harmony-one/go-sdk/pkg/keys"
 	"github.com/harmony-one/go-sdk/pkg/ledger"
 	"github.com/harmony-one/go-sdk/pkg/rpc"
 	"github.com/harmony-one/go-sdk/pkg/store"
-
-	"math/big"
-
 	"github.com/harmony-one/harmony/accounts"
 	"github.com/harmony-one/harmony/accounts/keystore"
 	"github.com/harmony-one/harmony/common/denominations"
@@ -48,12 +45,14 @@ var (
 	commisionMaxChangeRateStr string
 	slotKeyToRemove           string
 	slotKeyToAdd              string
-	minSelfDelegation         float64
-	maxTotalDelegation        float64
+	minSelfDelegation         string
+	maxTotalDelegation        string
 	stakingBlsPubKeys         []string
 	delegatorAddress          oneAddress
 	validatorAddress          oneAddress
-	stakingAmount             float64
+	stakingAmount             string
+	oneAsDec                  = numeric.NewDec(denominations.One)
+	nanoAsDec                 = numeric.NewDec(denominations.Nano)
 )
 
 var (
@@ -105,15 +104,17 @@ func createStakingTransaction(nonce uint64, f staking.StakeMsgFulfiller) (*staki
 func handleStakingTransaction(
 	stakingTx *staking.StakingTransaction, networkHandler *rpc.HTTPMessenger, signerAddress oneAddress,
 ) error {
-	var ks *keystore.KeyStore
-	var acct *accounts.Account
-	var signed *staking.StakingTransaction
-	var err error
+	var (
+		ks     *keystore.KeyStore
+		acct   *accounts.Account
+		signed *staking.StakingTransaction
+		err    error
+	)
 
 	from := signerAddress.String()
 
 	if useLedgerWallet {
-		var signerAddr string
+		signerAddr := ""
 		signed, signerAddr, err = ledger.SignStakingTx(stakingTx, chainName.chainID.Value)
 		if err != nil {
 			return err
@@ -149,20 +150,21 @@ func handleStakingTransaction(
 	return nil
 }
 
-func delegationAmountSanityCheck(minSelfDelegation *big.Int, maxTotalDelegation *big.Int, amount *big.Int) error {
+func delegationAmountSanityCheck(minSelfDelegation numeric.Dec, maxTotalDelegation numeric.Dec, amount *numeric.Dec) error {
 	// MinSelfDelegation must be >= 1 ONE
-	if minSelfDelegation.Cmp(big.NewInt(denominations.One)) < 0 {
+	if minSelfDelegation.LT(oneAsDec) {
 		return errMinSelfDelegationTooSmall
 	}
 
 	// MaxTotalDelegation must not be less than MinSelfDelegation
-	if maxTotalDelegation.Cmp(big.NewInt(0)) == 1 &&
-		maxTotalDelegation.Cmp(minSelfDelegation) < 0 {
+	if !maxTotalDelegation.Equal(numeric.ZeroDec()) &&
+		maxTotalDelegation.LT(minSelfDelegation) {
 		return errInvalidMaxTotalDelegation
 	}
 
 	// Amount must be >= MinSelfDelegation
-	if (amount != nil) && ((amount.Cmp(maxTotalDelegation) > 0) || (amount.Cmp(minSelfDelegation) < 0)) {
+	if amount != nil &&
+		amount.GT(maxTotalDelegation) || amount.LT(minSelfDelegation) {
 		return errInvalidSelfDelegation
 	}
 
@@ -261,16 +263,25 @@ Create a new validator"
 				return err
 			}
 
-			amountBigInt := big.NewInt(int64(stakingAmount * denominations.Nano))
-			amt := amountBigInt.Mul(amountBigInt, big.NewInt(denominations.Nano))
+			amt, e0 := numeric.NewDecFromStr(stakingAmount)
+			minSelfDel, e1 := numeric.NewDecFromStr(minSelfDelegation)
+			maxTotalDel, e2 := numeric.NewDecFromStr(maxTotalDelegation)
 
-			minSelfDelegationBigInt := big.NewInt(int64(minSelfDelegation * denominations.Nano))
-			minSelfDel := minSelfDelegationBigInt.Mul(minSelfDelegationBigInt, big.NewInt(denominations.Nano))
+			if e0 != nil {
+				return e0
+			}
+			if e1 != nil {
+				return e1
+			}
+			if e2 != nil {
+				return e2
+			}
 
-			maxTotalDelegationBigInt := big.NewInt(int64(maxTotalDelegation * denominations.Nano))
-			maxTotalDel := maxTotalDelegationBigInt.Mul(maxTotalDelegationBigInt, big.NewInt(denominations.Nano))
+			amt = amt.Mul(nanoAsDec)
+			minSelfDel = minSelfDel.Mul(nanoAsDec)
+			maxTotalDel = maxTotalDel.Mul(nanoAsDec)
 
-			err = delegationAmountSanityCheck(minSelfDel, maxTotalDel, amt)
+			err = delegationAmountSanityCheck(minSelfDel, maxTotalDel, &amt)
 			if err != nil {
 				return err
 			}
@@ -299,11 +310,11 @@ Create a new validator"
 						commisionRate,
 						commisionMaxRate,
 						commisionMaxChangeRate},
-					minSelfDel,
-					maxTotalDel,
+					minSelfDel.RoundInt(),
+					maxTotalDel.RoundInt(),
 					blsPubKeys,
 					blsSigs,
-					amt,
+					amt.RoundInt(),
 				}
 			}
 
@@ -328,11 +339,13 @@ Create a new validator"
 	subCmdNewValidator.Flags().StringVar(&commisionRateStr, "rate", "", "commission rate")
 	subCmdNewValidator.Flags().StringVar(&commisionMaxRateStr, "max-rate", "", "commision max rate")
 	subCmdNewValidator.Flags().StringVar(&commisionMaxChangeRateStr, "max-change-rate", "", "commission max change amount")
-	subCmdNewValidator.Flags().Float64Var(&minSelfDelegation, "min-self-delegation", 0.0, "minimal self delegation")
-	subCmdNewValidator.Flags().Float64Var(&maxTotalDelegation, "max-total-delegation", 0.0, "maximal total delegation")
+	subCmdNewValidator.Flags().StringVar(&minSelfDelegation, "min-self-delegation", "0.0", "minimal self delegation")
+	subCmdNewValidator.Flags().StringVar(&maxTotalDelegation, "max-total-delegation", "0.0", "maximal total delegation")
 	subCmdNewValidator.Flags().Var(&validatorAddress, "validator-addr", "validator's staking address")
-	subCmdNewValidator.Flags().StringSliceVar(&stakingBlsPubKeys, "bls-pubkeys", []string{}, "validator's list of public BLS key addresses")
-	subCmdNewValidator.Flags().Float64Var(&stakingAmount, "amount", 0.0, "staking amount")
+	subCmdNewValidator.Flags().StringSliceVar(
+		&stakingBlsPubKeys, "bls-pubkeys", []string{}, "validator's list of public BLS key addresses",
+	)
+	subCmdNewValidator.Flags().StringVar(&stakingAmount, "amount", "0.0", "staking amount")
 	subCmdNewValidator.Flags().Int64Var(&gasPrice, "gas-price", 1, "gas price to pay")
 	subCmdNewValidator.Flags().Var(&chainName, "chain-id", "what chain ID to target")
 	subCmdNewValidator.Flags().StringVar(&unlockP,
@@ -348,9 +361,7 @@ Create a new validator"
 	subCmdEditValidator := &cobra.Command{
 		Use:   "edit-validator",
 		Short: "edit a validator",
-		Long: `
-Edit an existing validator"
-`,
+		Long:  "Edit an existing validator",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			networkHandler, err := handlerForShard(0, node)
 			if err != nil {
@@ -385,11 +396,18 @@ Edit an existing validator"
 				return err
 			}
 
-			minSelfDelegationBigInt := big.NewInt(int64(minSelfDelegation * denominations.Nano))
-			minSelfDel := minSelfDelegationBigInt.Mul(minSelfDelegationBigInt, big.NewInt(denominations.Nano))
+			minSelfDel, e1 := numeric.NewDecFromStr(minSelfDelegation)
+			maxTotalDel, e2 := numeric.NewDecFromStr(maxTotalDelegation)
 
-			maxTotalDelegationBigInt := big.NewInt(int64(maxTotalDelegation * denominations.Nano))
-			maxTotalDel := maxTotalDelegationBigInt.Mul(maxTotalDelegationBigInt, big.NewInt(denominations.Nano))
+			if e1 != nil {
+				return e1
+			}
+			if e2 != nil {
+				return e2
+			}
+
+			minSelfDel = minSelfDel.Mul(nanoAsDec)
+			maxTotalDel = maxTotalDel.Mul(nanoAsDec)
 
 			err = delegationAmountSanityCheck(minSelfDel, maxTotalDel, nil)
 			if err != nil {
@@ -412,8 +430,8 @@ Edit an existing validator"
 					address.Parse(validatorAddress.String()),
 					&desc,
 					&commisionRate,
-					minSelfDel,
-					maxTotalDel,
+					minSelfDel.RoundInt(),
+					maxTotalDel.RoundInt(),
 					&shardPubKeyRemove,
 					&shardPubKeyAdd,
 					sigBls,
@@ -440,8 +458,8 @@ Edit an existing validator"
 	subCmdEditValidator.Flags().StringVar(&validatorSecurityContact, "security-contact", "", "validator's security contact")
 	subCmdEditValidator.Flags().StringVar(&validatorDetails, "details", "", "validator's details")
 	subCmdEditValidator.Flags().StringVar(&commisionRateStr, "rate", "", "commission rate")
-	subCmdEditValidator.Flags().Float64Var(&minSelfDelegation, "min-self-delegation", 0.0, "minimal self delegation")
-	subCmdEditValidator.Flags().Float64Var(&maxTotalDelegation, "max-total-delegation", 0.0, "maximal total delegation")
+	subCmdEditValidator.Flags().StringVar(&minSelfDelegation, "min-self-delegation", "0.0", "minimal self delegation")
+	subCmdEditValidator.Flags().StringVar(&maxTotalDelegation, "max-total-delegation", "0.0", "maximal total delegation")
 	subCmdEditValidator.Flags().Var(&validatorAddress, "validator-addr", "validator's staking address")
 	subCmdEditValidator.Flags().StringVar(&slotKeyToAdd, "add-bls-key", "", "add BLS pubkey to slot")
 	subCmdEditValidator.Flags().StringVar(&slotKeyToRemove, "remove-bls-key", "", "remove BLS pubkey from slot")
@@ -453,8 +471,11 @@ Edit an existing validator"
 		"passphrase to unlock delegator's keystore",
 	)
 
-	for _, flagName := range [...]string{"name", "identity", "website", "security-contact", "details", "rate",
-		"min-self-delegation", "max-total-delegation", "validator-addr", "remove-bls-key", "add-bls-key"} {
+	for _, flagName := range [...]string{
+		"name", "identity", "website", "security-contact", "details", "rate",
+		"min-self-delegation", "max-total-delegation", "validator-addr",
+		"remove-bls-key", "add-bls-key",
+	} {
 		subCmdEditValidator.MarkFlagRequired(flagName)
 	}
 
@@ -471,13 +492,12 @@ Delegating to a validator
 			}
 
 			delegateStakePayloadMaker := func() (staking.Directive, interface{}) {
-				amountBigInt := big.NewInt(int64(stakingAmount * denominations.Nano))
-				amt := amountBigInt.Mul(amountBigInt, big.NewInt(denominations.Nano))
-
+				amt, _ := numeric.NewDecFromStr(stakingAmount)
+				amt = amt.Mul(nanoAsDec)
 				return staking.DirectiveDelegate, staking.Delegate{
 					address.Parse(delegatorAddress.String()),
 					address.Parse(validatorAddress.String()),
-					amt,
+					amt.RoundInt(),
 				}
 			}
 
@@ -496,7 +516,7 @@ Delegating to a validator
 
 	subCmdDelegate.Flags().Var(&delegatorAddress, "delegator-addr", "delegator's address")
 	subCmdDelegate.Flags().Var(&validatorAddress, "validator-addr", "validator's address")
-	subCmdDelegate.Flags().Float64Var(&stakingAmount, "amount", 0.0, "staking amount")
+	subCmdDelegate.Flags().StringVar(&stakingAmount, "amount", "0.0", "staking amount")
 	subCmdDelegate.Flags().Int64Var(&gasPrice, "gas-price", 1, "gas price to pay")
 	subCmdDelegate.Flags().Var(&chainName, "chain-id", "what chain ID to target")
 	subCmdDelegate.Flags().StringVar(&unlockP,
@@ -521,13 +541,13 @@ Delegating to a validator
 			}
 
 			delegateStakePayloadMaker := func() (staking.Directive, interface{}) {
-				amountBigInt := big.NewInt(int64(stakingAmount * denominations.Nano))
-				amt := amountBigInt.Mul(amountBigInt, big.NewInt(denominations.Nano))
+				amt, _ := numeric.NewDecFromStr(stakingAmount)
+				amt = amt.Mul(nanoAsDec)
 
 				return staking.DirectiveUndelegate, staking.Undelegate{
 					address.Parse(delegatorAddress.String()),
 					address.Parse(validatorAddress.String()),
-					amt,
+					amt.RoundInt(),
 				}
 			}
 
@@ -546,7 +566,7 @@ Delegating to a validator
 
 	subCmdUnDelegate.Flags().Var(&delegatorAddress, "delegator-addr", "delegator's address")
 	subCmdUnDelegate.Flags().Var(&validatorAddress, "validator-addr", "source validator's address")
-	subCmdUnDelegate.Flags().Float64Var(&stakingAmount, "amount", 0.0, "staking amount")
+	subCmdUnDelegate.Flags().StringVar(&stakingAmount, "amount", "0.0", "staking amount")
 	subCmdUnDelegate.Flags().Int64Var(&gasPrice, "gas-price", 1, "gas price to pay")
 	subCmdUnDelegate.Flags().Var(&chainName, "chain-id", "what chain ID to target")
 	subCmdUnDelegate.Flags().StringVar(&unlockP,
