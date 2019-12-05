@@ -493,7 +493,7 @@ Delegating to a validator
 
 			delegateStakePayloadMaker := func() (staking.Directive, interface{}) {
 				amt, _ := numeric.NewDecFromStr(stakingAmount)
-				amt = amt.Mul(nanoAsDec)
+				amt = amt.Mul(oneAsDec)
 				return staking.DirectiveDelegate, staking.Delegate{
 					address.Parse(delegatorAddress.String()),
 					address.Parse(validatorAddress.String()),
@@ -542,7 +542,7 @@ Delegating to a validator
 
 			delegateStakePayloadMaker := func() (staking.Directive, interface{}) {
 				amt, _ := numeric.NewDecFromStr(stakingAmount)
-				amt = amt.Mul(nanoAsDec)
+				amt = amt.Mul(oneAsDec)
 
 				return staking.DirectiveUndelegate, staking.Undelegate{
 					address.Parse(delegatorAddress.String()),
