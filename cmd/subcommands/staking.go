@@ -163,8 +163,9 @@ func delegationAmountSanityCheck(minSelfDelegation numeric.Dec, maxTotalDelegati
 	}
 
 	// Amount must be >= MinSelfDelegation
-	if amount != nil &&
-		(amount.GT(maxTotalDelegation) || amount.LT(minSelfDelegation)) {
+	if amount != nil && amount.GT(minSelfDelegation) &&
+		(amount.Equal(numeric.ZeroDec()) ||
+		(!amount.Equal(numeric.ZeroDec()) && amount.LT(maxTotalDelegation))) {
 		return errInvalidSelfDelegation
 	}
 
