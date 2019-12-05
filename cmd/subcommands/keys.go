@@ -47,20 +47,22 @@ func keysSub() []*cobra.Command {
 	cmdList := &cobra.Command{
 		Use:   "list",
 		Short: "List all the local accounts",
-		Run: func(cmd *cobra.Command, args []string) {
+		RunE: func(cmd *cobra.Command, args []string) error {
 			if useLedgerWallet {
 				ledger.ProcessAddressCommand()
-				return
+				return nil
 			}
 			store.DescribeLocalAccounts()
+			return nil
 		},
 	}
 
 	cmdLocation := &cobra.Command{
 		Use:   "location",
 		Short: "Show where `hmy` keeps accounts & their keys",
-		Run: func(cmd *cobra.Command, args []string) {
+		RunE: func(cmd *cobra.Command, args []string) error {
 			fmt.Println(store.DefaultLocation())
+			return nil
 		},
 	}
 
@@ -106,8 +108,9 @@ func keysSub() []*cobra.Command {
 	cmdMnemonic := &cobra.Command{
 		Use:   "mnemonic",
 		Short: "Compute the bip39 mnemonic for some input entropy",
-		Run: func(cmd *cobra.Command, args []string) {
+		RunE: func(cmd *cobra.Command, args []string) error {
 			fmt.Println(mnemonic.Generate())
+			return nil
 		},
 	}
 
@@ -238,8 +241,9 @@ func init() {
 		Long: `
 Manage your local keys
 `,
-		Run: func(cmd *cobra.Command, args []string) {
+		RunE: func(cmd *cobra.Command, args []string) error {
 			cmd.Help()
+			return nil
 		},
 	}
 
