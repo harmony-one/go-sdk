@@ -16,19 +16,19 @@ type ChainID struct {
 type chainIDList struct {
 	MainNet ChainID
 	TestNet ChainID
-	Pangaea ChainID
+	DevNet ChainID
 }
 
 // Chain is an enumeration of the known Chain-IDs
 var Chain = chainIDList{
 	MainNet: ChainID{"mainnet", big.NewInt(1)},
 	TestNet: ChainID{"testnet", big.NewInt(2)},
-	Pangaea: ChainID{"pangaea", big.NewInt(3)},
+	DevNet: ChainID{"devnet", big.NewInt(3)},
 }
 
 // AllChainIDs returns list of known chains
 func AllChainIDs() []string {
-	return []string{"mainnet", "testnet", "pangaea"}
+	return []string{"mainnet", "testnet", "devnet"}
 }
 
 // StringToChainID returns the ChainID wrapper for the given human name of a chain-id
@@ -38,8 +38,8 @@ func StringToChainID(name string) (*ChainID, error) {
 		return &Chain.MainNet, nil
 	case "testnet":
 		return &Chain.TestNet, nil
-	case "pangaea":
-		return &Chain.Pangaea, nil
+	case "devnet":
+		return &Chain.DevNet, nil
 	default:
 		return nil, fmt.Errorf("unknown chain-id: %s", name)
 	}
