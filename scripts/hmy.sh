@@ -10,6 +10,9 @@ Usage: $0 [option] command
 Options:
    -d          download all the binaries
    -h          print this help
+Note: Arguments must be passed at the end for ./hmy to work correctly.
+For instance: ./hmy.sh ./hmy.sh balances <one-address> --node=https://api.s0.p.hmny.io/
+
 EOT
 }
 
