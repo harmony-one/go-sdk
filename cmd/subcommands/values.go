@@ -40,6 +40,9 @@ hmy --node="https://api.s0.b.hmny.io/" transfer \
 hmy --node="https://api.s0.b.hmny.io" blockchain transaction-receipt <SOME_TX_HASH>
 
 %s
+hmy keys add --recover
+
+%s
 hmy keys import-ks <SOME_ABSOLUTE_PATH_TO_KEYSTORE_JSON>.key
 
 %s
@@ -63,10 +66,11 @@ hmy staking create-validator --amount 10 --validator-addr <SOME_ONE_ADDRESS> \
 		g("3.  List local keys"),
 		g("4.  Sending a transaction (add --wait-for-confirm=10 to wait 10 seconds for confirmation)"),
 		g("5.  Check a completed transaction receipt"),
-		g("6.  Import an existing keystore file"),
-		g("7.  Import a keystore file using a secp256k1 private key"),
-		g("8.  Export a keystore file's secp256k1 private key"),
-		g("9.  Generate a BLS key then encrypt and save the private key to the specified location"),
-		g("10. Create a new validator with a list of BLS keys"),
+		g("6.  Prompts user for mnemonic to import an account"),
+		g("7.  Import an existing keystore file"),
+		g("8.  Import a keystore file using a secp256k1 private key"),
+		g("9.  Export a keystore file's secp256k1 private key"),
+		g("10. Generate a BLS key then encrypt and save the private key to the specified location"),
+		g("11. Create a new validator with a list of BLS keys"),
 	)
 )
