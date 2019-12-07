@@ -154,7 +154,7 @@ func VerifyBLS(blsPubKey string) (shard.BlsSignature, error) {
 	fmt.Println("Enter the bls passphrase:")
 	pass, _ := terminal.ReadPassword(int(os.Stdin.Fd()))
 
-	decryptedPrivateKeyBytes, err := decrypt(encryptedPrivateKeyBytes, strings.TrimSpace(string(pass)))
+	decryptedPrivateKeyBytes, err := decrypt(encryptedPrivateKeyBytes, string(pass))
 	if err != nil {
 		return sig, err
 	}
