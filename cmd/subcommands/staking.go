@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"math/big"
 	"strings"
+	"time"
 
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/ethereum/go-ethereum/core"
@@ -146,8 +147,30 @@ func handleStakingTransaction(
 		return err
 	}
 	r, _ := reply["result"].(string)
-	fmt.Println(fmt.Sprintf(`{"transaction-receipt":"%s"}`, r))
+	if confirmWait > 0 {
+		confirmTx(networkHandler, confirmWait, r)
+	} else {
+		fmt.Println(fmt.Sprintf(`{"transaction-receipt":"%s"}`, r))
+	}
 	return nil
+}
+
+func confirmTx(networkHandler *rpc.HTTPMessenger, confirmWaitTime uint32, txHash string) {
+	start := int(confirmWaitTime)
+	for {
+		if start < 0 {
+			fmt.Println("Could not confirm", txHash, "even after", confirmWaitTime, "seconds")
+			fmt.Println("Try increasing the wait-for-confirm")
+			return
+		}
+		r, _ := networkHandler.SendRPC(rpc.Method.GetTransactionReceipt, []interface{}{txHash})
+		if r["result"] != nil {
+			fmt.Println(common.ToJSONUnsafe(r, true))
+			return
+		}
+		time.Sleep(time.Second * 2)
+		start = start - 2
+	}
 }
 
 func delegationAmountSanityCheck(minSelfDelegation numeric.Dec, maxTotalDelegation numeric.Dec, amount *numeric.Dec) error {
@@ -165,7 +188,7 @@ func delegationAmountSanityCheck(minSelfDelegation numeric.Dec, maxTotalDelegati
 	// Amount must be >= MinSelfDelegation
 	if amount != nil && amount.LT(minSelfDelegation) &&
 		(maxTotalDelegation.Equal(numeric.ZeroDec()) ||
-		(!maxTotalDelegation.Equal(numeric.ZeroDec()) && amount.GT(maxTotalDelegation))) {
+			(!maxTotalDelegation.Equal(numeric.ZeroDec()) && amount.GT(maxTotalDelegation))) {
 		return errInvalidSelfDelegation
 	}
 
@@ -349,6 +372,7 @@ Create a new validator"
 	subCmdNewValidator.Flags().StringVar(&stakingAmount, "amount", "0.0", "staking amount")
 	subCmdNewValidator.Flags().Int64Var(&gasPrice, "gas-price", 1, "gas price to pay")
 	subCmdNewValidator.Flags().Var(&chainName, "chain-id", "what chain ID to target")
+	subCmdNewValidator.Flags().Uint32Var(&confirmWait, "wait-for-confirm", 0, "only waits if non-zero value, in seconds")
 	subCmdNewValidator.Flags().StringVar(&unlockP,
 		"passphrase", common.DefaultPassphrase,
 		"passphrase to unlock delegator's keystore",
@@ -467,6 +491,7 @@ Create a new validator"
 
 	subCmdEditValidator.Flags().Int64Var(&gasPrice, "gas-price", 1, "gas price to pay")
 	subCmdEditValidator.Flags().Var(&chainName, "chain-id", "what chain ID to target")
+	subCmdEditValidator.Flags().Uint32Var(&confirmWait, "wait-for-confirm", 0, "only waits if non-zero value, in seconds")
 	subCmdEditValidator.Flags().StringVar(&unlockP,
 		"passphrase", common.DefaultPassphrase,
 		"passphrase to unlock delegator's keystore",
@@ -520,6 +545,7 @@ Delegating to a validator
 	subCmdDelegate.Flags().StringVar(&stakingAmount, "amount", "0.0", "staking amount")
 	subCmdDelegate.Flags().Int64Var(&gasPrice, "gas-price", 1, "gas price to pay")
 	subCmdDelegate.Flags().Var(&chainName, "chain-id", "what chain ID to target")
+	subCmdDelegate.Flags().Uint32Var(&confirmWait, "wait-for-confirm", 0, "only waits if non-zero value, in seconds")
 	subCmdDelegate.Flags().StringVar(&unlockP,
 		"passphrase", common.DefaultPassphrase,
 		"passphrase to unlock delegator's keystore",
@@ -570,6 +596,7 @@ Delegating to a validator
 	subCmdUnDelegate.Flags().StringVar(&stakingAmount, "amount", "0.0", "staking amount")
 	subCmdUnDelegate.Flags().Int64Var(&gasPrice, "gas-price", 1, "gas price to pay")
 	subCmdUnDelegate.Flags().Var(&chainName, "chain-id", "what chain ID to target")
+	subCmdUnDelegate.Flags().Uint32Var(&confirmWait, "wait-for-confirm", 0, "only waits if non-zero value, in seconds")
 	subCmdUnDelegate.Flags().StringVar(&unlockP,
 		"passphrase", common.DefaultPassphrase,
 		"passphrase to unlock delegator's keystore",
@@ -613,6 +640,7 @@ Collect token rewards
 	subCmdCollectRewards.Flags().Var(&delegatorAddress, "delegator-addr", "delegator's address")
 	subCmdCollectRewards.Flags().Int64Var(&gasPrice, "gas-price", 1, "gas price to pay")
 	subCmdCollectRewards.Flags().Var(&chainName, "chain-id", "what chain ID to target")
+	subCmdCollectRewards.Flags().Uint32Var(&confirmWait, "wait-for-confirm", 0, "only waits if non-zero value, in seconds")
 	subCmdCollectRewards.Flags().StringVar(&unlockP,
 		"passphrase", common.DefaultPassphrase,
 		"passphrase to unlock delegator's keystore",
