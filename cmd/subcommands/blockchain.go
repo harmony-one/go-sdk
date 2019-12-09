@@ -88,6 +88,18 @@ High level information about transaction, like blockNumber, blockHash
 			return request(rpc.Method.GetTransactionReceipt, []interface{}{args[0]})
 		},
 	}, {
+		Use:   "current-nonce",
+		Short: "Current nonce of an account",
+		Args:  cobra.ExactArgs(1),
+		Long:  `Current nonce number of a one-address`,
+		RunE: func(cmd *cobra.Command, args []string) error {
+			addr := oneAddress{}
+			if err := addr.Set(args[0]); err != nil {
+				return err
+			}
+			return request(rpc.Method.GetTransactionCount, []interface{}{args[0]})
+		},
+	}, {
 		Use:   "latest-header",
 		Short: "Get the latest header",
 		RunE: func(cmd *cobra.Command, arg []string) error {
@@ -99,11 +111,8 @@ High level information about transaction, like blockNumber, blockHash
 
 	cmdBlockchain.AddCommand(cmdValidator)
 	cmdBlockchain.AddCommand(cmdDelegation)
-
 	cmdValidator.AddCommand(validatorSubCmds[:]...)
 	cmdDelegation.AddCommand(delegationSubCmds[:]...)
-
 	cmdBlockchain.AddCommand(subCommands[:]...)
-
 	RootCmd.AddCommand(cmdBlockchain)
 }
