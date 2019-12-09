@@ -70,7 +70,10 @@ var (
 	errInvalidDescFieldDetails         = errors.New("exceeds maximum length of 280 characters for description field details")
 )
 
-func getNextNonce(addr oneAddress, messenger rpc.T) uint64 {
+func getNextNonce(addr oneAddress, messenger rpc.T, nonce int64) uint64 {
+	if nonce < 0 {
+		return uint64(nonce)
+	}
 	transactionCountRPCReply, err :=
 		messenger.SendRPC(rpc.Method.GetTransactionCount, []interface{}{address.Parse(addr.String()), "latest"})
 
@@ -79,8 +82,8 @@ func getNextNonce(addr oneAddress, messenger rpc.T) uint64 {
 	}
 
 	transactionCount, _ := transactionCountRPCReply["result"].(string)
-	nonce, _ := big.NewInt(0).SetString(transactionCount[2:], 16)
-	return nonce.Uint64()
+	n, _ := big.NewInt(0).SetString(transactionCount[2:], 16)
+	return n.Uint64()
 }
 
 func createStakingTransaction(nonce uint64, f staking.StakeMsgFulfiller) (*staking.StakingTransaction, error) {
@@ -341,8 +344,7 @@ Create a new validator"
 					amt.RoundInt(),
 				}
 			}
-
-			stakingTx, err := createStakingTransaction(getNextNonce(validatorAddress, networkHandler), delegateStakePayloadMaker)
+			stakingTx, err := createStakingTransaction(getNextNonce(validatorAddress, networkHandler, setNonce), delegateStakePayloadMaker)
 			if err != nil {
 				return err
 			}
@@ -371,6 +373,7 @@ Create a new validator"
 	)
 	subCmdNewValidator.Flags().StringVar(&stakingAmount, "amount", "0.0", "staking amount")
 	subCmdNewValidator.Flags().Int64Var(&gasPrice, "gas-price", 1, "gas price to pay")
+	subCmdNewValidator.Flags().Int64Var(&setNonce, "nonce", -1, "set nonce for transaction")
 	subCmdNewValidator.Flags().Var(&chainName, "chain-id", "what chain ID to target")
 	subCmdNewValidator.Flags().Uint32Var(&confirmWait, "wait-for-confirm", 0, "only waits if non-zero value, in seconds")
 	subCmdNewValidator.Flags().StringVar(&unlockP,
@@ -464,7 +467,7 @@ Create a new validator"
 
 			}
 
-			stakingTx, err := createStakingTransaction(getNextNonce(validatorAddress, networkHandler), delegateStakePayloadMaker)
+			stakingTx, err := createStakingTransaction(getNextNonce(validatorAddress, networkHandler, setNonce), delegateStakePayloadMaker)
 			if err != nil {
 				return err
 			}
@@ -490,6 +493,7 @@ Create a new validator"
 	subCmdEditValidator.Flags().StringVar(&slotKeyToRemove, "remove-bls-key", "", "remove BLS pubkey from slot")
 
 	subCmdEditValidator.Flags().Int64Var(&gasPrice, "gas-price", 1, "gas price to pay")
+  subCmdEditValidator.Flags().Int64Var(&setNonce, "nonce", -1, "set nonce for transaction")
 	subCmdEditValidator.Flags().Var(&chainName, "chain-id", "what chain ID to target")
 	subCmdEditValidator.Flags().Uint32Var(&confirmWait, "wait-for-confirm", 0, "only waits if non-zero value, in seconds")
 	subCmdEditValidator.Flags().StringVar(&unlockP,
@@ -527,7 +531,7 @@ Delegating to a validator
 				}
 			}
 
-			stakingTx, err := createStakingTransaction(getNextNonce(delegatorAddress, networkHandler), delegateStakePayloadMaker)
+			stakingTx, err := createStakingTransaction(getNextNonce(delegatorAddress, networkHandler, setNonce), delegateStakePayloadMaker)
 			if err != nil {
 				return err
 			}
@@ -544,6 +548,7 @@ Delegating to a validator
 	subCmdDelegate.Flags().Var(&validatorAddress, "validator-addr", "validator's address")
 	subCmdDelegate.Flags().StringVar(&stakingAmount, "amount", "0.0", "staking amount")
 	subCmdDelegate.Flags().Int64Var(&gasPrice, "gas-price", 1, "gas price to pay")
+	subCmdDelegate.Flags().Int64Var(&setNonce, "nonce", -1, "set nonce for transaction")
 	subCmdDelegate.Flags().Var(&chainName, "chain-id", "what chain ID to target")
 	subCmdDelegate.Flags().Uint32Var(&confirmWait, "wait-for-confirm", 0, "only waits if non-zero value, in seconds")
 	subCmdDelegate.Flags().StringVar(&unlockP,
@@ -578,7 +583,7 @@ Delegating to a validator
 				}
 			}
 
-			stakingTx, err := createStakingTransaction(getNextNonce(delegatorAddress, networkHandler), delegateStakePayloadMaker)
+			stakingTx, err := createStakingTransaction(getNextNonce(delegatorAddress, networkHandler, setNonce), delegateStakePayloadMaker)
 			if err != nil {
 				return err
 			}
@@ -595,6 +600,7 @@ Delegating to a validator
 	subCmdUnDelegate.Flags().Var(&validatorAddress, "validator-addr", "source validator's address")
 	subCmdUnDelegate.Flags().StringVar(&stakingAmount, "amount", "0.0", "staking amount")
 	subCmdUnDelegate.Flags().Int64Var(&gasPrice, "gas-price", 1, "gas price to pay")
+	subCmdUnDelegate.Flags().Int64Var(&setNonce, "nonce", -1, "set nonce for transaction")
 	subCmdUnDelegate.Flags().Var(&chainName, "chain-id", "what chain ID to target")
 	subCmdUnDelegate.Flags().Uint32Var(&confirmWait, "wait-for-confirm", 0, "only waits if non-zero value, in seconds")
 	subCmdUnDelegate.Flags().StringVar(&unlockP,
@@ -624,7 +630,7 @@ Collect token rewards
 				}
 			}
 
-			stakingTx, err := createStakingTransaction(getNextNonce(delegatorAddress, networkHandler), delegateStakePayloadMaker)
+			stakingTx, err := createStakingTransaction(getNextNonce(delegatorAddress, networkHandler, setNonce), delegateStakePayloadMaker)
 			if err != nil {
 				return err
 			}
@@ -639,6 +645,7 @@ Collect token rewards
 
 	subCmdCollectRewards.Flags().Var(&delegatorAddress, "delegator-addr", "delegator's address")
 	subCmdCollectRewards.Flags().Int64Var(&gasPrice, "gas-price", 1, "gas price to pay")
+	subCmdCollectRewards.Flags().Int64Var(&setNonce, "nonce", -1, "set nonce for tx")
 	subCmdCollectRewards.Flags().Var(&chainName, "chain-id", "what chain ID to target")
 	subCmdCollectRewards.Flags().Uint32Var(&confirmWait, "wait-for-confirm", 0, "only waits if non-zero value, in seconds")
 	subCmdCollectRewards.Flags().StringVar(&unlockP,

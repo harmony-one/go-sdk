@@ -110,19 +110,23 @@ func (C *Controller) verifyBalance(amount float64) {
 	}
 }
 
-func (C *Controller) setNextNonce() {
+func (C *Controller) setNextNonce(nonce int64) {
 	if C.failure != nil {
 		return
 	}
-	transactionCountRPCReply, err :=
-		C.messenger.SendRPC(rpc.Method.GetTransactionCount, p{C.sender.account.Address.Hex(), "latest"})
-	if err != nil {
-		C.failure = err
-		return
+	if nonce < 0 {
+		C.transactionForRPC.params["nonce"] = uint64(nonce)
+	} else {
+		transactionCountRPCReply, err :=
+			C.messenger.SendRPC(rpc.Method.GetTransactionCount, p{C.sender.account.Address.Hex(), "latest"})
+		if err != nil {
+			C.failure = err
+			return
+		}
+		transactionCount, _ := transactionCountRPCReply["result"].(string)
+		nonce, _ := big.NewInt(0).SetString(transactionCount[2:], 16)
+		C.transactionForRPC.params["nonce"] = nonce.Uint64()
 	}
-	transactionCount, _ := transactionCountRPCReply["result"].(string)
-	nonce, _ := big.NewInt(0).SetString(transactionCount[2:], 16)
-	C.transactionForRPC.params["nonce"] = nonce.Uint64()
 }
 
 func (C *Controller) sendSignedTx() {
@@ -283,7 +287,7 @@ func (C *Controller) txConfirmation() {
 // Each becomes a no-op if failure occured in any previous step
 func (C *Controller) ExecuteTransaction(
 	to, inputData string,
-	amount float64, gPrice int64,
+	amount float64, gPrice, nonce int64,
 	fromShard, toShard int,
 ) error {
 	// WARNING Order of execution matters
@@ -293,7 +297,7 @@ func (C *Controller) ExecuteTransaction(
 	C.verifyBalance(amount)
 	C.setReceiver(to)
 	C.setGasPrice()
-	C.setNextNonce()
+	C.setNextNonce(nonce)
 	C.setNewTransactionWithDataAndGas(inputData, amount, gPrice)
 	switch C.Behavior.SigningImpl {
 	case Software:
