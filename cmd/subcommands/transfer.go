@@ -29,6 +29,9 @@ var (
 )
 
 func handlerForShard(senderShard uint32, node string) (*rpc.HTTPMessenger, error) {
+	if checkNodeInput(node) {
+		return rpc.NewHTTPHandler(node), nil
+	}
 	s, err := sharding.Structure(node)
 	if err != nil {
 		return nil, err
