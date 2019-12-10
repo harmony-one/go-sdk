@@ -257,7 +257,9 @@ func (n *NanoS) SignStaking(stake []byte) (sig [signatureSize]byte, err error) {
 func OpenNanoS() (*NanoS, error) {
 	const (
 		ledgerVendorID       = 0x2c97
-		ledgerNanoSProductID = 0x0001
+		// new device ID for firmware 1.6.0
+		ledgerNanoSProductID = 0x1011
+		// ledgerNanoSProductID = 0x0001
 		//ledgerUsageID        = 0xffa0
 	)
 
