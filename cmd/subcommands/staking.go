@@ -329,7 +329,7 @@ Create a new validator"
 				}
 			}
 
-			nonce, err := getNonceFromInput(fromAddress.String(), inputNonce, networkHandler)
+			nonce, err := getNonceFromInput(validatorAddress.String(), inputNonce, networkHandler)
 			if err != nil {
 				return err
 			}
@@ -456,7 +456,7 @@ Create a new validator"
 
 			}
 
-			nonce, err := getNonceFromInput(fromAddress.String(), inputNonce, networkHandler)
+			nonce, err := getNonceFromInput(validatorAddress.String(), inputNonce, networkHandler)
 			if err != nil {
 				return err
 			}
@@ -524,7 +524,7 @@ Delegating to a validator
 				}
 			}
 
-			nonce, err := getNonceFromInput(fromAddress.String(), inputNonce, networkHandler)
+			nonce, err := getNonceFromInput(delegatorAddress.String(), inputNonce, networkHandler)
 			if err != nil {
 				return err
 			}
@@ -580,7 +580,7 @@ Delegating to a validator
 				}
 			}
 
-			nonce, err := getNonceFromInput(fromAddress.String(), inputNonce, networkHandler)
+			nonce, err := getNonceFromInput(delegatorAddress.String(), inputNonce, networkHandler)
 			if err != nil {
 				return err
 			}
@@ -631,7 +631,7 @@ Collect token rewards
 				}
 			}
 
-			nonce, err := getNonceFromInput(fromAddress.String(), inputNonce, networkHandler)
+			nonce, err := getNonceFromInput(delegatorAddress.String(), inputNonce, networkHandler)
 			if err != nil {
 				return err
 			}
