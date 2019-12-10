@@ -100,32 +100,13 @@ func (C *Controller) verifyBalance(amount float64) {
 	balance = common.NormalizeAmount(balance)
 	transfer := big.NewInt(int64(amount * denominations.Nano))
 
-	tns := (float64(transfer.Uint64()) / denominations.Nano)
-	bln := (float64(balance.Uint64()) / denominations.Nano)
+	tns := float64(transfer.Uint64()) / denominations.Nano
+	bln := float64(balance.Uint64()) / denominations.Nano
 
 	if tns > bln {
 		C.failure = fmt.Errorf(
 			"current balance of %.6f is not enough for the requested transfer %.6f", bln, tns,
 		)
-	}
-}
-
-func (C *Controller) setNextNonce(nonce int64) {
-	if C.failure != nil {
-		return
-	}
-	if nonce < 0 {
-		C.transactionForRPC.params["nonce"] = uint64(nonce)
-	} else {
-		transactionCountRPCReply, err :=
-			C.messenger.SendRPC(rpc.Method.GetTransactionCount, p{C.sender.account.Address.Hex(), "latest"})
-		if err != nil {
-			C.failure = err
-			return
-		}
-		transactionCount, _ := transactionCountRPCReply["result"].(string)
-		nonce, _ := big.NewInt(0).SetString(transactionCount[2:], 16)
-		C.transactionForRPC.params["nonce"] = nonce.Uint64()
 	}
 }
 
@@ -287,7 +268,7 @@ func (C *Controller) txConfirmation() {
 // Each becomes a no-op if failure occured in any previous step
 func (C *Controller) ExecuteTransaction(
 	to, inputData string,
-	amount float64, gPrice, nonce int64,
+	amount float64, gPrice int64, nonce uint64,
 	fromShard, toShard int,
 ) error {
 	// WARNING Order of execution matters
@@ -297,7 +278,7 @@ func (C *Controller) ExecuteTransaction(
 	C.verifyBalance(amount)
 	C.setReceiver(to)
 	C.setGasPrice()
-	C.setNextNonce(nonce)
+	C.transactionForRPC.params["nonce"] = nonce
 	C.setNewTransactionWithDataAndGas(inputData, amount, gPrice)
 	switch C.Behavior.SigningImpl {
 	case Software:
