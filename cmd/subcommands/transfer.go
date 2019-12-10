@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"fmt"
+	"strconv"
 
 	"github.com/harmony-one/go-sdk/pkg/address"
 	"github.com/harmony-one/go-sdk/pkg/common"
@@ -25,8 +26,8 @@ var (
 	chainName   = chainIDWrapper{chainID: &common.Chain.TestNet}
 	dryRun      bool
 	unlockP     string
+	inputNonce  string
 	gasPrice    int64
-	setNonce    int64
 )
 
 func handlerForShard(senderShard uint32, node string) (*rpc.HTTPMessenger, error) {
@@ -56,6 +57,19 @@ func opts(ctlr *transaction.Controller) {
 	}
 	if confirmWait > 0 {
 		ctlr.Behavior.ConfirmationWaitTime = confirmWait
+	}
+}
+
+func getNonceFromInput(addr, inputNonce string, messenger rpc.T) (uint64, error) {
+	if inputNonce != "" {
+		nonce, err := strconv.ParseUint(inputNonce, 10, 64)
+		if err != nil {
+			return 0, err
+		} else {
+			return nonce, nil
+		}
+	} else {
+		return transaction.GetNextNonce(addr, messenger), nil
 	}
 }
 
@@ -92,10 +106,15 @@ Create a transaction, sign it, and send off to the Harmony blockchain
 				ctrlr = transaction.NewController(networkHandler, ks, acct, *chainName.chainID, opts)
 			}
 
+			nonce, err := getNonceFromInput(fromAddress.String(), inputNonce, networkHandler)
+			if err != nil {
+				return err
+			}
+
 			if transactionFailure := ctrlr.ExecuteTransaction(
 				toAddress.String(),
 				"",
-				amount, gasPrice, setNonce,
+				amount, gasPrice, nonce,
 				int(fromShardID),
 				int(toShardID),
 			); transactionFailure != nil {
@@ -120,7 +139,7 @@ Create a transaction, sign it, and send off to the Harmony blockchain
 	cmdTransfer.Flags().BoolVar(&dryRun, "dry-run", false, "do not send signed transaction")
 	cmdTransfer.Flags().Float64Var(&amount, "amount", 0.0, "amount")
 	cmdTransfer.Flags().Int64Var(&gasPrice, "gas-price", 1, "gas price to pay")
-	cmdTransfer.Flags().Int64Var(&setNonce, "nonce", -1, "set nonce for tx")
+	cmdTransfer.Flags().StringVar(&inputNonce, "nonce", "", "set nonce for tx")
 	cmdTransfer.Flags().Uint32Var(&fromShardID, "from-shard", 0, "source shard id")
 	cmdTransfer.Flags().Uint32Var(&toShardID, "to-shard", 0, "target shard id")
 	cmdTransfer.Flags().Var(&chainName, "chain-id", "what chain ID to target")
