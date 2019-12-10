@@ -15,8 +15,9 @@ func init() {
 		Long: `
 Look up information about validator information
 `,
-		Run: func(cmd *cobra.Command, args []string) {
+		RunE: func(cmd *cobra.Command, args []string) error {
 			cmd.Help()
+			return nil
 		},
 	}
 
@@ -26,8 +27,9 @@ Look up information about validator information
 		Long: `
 Look up information about delegation
 `,
-		Run: func(cmd *cobra.Command, args []string) {
+		RunE: func(cmd *cobra.Command, args []string) error {
 			cmd.Help()
+			return nil
 		},
 	}
 
@@ -37,8 +39,9 @@ Look up information about delegation
 		Long: `
 Query Harmony's blockchain for completed transaction, historic records
 `,
-		Run: func(cmd *cobra.Command, args []string) {
+		RunE: func(cmd *cobra.Command, args []string) error {
 			cmd.Help()
+			return nil
 		},
 	}
 
@@ -53,8 +56,9 @@ Query Harmony's blockchain for completed transaction, historic records
 	}, {
 		Use:   "known-chains",
 		Short: "Print out the known chain-ids",
-		Run: func(cmd *cobra.Command, args []string) {
+		RunE: func(cmd *cobra.Command, args []string) error {
 			fmt.Println(common.ToJSONUnsafe(common.AllChainIDs(), !noPrettyOutput))
+			return nil
 		},
 	}, {
 		Use:   "protocol-version",

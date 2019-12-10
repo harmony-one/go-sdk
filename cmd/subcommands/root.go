@@ -50,8 +50,9 @@ var (
 CLI interface to the Harmony blockchain
 
 %s`, g("Invoke 'hmy cookbook' for examples of the most common, important usages")),
-		Run: func(cmd *cobra.Command, args []string) {
+		RunE: func(cmd *cobra.Command, args []string) error {
 			cmd.Help()
+			return nil
 		},
 	}
 )
@@ -69,19 +70,21 @@ func init() {
 	RootCmd.AddCommand(&cobra.Command{
 		Use:   "cookbook",
 		Short: "Example usages of the most important, frequently used commands",
-		Run: func(cmd *cobra.Command, args []string) {
+		RunE: func(cmd *cobra.Command, args []string) error {
 			fmt.Print(cookbookDoc)
+			return nil
 		},
 	})
 	RootCmd.PersistentFlags().BoolVarP(&useLedgerWallet, "ledger", "e", false, "Use ledger hardware wallet")
 	RootCmd.AddCommand(&cobra.Command{
 		Use:   "docs",
 		Short: fmt.Sprintf("Generate docs to a local %s directory", hmyDocsDir),
-		Run: func(cmd *cobra.Command, args []string) {
+		RunE: func(cmd *cobra.Command, args []string) error {
 			cwd, _ := os.Getwd()
 			docDir := path.Join(cwd, hmyDocsDir)
 			os.Mkdir(docDir, 0700)
 			doc.GenMarkdownTree(RootCmd, docDir)
+			return nil
 		},
 	})
 }
