@@ -26,6 +26,7 @@ var (
 	dryRun      bool
 	unlockP     string
 	gasPrice    int64
+	setNonce    int64
 )
 
 func handlerForShard(senderShard uint32, node string) (*rpc.HTTPMessenger, error) {
@@ -94,7 +95,7 @@ Create a transaction, sign it, and send off to the Harmony blockchain
 			if transactionFailure := ctrlr.ExecuteTransaction(
 				toAddress.String(),
 				"",
-				amount, gasPrice,
+				amount, gasPrice, setNonce,
 				int(fromShardID),
 				int(toShardID),
 			); transactionFailure != nil {
@@ -119,6 +120,7 @@ Create a transaction, sign it, and send off to the Harmony blockchain
 	cmdTransfer.Flags().BoolVar(&dryRun, "dry-run", false, "do not send signed transaction")
 	cmdTransfer.Flags().Float64Var(&amount, "amount", 0.0, "amount")
 	cmdTransfer.Flags().Int64Var(&gasPrice, "gas-price", 1, "gas price to pay")
+	cmdTransfer.Flags().Int64Var(&setNonce, "nonce", -1, "set nonce for tx")
 	cmdTransfer.Flags().Uint32Var(&fromShardID, "from-shard", 0, "source shard id")
 	cmdTransfer.Flags().Uint32Var(&toShardID, "to-shard", 0, "target shard id")
 	cmdTransfer.Flags().Var(&chainName, "chain-id", "what chain ID to target")
