@@ -70,10 +70,7 @@ var (
 	errInvalidDescFieldDetails         = errors.New("exceeds maximum length of 280 characters for description field details")
 )
 
-func getNextNonce(addr oneAddress, messenger rpc.T, nonce int64) uint64 {
-	if nonce < 0 {
-		return uint64(nonce)
-	}
+func getNextNonce(addr oneAddress, messenger rpc.T) uint64 {
 	transactionCountRPCReply, err :=
 		messenger.SendRPC(rpc.Method.GetTransactionCount, []interface{}{address.Parse(addr.String()), "latest"})
 
@@ -344,7 +341,11 @@ Create a new validator"
 					amt.RoundInt(),
 				}
 			}
-			stakingTx, err := createStakingTransaction(getNextNonce(validatorAddress, networkHandler, setNonce), delegateStakePayloadMaker)
+			nonce := uint64(setNonce)
+			if setNonce < 0 {
+				nonce = getNextNonce(validatorAddress, networkHandler)
+			}
+			stakingTx, err := createStakingTransaction(nonce, delegateStakePayloadMaker)
 			if err != nil {
 				return err
 			}
@@ -466,8 +467,11 @@ Create a new validator"
 				}
 
 			}
-
-			stakingTx, err := createStakingTransaction(getNextNonce(validatorAddress, networkHandler, setNonce), delegateStakePayloadMaker)
+			nonce := uint64(setNonce)
+			if setNonce < 0 {
+				nonce = getNextNonce(validatorAddress, networkHandler)
+			}
+			stakingTx, err := createStakingTransaction(nonce, delegateStakePayloadMaker)
 			if err != nil {
 				return err
 			}
@@ -493,7 +497,7 @@ Create a new validator"
 	subCmdEditValidator.Flags().StringVar(&slotKeyToRemove, "remove-bls-key", "", "remove BLS pubkey from slot")
 
 	subCmdEditValidator.Flags().Int64Var(&gasPrice, "gas-price", 1, "gas price to pay")
-  subCmdEditValidator.Flags().Int64Var(&setNonce, "nonce", -1, "set nonce for transaction")
+	subCmdEditValidator.Flags().Int64Var(&setNonce, "nonce", -1, "set nonce for transaction")
 	subCmdEditValidator.Flags().Var(&chainName, "chain-id", "what chain ID to target")
 	subCmdEditValidator.Flags().Uint32Var(&confirmWait, "wait-for-confirm", 0, "only waits if non-zero value, in seconds")
 	subCmdEditValidator.Flags().StringVar(&unlockP,
@@ -531,7 +535,11 @@ Delegating to a validator
 				}
 			}
 
-			stakingTx, err := createStakingTransaction(getNextNonce(delegatorAddress, networkHandler, setNonce), delegateStakePayloadMaker)
+			nonce := uint64(setNonce)
+			if setNonce < 0 {
+				nonce = getNextNonce(validatorAddress, networkHandler)
+			}
+			stakingTx, err := createStakingTransaction(nonce, delegateStakePayloadMaker)
 			if err != nil {
 				return err
 			}
@@ -583,7 +591,11 @@ Delegating to a validator
 				}
 			}
 
-			stakingTx, err := createStakingTransaction(getNextNonce(delegatorAddress, networkHandler, setNonce), delegateStakePayloadMaker)
+			nonce := uint64(setNonce)
+			if setNonce < 0 {
+				nonce = getNextNonce(validatorAddress, networkHandler)
+			}
+			stakingTx, err := createStakingTransaction(nonce, delegateStakePayloadMaker)
 			if err != nil {
 				return err
 			}
@@ -630,7 +642,11 @@ Collect token rewards
 				}
 			}
 
-			stakingTx, err := createStakingTransaction(getNextNonce(delegatorAddress, networkHandler, setNonce), delegateStakePayloadMaker)
+			nonce := uint64(setNonce)
+			if setNonce < 0 {
+				nonce = getNextNonce(validatorAddress, networkHandler)
+			}
+			stakingTx, err := createStakingTransaction(nonce, delegateStakePayloadMaker)
 			if err != nil {
 				return err
 			}

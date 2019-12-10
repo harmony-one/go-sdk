@@ -92,6 +92,9 @@ Create a transaction, sign it, and send off to the Harmony blockchain
 				ctrlr = transaction.NewController(networkHandler, ks, acct, *chainName.chainID, opts)
 			}
 
+			if setNonce < 0 {
+				setNonce = int64(getNextNonce(validatorAddress, networkHandler))
+			}
 			if transactionFailure := ctrlr.ExecuteTransaction(
 				toAddress.String(),
 				"",
