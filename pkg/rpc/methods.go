@@ -52,6 +52,7 @@ type rpcEnumList struct {
 	GetValidatorInformation             method
 	GetDelegationsByDelegator           method
 	GetDelegationsByValidator           method
+	GetCurrentTransactionErrorSink      method
 }
 
 // Method is a list of known RPC methods
@@ -96,6 +97,7 @@ var Method = rpcEnumList{
 	GetValidatorInformation:             "hmy_getValidatorInformation",
 	GetDelegationsByDelegator:           "hmy_getDelegationsByDelegator",
 	GetDelegationsByValidator:           "hmy_getDelegationsByValidator",
+	GetCurrentTransactionErrorSink:      "hmy_getCurrentTransactionErrorSink",
 }
 
 // TODO Use Reflection here to avoid typing out the cases
@@ -215,6 +217,6 @@ func codeToMessage(err float64) string {
 	case errorCodeEnumeration.rpcIncorrectChainID:
 		return wrongChain
 	default:
-		panic(fmt.Sprintf("Error number %v not found", err))
+		return fmt.Sprintf("Error number %v not found", err)
 	}
 }

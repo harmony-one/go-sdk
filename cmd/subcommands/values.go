@@ -86,6 +86,9 @@ hmy --node="https://api.s1.p.hmny.io" staking collect-rewards \
 %s
 hmy --node="https://api.s1.p.hmny.io" blockchain validator all-active
 
+%s
+hmy failures staking
+
 `,
 		g("1.  Check account balance on given chain"),
 		g("2.  Check sent transaction"),
@@ -103,5 +106,6 @@ hmy --node="https://api.s1.p.hmny.io" blockchain validator all-active
 		g("14. Undelegate to a validator"),
 		g("15. Collect block rewards as a delegator"),
 		g("16. Check active validators"),
+		g("17. Check in-memory record of failed staking transactions"),
 	)
 )
