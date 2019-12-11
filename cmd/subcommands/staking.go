@@ -408,7 +408,7 @@ Create a new validator"
 			shardPubKeyAdd := shard.BlsPublicKey{}
 			shardPubKeyAdd.FromLibBLSPublicKey(blsPubKeyAdd)
 
-			sigBls, err := keys.VerifyBLS(slotKeyToAdd)
+			sigBls, err := keys.VerifyBLS(strings.TrimPrefix(slotKeyToAdd, "0x"))
 			if err != nil {
 				return err
 			}
