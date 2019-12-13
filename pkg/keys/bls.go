@@ -46,7 +46,7 @@ func GenBlsKeys(passphrase, filePath string) error {
 		return err
 	}
 	out := fmt.Sprintf(`
-{"public-key" : "0x%s", "private-key" : "0x%s", "encrypted-private-key-path" : "%s"}`,
+{"public-key" : "%s", "private-key" : "%s", "encrypted-private-key-path" : "%s"}`,
 		publicKeyHex, privateKeyHex, filePath)
 	fmt.Println(common.JSONPrettyFormat(out))
 	return nil
