@@ -53,6 +53,7 @@ type rpcEnumList struct {
 	GetDelegationsByDelegator           method
 	GetDelegationsByValidator           method
 	GetCurrentTransactionErrorSink      method
+	GetValidatorMetrics                 method
 }
 
 // Method is a list of known RPC methods
@@ -98,6 +99,7 @@ var Method = rpcEnumList{
 	GetDelegationsByDelegator:           "hmy_getDelegationsByDelegator",
 	GetDelegationsByValidator:           "hmy_getDelegationsByValidator",
 	GetCurrentTransactionErrorSink:      "hmy_getCurrentTransactionErrorSink",
+	GetValidatorMetrics:                 "hmy_getValidatorMetrics",
 }
 
 // TODO Use Reflection here to avoid typing out the cases
@@ -126,7 +128,7 @@ type rpcErrorCodeList struct {
 	rpcVerifyRejected       errorCode
 	rpcInWarmup             errorCode
 	rpcMethodDeprecated     errorCode
-	rpcIncorrectChainID     errorCode
+	rpcGenericError         errorCode
 }
 
 // TODO Do not punt on the field names
@@ -144,17 +146,17 @@ var errorCodeEnumeration = rpcErrorCodeList{
 	rpcInternalError: -32603,
 	rpcParseError:    -32700,
 	// General application defined errors
-	rpcMiscError:            -1,  // std::exception thrown in command handling
-	rpcTypeError:            -3,  // Unexpected type was passed as parameter
-	rpcInvalidAddressOrKey:  -5,  // Invalid address or key
-	rpcInvalidParameter:     -8,  // Invalid, missing or duplicate parameter
-	rpcDatabaseError:        -20, // Database error
-	rpcDeserializationError: -22, // Error parsing or validating structure in raw format
-	rpcVerifyError:          -25, // General error during transaction or block submission
-	rpcVerifyRejected:       -26, // Transaction or block was rejected by network rules
-	rpcInWarmup:             -28, // Client still warming up
-	rpcMethodDeprecated:     -32, // RPC method is deprecated
-	rpcIncorrectChainID:     -32000,
+	rpcMiscError:            -1,     // std::exception thrown in command handling
+	rpcTypeError:            -3,     // Unexpected type was passed as parameter
+	rpcInvalidAddressOrKey:  -5,     // Invalid address or key
+	rpcInvalidParameter:     -8,     // Invalid, missing or duplicate parameter
+	rpcDatabaseError:        -20,    // Database error
+	rpcDeserializationError: -22,    // Error parsing or validating structure in raw format
+	rpcVerifyError:          -25,    // General error during transaction or block submission
+	rpcVerifyRejected:       -26,    // Transaction or block was rejected by network rules
+	rpcInWarmup:             -28,    // Client still warming up
+	rpcMethodDeprecated:     -32,    // RPC method is deprecated
+	rpcGenericError:         -32000, // Generic catchall error code
 }
 
 const (
@@ -173,7 +175,7 @@ const (
 	verifyRejectedError      = "Transaction or block was rejected by network rules"
 	rpcInWarmupError         = "Client still warming up"
 	methodDeprecatedError    = "RPC method deprecated"
-	wrongChain               = "ChainID on node differs from received chainID"
+	catchAllError            = "Catch all RPC error"
 )
 
 // ErrorCodeToError lifts an untyped error code from RPC to Error value
@@ -214,8 +216,8 @@ func codeToMessage(err float64) string {
 		return rpcInWarmupError
 	case errorCodeEnumeration.rpcMethodDeprecated:
 		return methodDeprecatedError
-	case errorCodeEnumeration.rpcIncorrectChainID:
-		return wrongChain
+	case errorCodeEnumeration.rpcGenericError:
+		return catchAllError
 	default:
 		return fmt.Sprintf("Error number %v not found", err)
 	}

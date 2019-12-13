@@ -20,7 +20,6 @@ func (oneAddress *oneAddress) Set(s string) error {
 	if err != nil {
 		return err
 	}
-
 	_, err = address.Bech32ToAddress(s)
 	if err != nil {
 		return errors.Wrap(err, "not a valid one address")
@@ -30,7 +29,7 @@ func (oneAddress *oneAddress) Set(s string) error {
 }
 
 func (oneAddress oneAddress) Type() string {
-	return "string"
+	return "one-address"
 }
 
 type chainIDWrapper struct {
@@ -51,5 +50,5 @@ func (chainIDWrapper *chainIDWrapper) Set(s string) error {
 }
 
 func (chainIDWrapper chainIDWrapper) Type() string {
-	return "string"
+	return "chain-id"
 }

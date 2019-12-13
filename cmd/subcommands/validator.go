@@ -20,15 +20,20 @@ var (
 			return request(rpc.Method.GetAllValidatorAddresses, []interface{}{})
 		},
 	}, {
-		Use:   "information",
-		Short: "original creation record of a validator",
-		Args:  cobra.ExactArgs(1),
+		Use:     "metrics",
+		Short:   "metrics about the performance of a validator",
+		Args:    cobra.ExactArgs(1),
+		PreRunE: validateAddress,
+		RunE: func(cmd *cobra.Command, args []string) error {
+			return request(rpc.Method.GetValidatorMetrics, []interface{}{})
+		},
+	}, {
+		Use:     "information",
+		Short:   "original creation record of a validator",
+		Args:    cobra.ExactArgs(1),
+		PreRunE: validateAddress,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			noLatest = true
-			addr := oneAddress{}
-			if err := addr.Set(args[0]); err != nil {
-				return err
-			}
 			return request(rpc.Method.GetValidatorInformation, []interface{}{args[0]})
 		},
 	},

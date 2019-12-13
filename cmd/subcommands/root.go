@@ -13,6 +13,14 @@ import (
 	"github.com/spf13/cobra/doc"
 )
 
+func validateAddress(cmd *cobra.Command, args []string) error {
+	addr := oneAddress{}
+	if err := addr.Set(args[0]); err != nil {
+		return err
+	}
+	return nil
+}
+
 var (
 	verbose         bool
 	useLedgerWallet bool

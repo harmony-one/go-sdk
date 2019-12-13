@@ -13,26 +13,26 @@ var (
 func ValidateAddress(address string) error {
 	matches := addressValidationRegexp.FindAllStringSubmatch(address, -1)
 	if len(matches) == 0 {
-		return fmt.Errorf("The address you supplied (%s) is in an invalid format. Please provide a valid address.", address)
+		return fmt.Errorf("address supplied (%s) is not valid", address)
 	}
 
 	return nil
 }
 
-// ValidateShardIDs validates senderShard and receiverShard against the shardCount
+// ValidShardIDs validates senderShard and receiverShard against the shardCount
 func ValidShardIDs(senderShard uint32, receiverShard uint32, shardCount uint32) error {
 	if !ValidShardID(senderShard, shardCount) {
-		return fmt.Errorf(`invalid argument "%d" for "--from-shard" flag: please specify a valid shard ID using --from-shard and try again!`, senderShard)
+		return fmt.Errorf(`invalid argument "%d" for "--from-shard"`, senderShard)
 	}
 
 	if !ValidShardID(receiverShard, shardCount) {
-		return fmt.Errorf(`invalid argument "%d" for "--to-shard" flag: please specify a valid shard ID using --to-shard and try again!`, receiverShard)
+		return fmt.Errorf(`invalid argument "%d" for "--to-shard"`, receiverShard)
 	}
 
 	return nil
 }
 
-// ValidateShard validates that a shardID is within the bounds of the shardCount
+// ValidShardID validates that a shardID is within the bounds of the shardCount
 func ValidShardID(shardID uint32, shardCount uint32) bool {
 	if shardID > (shardCount - 1) {
 		return false
