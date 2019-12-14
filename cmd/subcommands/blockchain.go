@@ -92,6 +92,13 @@ High level information about transaction, like blockNumber, blockHash
 			return request(rpc.Method.GetTransactionReceipt, []interface{}{args[0]})
 		},
 	}, {
+		Use:   "median-stake",
+		Short: "median stake of top 320 validators with delegations applied stake (pre-epos processing)",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			noLatest = true
+			return request(rpc.Method.GetMedianRawStakeSnapshot, []interface{}{})
+		},
+	}, {
 		Use:   "current-nonce",
 		Short: "Current nonce of an account",
 		Args:  cobra.ExactArgs(1),
