@@ -16,11 +16,20 @@ func init() {
 		},
 	}
 	cmdFailures.AddCommand([]*cobra.Command{{
+		Use:   "plain",
+		Short: "plain transaction failures",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			noLatest = true
+			return request(rpc.Method.GetCurrentTransactionErrorSink, []interface{}{})
+		},
+	}, {
 		Use:   "staking",
 		Short: "staking transaction failures",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return request(rpc.Method.GetCurrentTransactionErrorSink, []interface{}{})
+			noLatest = true
+			return request(rpc.Method.GetCurrentStakingErrorSink, []interface{}{})
 		},
-	}}...)
+	},
+	}...)
 	RootCmd.AddCommand(cmdFailures)
 }
