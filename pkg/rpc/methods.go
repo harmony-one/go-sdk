@@ -56,6 +56,7 @@ type rpcEnumList struct {
 	GetValidatorMetrics                 method
 	GetMedianRawStakeSnapshot           method
 	GetCurrentStakingErrorSink          method
+	GetTransactionsHistory              method
 }
 
 // Method is a list of known RPC methods
@@ -104,6 +105,7 @@ var Method = rpcEnumList{
 	GetValidatorMetrics:                 "hmy_getValidatorMetrics",
 	GetMedianRawStakeSnapshot:           "hmy_getMedianRawStakeSnapshot",
 	GetCurrentStakingErrorSink:          "hmy_getCurrentStakingErrorSink",
+	GetTransactionsHistory:              "hmy_getTransactionsHistory",
 }
 
 // TODO Use Reflection here to avoid typing out the cases
