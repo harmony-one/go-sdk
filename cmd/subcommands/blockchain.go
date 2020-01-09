@@ -8,6 +8,11 @@ import (
 	"github.com/spf13/cobra"
 )
 
+var (
+	addr    oneAddress
+	size    int64
+)
+
 func init() {
 	cmdValidator := &cobra.Command{
 		Use:   "validator",
@@ -44,6 +49,30 @@ Query Harmony's blockchain for completed transaction, historic records
 			return nil
 		},
 	}
+
+	accountHistorySubCmd := &cobra.Command {
+		Use:   "account-history",
+		Short: "Get history of all transactions for given account",
+		Long: `
+High level information about each transaction for given account
+`,
+		RunE: func(cmd *cobra.Command, args []string) error {
+			type historyParams struct {
+				Address   string `json:"address"`
+				PageIndex int64  `json:"pageIndex"`
+				PageSize  int64  `json:"pageSize"`
+				FullTx    bool   `json:"fullTx"`
+				TxType    string `json:"txType"`
+				Order     string `json:"order"`
+			}
+			noLatest = true
+			params := historyParams{addr.String(), 0, size, true, "", ""}
+			return request(rpc.Method.GetTransactionsHistory, []interface{}{params})
+		},
+	}
+
+	accountHistorySubCmd.Flags().Var(&addr, "address", "address to list transactions for")
+	accountHistorySubCmd.Flags().Int64Var(&size, "max-tx", 1000, "max number of transactions to list")
 
 	subCommands := []*cobra.Command{{
 		Use:   "block-by-number",
@@ -118,6 +147,7 @@ High level information about transaction, like blockNumber, blockHash
 			return request(rpc.Method.GetLatestBlockHeader, []interface{}{})
 		},
 	},
+	accountHistorySubCmd,
 	}
 
 	cmdBlockchain.AddCommand(cmdValidator)
