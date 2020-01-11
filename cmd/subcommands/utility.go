@@ -10,8 +10,7 @@ import (
 func init() {
 	cmdUtilities := &cobra.Command{
 		Use:   "utility",
-		Short: "Check in-memory record of failed transactions",
-		Long:  `Check node for its in-memory record of failed transactions`,
+		Short: "common harmony blockchain utilities",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cmd.Help()
 			return nil

@@ -9,8 +9,8 @@ import (
 )
 
 var (
-	addr    oneAddress
-	size    int64
+	addr oneAddress
+	size int64
 )
 
 func init() {
@@ -50,7 +50,7 @@ Query Harmony's blockchain for completed transaction, historic records
 		},
 	}
 
-	accountHistorySubCmd := &cobra.Command {
+	accountHistorySubCmd := &cobra.Command{
 		Use:   "account-history",
 		Short: "Get history of all transactions for given account",
 		Long: `
@@ -140,6 +140,13 @@ High level information about transaction, like blockNumber, blockHash
 			return request(rpc.Method.GetTransactionCount, []interface{}{args[0]})
 		},
 	}, {
+		Use:   "pool",
+		Short: "Dump a node's transaction pool",
+		RunE: func(cmd *cobra.Command, arg []string) error {
+			noLatest = true
+			return request(rpc.Method.GetPendingTxnsInPool, []interface{}{})
+		},
+	}, {
 		Use:   "latest-header",
 		Short: "Get the latest header",
 		RunE: func(cmd *cobra.Command, arg []string) error {
@@ -147,7 +154,7 @@ High level information about transaction, like blockNumber, blockHash
 			return request(rpc.Method.GetLatestBlockHeader, []interface{}{})
 		},
 	},
-	accountHistorySubCmd,
+		accountHistorySubCmd,
 	}
 
 	cmdBlockchain.AddCommand(cmdValidator)
