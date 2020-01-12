@@ -110,10 +110,10 @@ func keysSub() []*cobra.Command {
 		Short: "Remove a key from the keystore",
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			if !store.DoesNamedAccountExist(args[0]) {
-				return fmt.Errorf("account %s doesn't exist", args[0])
+			if err := account.RemoveAccount(args[0]); err != nil {
+				return err
 			}
-			account.RemoveAccount(args[0])
+
 			return nil
 		},
 	}
