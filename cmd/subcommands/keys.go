@@ -105,6 +105,19 @@ func keysSub() []*cobra.Command {
 	)
 	cmdAdd.Flags().BoolVar(&userProvidesPassphrase, "use-own-passphrase", false, ppPrompt)
 
+	cmdRemove := &cobra.Command{
+		Use:   "remove <ACCOUNT_NAME>",
+		Short: "Remove a key from the keystore",
+		Args:  cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			if err := account.RemoveAccount(args[0]); err != nil {
+				return err
+			}
+
+			return nil
+		},
+	}
+
 	cmdMnemonic := &cobra.Command{
 		Use:   "mnemonic",
 		Short: "Compute the bip39 mnemonic for some input entropy",
@@ -230,7 +243,7 @@ func keysSub() []*cobra.Command {
 		},
 	}
 
-	return []*cobra.Command{cmdList, cmdLocation, cmdAdd, cmdMnemonic, cmdImportKS, cmdImportSK,
+	return []*cobra.Command{cmdList, cmdLocation, cmdAdd, cmdRemove, cmdMnemonic, cmdImportKS, cmdImportSK,
 		cmdExportKS, cmdExportSK, cmdGenerateBlsKey, cmdRecoverBlsKey, cmdSaveBlsKey, GetPublicBlsKey}
 }
 
