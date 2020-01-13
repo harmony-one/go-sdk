@@ -12,6 +12,7 @@ import (
 	"github.com/harmony-one/go-sdk/pkg/transaction"
 	"github.com/harmony-one/go-sdk/pkg/validation"
 	"github.com/harmony-one/harmony/accounts"
+	common2 "github.com/harmony-one/go-sdk/pkg/common"
 
 	"github.com/spf13/cobra"
 )
@@ -19,7 +20,7 @@ import (
 var (
 	fromAddress oneAddress
 	toAddress   oneAddress
-	amount      float64
+	amount      string
 	fromShardID uint32
 	toShardID   uint32
 	confirmWait uint32
@@ -27,7 +28,8 @@ var (
 	dryRun      bool
 	unlockP     string
 	inputNonce  string
-	gasPrice    int64
+	gasPrice    uint64
+	gasLimit    int
 )
 
 func handlerForShard(senderShard uint32, node string) (*rpc.HTTPMessenger, error) {
@@ -111,10 +113,16 @@ Create a transaction, sign it, and send off to the Harmony blockchain
 				return err
 			}
 
+			amt, err := common2.NewDecFromString(amount)
+			if err != nil {
+				return err
+			}
+
 			if transactionFailure := ctrlr.ExecuteTransaction(
 				toAddress.String(),
 				"",
-				amount, gasPrice, nonce,
+				amt, nonce,
+				gasPrice, gasLimit,
 				int(fromShardID),
 				int(toShardID),
 			); transactionFailure != nil {
@@ -137,8 +145,9 @@ Create a transaction, sign it, and send off to the Harmony blockchain
 	cmdTransfer.Flags().Var(&fromAddress, "from", "sender's one address, keystore must exist locally")
 	cmdTransfer.Flags().Var(&toAddress, "to", "the destination one address")
 	cmdTransfer.Flags().BoolVar(&dryRun, "dry-run", false, "do not send signed transaction")
-	cmdTransfer.Flags().Float64Var(&amount, "amount", 0.0, "amount")
-	cmdTransfer.Flags().Int64Var(&gasPrice, "gas-price", 1, "gas price to pay")
+	cmdTransfer.Flags().StringVar(&amount, "amount", "0", "amount")
+	cmdTransfer.Flags().Uint64Var(&gasPrice, "gas-price", 1, "gas price to pay")
+	cmdTransfer.Flags().IntVar(&gasLimit, "gas-limit", 21000, "gas limit")
 	cmdTransfer.Flags().StringVar(&inputNonce, "nonce", "", "set nonce for tx")
 	cmdTransfer.Flags().Uint32Var(&fromShardID, "from-shard", 0, "source shard id")
 	cmdTransfer.Flags().Uint32Var(&toShardID, "to-shard", 0, "target shard id")

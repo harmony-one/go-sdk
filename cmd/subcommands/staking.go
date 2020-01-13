@@ -71,8 +71,7 @@ var (
 )
 
 func createStakingTransaction(nonce uint64, f staking.StakeMsgFulfiller) (*staking.StakingTransaction, error) {
-	gasPrice := big.NewInt(gasPrice)
-	gasPrice = gasPrice.Mul(gasPrice, big.NewInt(denominations.Nano))
+	gPrice := big.NewInt(int64(gasPrice))
 
 	_, payload := f()
 	data, err := rlp.EncodeToBytes(payload)
@@ -85,7 +84,7 @@ func createStakingTransaction(nonce uint64, f staking.StakeMsgFulfiller) (*staki
 		return nil, err
 	}
 
-	stakingTx, err := staking.NewStakingTransaction(nonce, gasLimit, gasPrice, f)
+	stakingTx, err := staking.NewStakingTransaction(nonce, gasLimit, gPrice, f)
 	return stakingTx, err
 }
 
@@ -361,7 +360,8 @@ Create a new validator"
 		&stakingBlsPubKeys, "bls-pubkeys", []string{}, "validator's list of public BLS key addresses",
 	)
 	subCmdNewValidator.Flags().StringVar(&stakingAmount, "amount", "0.0", "staking amount")
-	subCmdNewValidator.Flags().Int64Var(&gasPrice, "gas-price", 1, "gas price to pay")
+	subCmdNewValidator.Flags().Uint64Var(&gasPrice, "gas-price", 1, "gas price to pay")
+	subCmdNewValidator.Flags().IntVar(&gasLimit, "gas-limit", 21000, "gas limit")
 	subCmdNewValidator.Flags().StringVar(&inputNonce, "nonce", "", "set nonce for transaction")
 	subCmdNewValidator.Flags().Var(&chainName, "chain-id", "what chain ID to target")
 	subCmdNewValidator.Flags().Uint32Var(&confirmWait, "wait-for-confirm", 0, "only waits if non-zero value, in seconds")
@@ -485,7 +485,8 @@ Create a new validator"
 	subCmdEditValidator.Flags().StringVar(&slotKeyToAdd, "add-bls-key", "", "add BLS pubkey to slot")
 	subCmdEditValidator.Flags().StringVar(&slotKeyToRemove, "remove-bls-key", "", "remove BLS pubkey from slot")
 
-	subCmdEditValidator.Flags().Int64Var(&gasPrice, "gas-price", 1, "gas price to pay")
+	subCmdEditValidator.Flags().Uint64Var(&gasPrice, "gas-price", 1, "gas price to pay")
+	subCmdEditValidator.Flags().IntVar(&gasLimit, "gas-limit", 21000, "gas limit")
 	subCmdEditValidator.Flags().StringVar(&inputNonce, "nonce", "", "set nonce for transaction")
 	subCmdEditValidator.Flags().Var(&chainName, "chain-id", "what chain ID to target")
 	subCmdEditValidator.Flags().Uint32Var(&confirmWait, "wait-for-confirm", 0, "only waits if non-zero value, in seconds")
@@ -544,7 +545,8 @@ Delegating to a validator
 	subCmdDelegate.Flags().Var(&delegatorAddress, "delegator-addr", "delegator's address")
 	subCmdDelegate.Flags().Var(&validatorAddress, "validator-addr", "validator's address")
 	subCmdDelegate.Flags().StringVar(&stakingAmount, "amount", "0.0", "staking amount")
-	subCmdDelegate.Flags().Int64Var(&gasPrice, "gas-price", 1, "gas price to pay")
+	subCmdDelegate.Flags().Uint64Var(&gasPrice, "gas-price", 1, "gas price to pay")
+	subCmdDelegate.Flags().IntVar(&gasLimit, "gas-limit", 21000, "gas limit")
 	subCmdDelegate.Flags().StringVar(&inputNonce, "nonce", "", "set nonce for transaction")
 	subCmdDelegate.Flags().Var(&chainName, "chain-id", "what chain ID to target")
 	subCmdDelegate.Flags().Uint32Var(&confirmWait, "wait-for-confirm", 0, "only waits if non-zero value, in seconds")
@@ -600,7 +602,8 @@ Delegating to a validator
 	subCmdUnDelegate.Flags().Var(&delegatorAddress, "delegator-addr", "delegator's address")
 	subCmdUnDelegate.Flags().Var(&validatorAddress, "validator-addr", "source validator's address")
 	subCmdUnDelegate.Flags().StringVar(&stakingAmount, "amount", "0.0", "staking amount")
-	subCmdUnDelegate.Flags().Int64Var(&gasPrice, "gas-price", 1, "gas price to pay")
+	subCmdUnDelegate.Flags().Uint64Var(&gasPrice, "gas-price", 1, "gas price to pay")
+	subCmdUnDelegate.Flags().IntVar(&gasLimit, "gas-limit", 21000, "gas limit")
 	subCmdUnDelegate.Flags().StringVar(&inputNonce, "nonce", "", "set nonce for transaction")
 	subCmdUnDelegate.Flags().Var(&chainName, "chain-id", "what chain ID to target")
 	subCmdUnDelegate.Flags().Uint32Var(&confirmWait, "wait-for-confirm", 0, "only waits if non-zero value, in seconds")
@@ -649,7 +652,8 @@ Collect token rewards
 	}
 
 	subCmdCollectRewards.Flags().Var(&delegatorAddress, "delegator-addr", "delegator's address")
-	subCmdCollectRewards.Flags().Int64Var(&gasPrice, "gas-price", 1, "gas price to pay")
+	subCmdCollectRewards.Flags().Uint64Var(&gasPrice, "gas-price", 1, "gas price to pay")
+	subCmdCollectRewards.Flags().IntVar(&gasLimit, "gas-limit", 21000, "gas limit")
 	subCmdCollectRewards.Flags().StringVar(&inputNonce, "nonce", "", "set nonce for tx")
 	subCmdCollectRewards.Flags().Var(&chainName, "chain-id", "what chain ID to target")
 	subCmdCollectRewards.Flags().Uint32Var(&confirmWait, "wait-for-confirm", 0, "only waits if non-zero value, in seconds")
