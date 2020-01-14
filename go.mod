@@ -1,6 +1,6 @@
 module github.com/harmony-one/go-sdk
 
-go 1.13
+go 1.13.6
 
 require (
 	github.com/aristanetworks/goarista v0.0.0-20191023202215-f096da5361bb // indirect
