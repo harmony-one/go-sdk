@@ -20,8 +20,12 @@ func init() {
 		Long:  `Query for the latest account balance given a Harmony Address`,
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
+			addr := oneAddress{}
+			if err := addr.Set(args[0]); err != nil {
+				return err
+			}
 			if checkNodeInput(node) {
-				balanceRPCReply, err := rpc.Request(rpc.Method.GetBalance, node, []interface{}{args[0], "latest"})
+				balanceRPCReply, err := rpc.Request(rpc.Method.GetBalance, node, []interface{}{addr.String(), "latest"})
 				if err != nil {
 					return err
 				}
@@ -41,7 +45,7 @@ func init() {
 				fmt.Println(common.JSONPrettyFormat(out.String()))
 				return nil
 			}
-			r, err := sharding.CheckAllShards(node, args[0], noPrettyOutput)
+			r, err := sharding.CheckAllShards(node, addr.String(), noPrettyOutput)
 			if err != nil {
 				return err
 			}
