@@ -1,7 +1,6 @@
 package transaction
 
 import (
-	"encoding/base64"
 	"errors"
 	"fmt"
 	"math/big"
@@ -17,7 +16,12 @@ import (
 	"github.com/harmony-one/harmony/accounts"
 	"github.com/harmony-one/harmony/accounts/keystore"
 	"github.com/harmony-one/harmony/common/denominations"
-	"github.com/harmony-one/harmony/core"
+	"github.com/harmony-one/harmony/numeric"
+)
+
+var (
+	nanoAsDec = numeric.NewDec(denominations.Nano)
+	oneAsDec = numeric.NewDec(denominations.One)
 )
 
 type p []interface{}
@@ -83,7 +87,7 @@ func NewController(
 	return ctrlr
 }
 
-func (C *Controller) verifyBalance(amount float64) {
+func (C *Controller) verifyBalance() {
 	if C.failure != nil {
 		return
 	}
@@ -96,16 +100,14 @@ func (C *Controller) verifyBalance(amount float64) {
 		return
 	}
 	currentBalance, _ := balanceRPCReply["result"].(string)
-	balance, _ := big.NewInt(0).SetString(currentBalance[2:], 16)
-	balance = common.NormalizeAmount(balance)
-	transfer := big.NewInt(int64(amount * denominations.Nano))
+	bal, _ := new(big.Int).SetString(currentBalance[2:], 16)
+	balance := numeric.NewDecFromBigInt(bal)
+	gasAsDec := numeric.NewDecFromBigInt(big.NewInt(int64(C.transactionForRPC.params["gas-price"].(uint64))))
+	total := C.transactionForRPC.params["transfer-amount"].(numeric.Dec).Add(gasAsDec)
 
-	tns := float64(transfer.Uint64()) / denominations.Nano
-	bln := float64(balance.Uint64()) / denominations.Nano
-
-	if tns > bln {
+	if total.GT(balance) {
 		C.failure = fmt.Errorf(
-			"current balance of %.6f is not enough for the requested transfer %.6f", bln, tns,
+			"insufficient balance of %s for the requested transfer of %s", balance.String(), total.String(),
 		)
 	}
 }
@@ -123,27 +125,22 @@ func (C *Controller) sendSignedTx() {
 	C.transactionForRPC.receiptHash = &r
 }
 
-func (C *Controller) setIntrinsicGas(rawInput string) {
+func (C *Controller) setIntrinsicGas(gasLimit int) {
 	if C.failure != nil {
 		return
 	}
-	inputData, _ := base64.StdEncoding.DecodeString(rawInput)
-	// NOTE Need to add more intrisicGas
-	// in order to include more data in inputData
-	gas, _ := core.IntrinsicGas(inputData, false, true)
-	C.transactionForRPC.params["gas"] = gas
+	C.transactionForRPC.params["gas-limit"] = uint64(gasLimit)
 }
 
-func (C *Controller) setGasPrice() {
+func (C *Controller) setGasPrice(gasPrice uint64) {
 	if C.failure != nil {
 		return
 	}
-	C.transactionForRPC.params["gas-price"] = nil
+	C.transactionForRPC.params["gas-price"] = gasPrice * C.transactionForRPC.params["gas-limit"].(uint64)
 }
 
-func (C *Controller) setAmount(amount float64) {
-	amountBigInt := big.NewInt(int64(amount * denominations.Nano))
-	amt := amountBigInt.Mul(amountBigInt, big.NewInt(denominations.Nano))
+func (C *Controller) setAmount(amount numeric.Dec) {
+	amt := amount.Mul(oneAsDec)
 	C.transactionForRPC.params["transfer-amount"] = amt
 }
 
@@ -151,23 +148,19 @@ func (C *Controller) setReceiver(receiver string) {
 	C.transactionForRPC.params["receiver"] = address.Parse(receiver)
 }
 
-func (C *Controller) setNewTransactionWithDataAndGas(i string, amount float64, gasPrice int64) {
+func (C *Controller) setNewTransactionWithDataAndGas(i string) {
 	if C.failure != nil {
 		return
 	}
-	amountBigInt := big.NewInt(int64(amount * denominations.Nano))
-	amt := amountBigInt.Mul(amountBigInt, big.NewInt(denominations.Nano))
-	gPrice := big.NewInt(gasPrice)
-	gPrice = gPrice.Mul(gPrice, big.NewInt(denominations.Nano))
 
 	tx := NewTransaction(
 		C.transactionForRPC.params["nonce"].(uint64),
-		C.transactionForRPC.params["gas"].(uint64),
+		C.transactionForRPC.params["gas-limit"].(uint64),
+		C.transactionForRPC.params["gas-price"].(uint64),
 		C.transactionForRPC.params["receiver"].(address.T),
 		C.transactionForRPC.params["from-shard"].(uint32),
 		C.transactionForRPC.params["to-shard"].(uint32),
-		amt,
-		gPrice,
+		C.transactionForRPC.params["transfer-amount"].(numeric.Dec),
 		[]byte(i),
 	)
 	C.transactionForRPC.transaction = tx
@@ -268,18 +261,18 @@ func (C *Controller) txConfirmation() {
 // Each becomes a no-op if failure occured in any previous step
 func (C *Controller) ExecuteTransaction(
 	to, inputData string,
-	amount float64, gPrice int64, nonce uint64,
-	fromShard, toShard int,
+	amount numeric.Dec, nonce, gasPrice uint64,
+	gasLimit, fromShard, toShard int,
 ) error {
 	// WARNING Order of execution matters
 	C.setShardIDs(fromShard, toShard)
-	C.setIntrinsicGas(inputData)
+	C.setIntrinsicGas(gasLimit)
+	C.setGasPrice(gasPrice)
 	C.setAmount(amount)
-	C.verifyBalance(amount)
+	C.verifyBalance()
 	C.setReceiver(to)
-	C.setGasPrice()
 	C.transactionForRPC.params["nonce"] = nonce
-	C.setNewTransactionWithDataAndGas(inputData, amount, gPrice)
+	C.setNewTransactionWithDataAndGas(inputData)
 	switch C.Behavior.SigningImpl {
 	case Software:
 		C.signAndPrepareTxEncodedForSending()
