@@ -29,7 +29,7 @@ func main() {
 		Short: "Show version",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			fmt.Fprintf(os.Stderr,
-				"Harmony (C) 2019. %v, version %v-%v (%v %v)\n",
+				"Harmony (C) 2020. %v, version %v-%v (%v %v)\n",
 				path.Base(os.Args[0]), version, commit, builtBy, builtAt)
 			os.Exit(0)
 			return nil
