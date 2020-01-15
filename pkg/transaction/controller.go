@@ -102,12 +102,15 @@ func (C *Controller) verifyBalance() {
 	currentBalance, _ := balanceRPCReply["result"].(string)
 	bal, _ := new(big.Int).SetString(currentBalance[2:], 16)
 	balance := numeric.NewDecFromBigInt(bal)
-	gasAsDec := numeric.NewDecFromBigInt(big.NewInt(int64(C.transactionForRPC.params["gas-price"].(uint64))))
+	gasAsDec := C.transactionForRPC.params["gas-price"].(numeric.Dec)
+	gasAsDec = gasAsDec.Mul(numeric.NewDec(int64(C.transactionForRPC.params["gas-limit"].(uint64))))
 	total := C.transactionForRPC.params["transfer-amount"].(numeric.Dec).Add(gasAsDec)
 
 	if total.GT(balance) {
+		b := balance.Quo(oneAsDec)
+		t := total.Quo(oneAsDec)
 		C.failure = fmt.Errorf(
-			"insufficient balance of %s for the requested transfer of %s", balance.String(), total.String(),
+			"insufficient balance of %s for the requested transfer of %s", b.String(), t.String(),
 		)
 	}
 }
@@ -125,18 +128,18 @@ func (C *Controller) sendSignedTx() {
 	C.transactionForRPC.receiptHash = &r
 }
 
-func (C *Controller) setIntrinsicGas(gasLimit int) {
+func (C *Controller) setIntrinsicGas(gasLimit uint64) {
 	if C.failure != nil {
 		return
 	}
-	C.transactionForRPC.params["gas-limit"] = uint64(gasLimit)
+	C.transactionForRPC.params["gas-limit"] = gasLimit
 }
 
-func (C *Controller) setGasPrice(gasPrice uint64) {
+func (C *Controller) setGasPrice(gasPrice numeric.Dec) {
 	if C.failure != nil {
 		return
 	}
-	C.transactionForRPC.params["gas-price"] = gasPrice * C.transactionForRPC.params["gas-limit"].(uint64)
+	C.transactionForRPC.params["gas-price"] = gasPrice.Mul(nanoAsDec)
 }
 
 func (C *Controller) setAmount(amount numeric.Dec) {
@@ -156,11 +159,11 @@ func (C *Controller) setNewTransactionWithDataAndGas(i string) {
 	tx := NewTransaction(
 		C.transactionForRPC.params["nonce"].(uint64),
 		C.transactionForRPC.params["gas-limit"].(uint64),
-		C.transactionForRPC.params["gas-price"].(uint64),
 		C.transactionForRPC.params["receiver"].(address.T),
 		C.transactionForRPC.params["from-shard"].(uint32),
 		C.transactionForRPC.params["to-shard"].(uint32),
 		C.transactionForRPC.params["transfer-amount"].(numeric.Dec),
+		C.transactionForRPC.params["gas-price"].(numeric.Dec),
 		[]byte(i),
 	)
 	C.transactionForRPC.transaction = tx
@@ -261,8 +264,8 @@ func (C *Controller) txConfirmation() {
 // Each becomes a no-op if failure occured in any previous step
 func (C *Controller) ExecuteTransaction(
 	to, inputData string,
-	amount numeric.Dec, nonce, gasPrice uint64,
-	gasLimit, fromShard, toShard int,
+	amount, gasPrice numeric.Dec, nonce, gasLimit uint64,
+	fromShard, toShard int,
 ) error {
 	// WARNING Order of execution matters
 	C.setShardIDs(fromShard, toShard)

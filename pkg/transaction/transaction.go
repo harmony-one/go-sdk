@@ -12,13 +12,13 @@ import (
 type Transaction = types.Transaction
 
 func NewTransaction(
-	nonce, gasLimit, gasPrice uint64,
+	nonce, gasLimit uint64,
 	to address.T,
 	shardID, toShardID uint32,
-	amount numeric.Dec,
+	amount, gasPrice numeric.Dec,
 	data []byte) *Transaction {
 	// types.New
-	return types.NewCrossShardTransaction(nonce, &to, shardID, toShardID, amount.TruncateInt(), gasLimit, big.NewInt(int64(gasPrice)), data)
+	return types.NewCrossShardTransaction(nonce, &to, shardID, toShardID, amount.TruncateInt(), gasLimit, gasPrice.TruncateInt(), data)
 }
 
 func GetNextNonce(addr string, messenger rpc.T) uint64 {
