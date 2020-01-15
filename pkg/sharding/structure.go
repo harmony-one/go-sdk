@@ -39,15 +39,16 @@ func CheckAllShards(node, oneAddr string, noPretty bool) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	count := len(s)
 	for i, shard := range s {
 		balanceRPCReply, err := rpc.Request(rpc.Method.GetBalance, shard.HTTP, params)
 		if err != nil {
 			if common.DebugRPC {
 				fmt.Printf("NOTE: Route %s failed.", shard.HTTP)
 			}
-			count--
 			continue
+		}
+		if i != 0 {
+			out.WriteString(",")
 		}
 		balance, _ := balanceRPCReply["result"].(string)
 		bln, _ := big.NewInt(0).SetString(balance[2:], 16)
@@ -55,9 +56,6 @@ func CheckAllShards(node, oneAddr string, noPretty bool) (string, error) {
 			shard.ShardID,
 			common.ConvertBalanceIntoReadableFormat(bln),
 		))
-		if i != count - 1 {
-			out.WriteString(",")
-		}
 	}
 	out.WriteString("]")
 	if noPretty {
