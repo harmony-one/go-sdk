@@ -3,7 +3,6 @@ package cmd
 import (
 	"fmt"
 	"bytes"
-	"math/big"
 	"net"
 	"strings"
 
