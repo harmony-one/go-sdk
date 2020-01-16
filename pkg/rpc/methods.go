@@ -58,6 +58,8 @@ type rpcEnumList struct {
 	GetCurrentStakingErrorSink          method
 	GetTransactionsHistory              method
 	GetPendingTxnsInPool                method
+	GetPendingCrosslinks                method
+	GetPendingCXReceipts                method
 }
 
 // Method is a list of known RPC methods
@@ -108,6 +110,8 @@ var Method = rpcEnumList{
 	GetCurrentStakingErrorSink:          "hmy_getCurrentStakingErrorSink",
 	GetTransactionsHistory:              "hmy_getTransactionsHistory",
 	GetPendingTxnsInPool:                "hmy_pendingTransactions",
+	GetPendingCrosslinks:                "hmy_getPendingCrosslinks",
+	GetPendingCXReceipts:                "hmy_getPendingCXReceipts",
 }
 
 // TODO Use Reflection here to avoid typing out the cases
