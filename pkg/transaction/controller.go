@@ -110,7 +110,7 @@ func (C *Controller) verifyBalance() {
 		b := balance.Quo(oneAsDec)
 		t := total.Quo(oneAsDec)
 		C.failure = fmt.Errorf(
-			"insufficient balance of %s for the requested transfer of %s", b.String(), t.String(),
+			"insufficient balance of %s in shard %d for the requested transfer of %s", b.String(), C.transactionForRPC.params["from-shard"].(uint32), t.String(),
 		)
 	}
 }
