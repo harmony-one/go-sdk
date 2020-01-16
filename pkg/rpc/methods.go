@@ -110,7 +110,7 @@ var Method = rpcEnumList{
 	GetCurrentStakingErrorSink:          "hmy_getCurrentStakingErrorSink",
 	GetTransactionsHistory:              "hmy_getTransactionsHistory",
 	GetPendingTxnsInPool:                "hmy_pendingTransactions",
-	GetPendingCrosslinks:                "hmy_getPendingCrosslinks",
+	GetPendingCrosslinks:                "hmy_getPendingCrossLinks",
 	GetPendingCXReceipts:                "hmy_getPendingCXReceipts",
 }
 

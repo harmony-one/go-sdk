@@ -29,14 +29,14 @@ func init() {
 
 	cmdMetrics.AddCommand([]*cobra.Command{{
 		Use:   "pending-crosslinks",
-		Short: "number of pending crosslinks in memory",
+		Short: "dump the pending crosslinks in memory of target node",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			noLatest = true
 			return request(rpc.Method.GetPendingCrosslinks, []interface{}{})
 		},
 	}, {
 		Use:   "pending-cx-receipts",
-		Short: "number of pending cross shard receipts in memory",
+		Short: "dump the pending cross shard receipts in memory of target node",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			noLatest = true
 			return request(rpc.Method.GetPendingCXReceipts, []interface{}{})
