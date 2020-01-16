@@ -34,12 +34,13 @@ func init() {
 					return err
 				}
 				balance, _ := balanceRPCReply["result"].(string)
-				bln, _ := big.NewInt(0).SetString(balance[2:], 16)
+				bln := common.NewDecFromHex(balance)
+				bln = bln.Quo(oneAsDec)
 				var out bytes.Buffer
 				out.WriteString("[")
 				out.WriteString(fmt.Sprintf(`{"shard":%d, "amount":%s}`,
 					uint64(nodeRPCReply["result"].(map[string]interface{})["shard-id"].(float64)),
-					common.ConvertBalanceIntoReadableFormat(bln),
+					bln.String(),
 				))
 				out.WriteString("]")
 				fmt.Println(common.JSONPrettyFormat(out.String()))
