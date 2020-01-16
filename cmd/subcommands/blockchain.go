@@ -142,16 +142,24 @@ High level information about transaction, like blockNumber, blockHash
 	}, {
 		Use:   "pool",
 		Short: "Dump a node's transaction pool",
-		RunE: func(cmd *cobra.Command, arg []string) error {
+		RunE: func(cmd *cobra.Command, args []string) error {
 			noLatest = true
 			return request(rpc.Method.GetPendingTxnsInPool, []interface{}{})
 		},
 	}, {
 		Use:   "latest-header",
 		Short: "Get the latest header",
-		RunE: func(cmd *cobra.Command, arg []string) error {
+		RunE: func(cmd *cobra.Command, args []string) error {
 			noLatest = true
 			return request(rpc.Method.GetLatestBlockHeader, []interface{}{})
+		},
+	}, {
+		Use:   "resend-cx",
+		Short: "Re-play a cross shard transaction",
+		Args: cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			noLatest = true
+			return request(rpc.Method.ResendCX, []interface{}{args[0]})
 		},
 	},
 		accountHistorySubCmd,
