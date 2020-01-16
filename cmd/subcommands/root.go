@@ -6,6 +6,7 @@ import (
 	"os"
 	"path"
 
+	color "github.com/fatih/color"
 	"github.com/harmony-one/go-sdk/pkg/common"
 	"github.com/harmony-one/go-sdk/pkg/rpc"
 	"github.com/pkg/errors"
@@ -100,12 +101,15 @@ func init() {
 var (
 	// VersionWrapDump meant to be set from main.go
 	VersionWrapDump = ""
+	cookbook        = color.GreenString("hmy cookbook")
 )
 
 // Execute kicks off the hmy CLI
 func Execute() {
+	RootCmd.SilenceErrors = true
 	if err := RootCmd.Execute(); err != nil {
-		fmt.Println(errors.Wrapf(err, VersionWrapDump).Error())
+		fmt.Println(errors.Wrapf(err, "commit: %s, error", VersionWrapDump).Error())
+		fmt.Println("check " + cookbook + " for valid examples or try adding a `--help` flag")
 		os.Exit(1)
 	}
 }
