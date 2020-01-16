@@ -28,8 +28,8 @@ var (
 	dryRun      bool
 	unlockP     string
 	inputNonce  string
-	gasPrice    uint64
-	gasLimit    int
+	gasPrice    string
+	gasLimit    uint64
 )
 
 func handlerForShard(senderShard uint32, node string) (*rpc.HTTPMessenger, error) {
@@ -118,11 +118,16 @@ Create a transaction, sign it, and send off to the Harmony blockchain
 				return err
 			}
 
+			gPrice, err := common2.NewDecFromString(gasPrice)
+			if err != nil {
+				return err
+			}
+
 			if transactionFailure := ctrlr.ExecuteTransaction(
 				toAddress.String(),
 				"",
-				amt, nonce,
-				gasPrice, gasLimit,
+				amt, gPrice,
+				nonce, gasLimit,
 				int(fromShardID),
 				int(toShardID),
 			); transactionFailure != nil {
@@ -145,9 +150,9 @@ Create a transaction, sign it, and send off to the Harmony blockchain
 	cmdTransfer.Flags().Var(&fromAddress, "from", "sender's one address, keystore must exist locally")
 	cmdTransfer.Flags().Var(&toAddress, "to", "the destination one address")
 	cmdTransfer.Flags().BoolVar(&dryRun, "dry-run", false, "do not send signed transaction")
-	cmdTransfer.Flags().StringVar(&amount, "amount", "0", "amount")
-	cmdTransfer.Flags().Uint64Var(&gasPrice, "gas-price", 1, "gas price to pay")
-	cmdTransfer.Flags().IntVar(&gasLimit, "gas-limit", 21000, "gas limit")
+	cmdTransfer.Flags().StringVar(&amount, "amount", "0", "amount to send (ONE)")
+	cmdTransfer.Flags().StringVar(&gasPrice, "gas-price", "1", "gas price to pay (NANO)")
+	cmdTransfer.Flags().Uint64Var(&gasLimit, "gas-limit", 21000, "gas limit")
 	cmdTransfer.Flags().StringVar(&inputNonce, "nonce", "", "set nonce for tx")
 	cmdTransfer.Flags().Uint32Var(&fromShardID, "from-shard", 0, "source shard id")
 	cmdTransfer.Flags().Uint32Var(&toShardID, "to-shard", 0, "target shard id")
