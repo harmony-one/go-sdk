@@ -46,3 +46,21 @@ func NewDecFromString (i string) (numeric.Dec, error) {
 		return numeric.NewDecFromStr(i)
 	}
 }
+
+// Assumes Hex string input
+// Split into 2 64 bit integers to guarentee 128 bit precision
+func NewDecFromHex (i string) numeric.Dec {
+	i = strings.TrimPrefix(i, "0x")
+	if len(i) == 1 {
+		hex := new(big.Int)
+		hex.SetString(i, 16)
+		return numeric.NewDecFromBigInt(hex)
+	} else {
+		half := int((len(i) - 1) / 2)
+		front := i[:half]
+		back := i[half:]
+		f, _ := big.NewInt(0).SetString(front, 16)
+		b, _ := big.NewInt(0).SetString(back, 16)
+		return numeric.NewDecFromBigInt(f).Mul(Pow(numeric.NewDec(16), len(back))).Add(numeric.NewDecFromBigInt(b))
+	}
+}

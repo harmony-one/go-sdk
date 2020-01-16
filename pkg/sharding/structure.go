@@ -3,11 +3,17 @@ package sharding
 import (
 	"bytes"
 	"fmt"
-	"math/big"
 	"encoding/json"
 
 	"github.com/harmony-one/go-sdk/pkg/rpc"
 	"github.com/harmony-one/go-sdk/pkg/common"
+	"github.com/harmony-one/harmony/common/denominations"
+	"github.com/harmony-one/harmony/numeric"
+)
+
+var (
+	nanoAsDec = numeric.NewDec(denominations.Nano)
+	oneAsDec  = numeric.NewDec(denominations.One)
 )
 
 // RPCRoutes reflects the RPC endpoints of the target network across shards
@@ -51,10 +57,11 @@ func CheckAllShards(node, oneAddr string, noPretty bool) (string, error) {
 			out.WriteString(",")
 		}
 		balance, _ := balanceRPCReply["result"].(string)
-		bln, _ := big.NewInt(0).SetString(balance[2:], 16)
+		bln := common.NewDecFromHex(balance)
+		bln = bln.Quo(oneAsDec)
 		out.WriteString(fmt.Sprintf(`{"shard":%d, "amount":%s}`,
 			shard.ShardID,
-			common.ConvertBalanceIntoReadableFormat(bln),
+			bln.String(),
 		))
 	}
 	out.WriteString("]")

@@ -21,7 +21,7 @@ import (
 
 var (
 	nanoAsDec = numeric.NewDec(denominations.Nano)
-	oneAsDec = numeric.NewDec(denominations.One)
+	oneAsDec  = numeric.NewDec(denominations.One)
 )
 
 type p []interface{}
