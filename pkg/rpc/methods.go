@@ -60,6 +60,7 @@ type rpcEnumList struct {
 	GetPendingTxnsInPool                method
 	GetPendingCrosslinks                method
 	GetPendingCXReceipts                method
+	ResendCX                            method
 }
 
 // Method is a list of known RPC methods
@@ -112,6 +113,7 @@ var Method = rpcEnumList{
 	GetPendingTxnsInPool:                "hmy_pendingTransactions",
 	GetPendingCrosslinks:                "hmy_getPendingCrossLinks",
 	GetPendingCXReceipts:                "hmy_getPendingCXReceipts",
+	ResendCX:                            "hmy_resendCx",
 }
 
 // TODO Use Reflection here to avoid typing out the cases
