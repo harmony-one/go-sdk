@@ -3,7 +3,7 @@ package account
 import (
 	"encoding/hex"
 	"io/ioutil"
-	"path"
+	"path/filepath"
 	"strings"
 
 	"github.com/btcsuite/btcd/btcec"
@@ -65,8 +65,9 @@ func generateName() string {
 
 // ImportKeyStore imports a keystore along with a password
 func ImportKeyStore(keypath, name, passphrase string) (string, error) {
-	if !path.IsAbs(keypath) {
-		return "", common.ErrNotAbsPath
+	keypath, err := filepath.Abs(keypath)
+	if err != nil {
+		return "", err
 	}
 	keyJSON, readError := ioutil.ReadFile(keypath)
 	if readError != nil {
@@ -76,7 +77,7 @@ func ImportKeyStore(keypath, name, passphrase string) (string, error) {
 		name = generateName() + "-imported"
 	}
 	ks := store.FromAccountName(name)
-	_, err := ks.Import(keyJSON, passphrase, common.DefaultPassphrase)
+	_, err = ks.Import(keyJSON, passphrase, passphrase)
 	if err != nil {
 		return "", errors.Wrap(err, "could not import")
 	}
