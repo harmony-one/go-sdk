@@ -128,7 +128,7 @@ func keysSub() []*cobra.Command {
 	}
 
 	cmdImportKS := &cobra.Command{
-		Use:   "import-ks <ABSOLUTE_PATH_KEYSTORE> [ACCOUNT_NAME]",
+		Use:   "import-ks <KEYSTORE_FILE_PATH> [ACCOUNT_NAME]",
 		Args:  cobra.RangeArgs(1, 2),
 		Short: "Import an existing keystore key",
 		RunE: func(cmd *cobra.Command, args []string) error {
