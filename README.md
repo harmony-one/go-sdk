@@ -14,6 +14,14 @@ Invoke `make` to build the `hmy` binary.
 
 `hmy` implements a fluent API, that is, there is a hierarchy of commands.
 
+# bash completions
+
+once built, add `hmy` to your path and add to your `.bashrc`
+
+```
+. <(hmy completion)
+```
+
 invoke the following command to see the most command usages of `hmy`
 
 ```
