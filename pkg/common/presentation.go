@@ -3,10 +3,6 @@ package common
 import (
 	"bytes"
 	"encoding/json"
-	"fmt"
-	"math/big"
-
-	"github.com/harmony-one/harmony/common/denominations"
 )
 
 func JSONPrettyFormat(in string) string {
