@@ -18,6 +18,15 @@ func init() {
 		},
 	}
 
+	cmdUtilities.AddCommand(&cobra.Command{
+		Use:   "metadata",
+		Short: "data includes network specific values",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			noLatest = true
+			return request(rpc.Method.GetNodeMetadata, []interface{}{})
+		},
+	})
+
 	cmdMetrics := &cobra.Command{
 		Use:   "metrics",
 		Short: "mostly in-memory fluctuating values",
