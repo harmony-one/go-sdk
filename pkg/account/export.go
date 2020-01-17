@@ -2,6 +2,7 @@ package account
 
 import (
 	"fmt"
+	
 	"github.com/harmony-one/go-sdk/pkg/store"
 	"github.com/harmony-one/harmony/accounts"
 )
@@ -14,7 +15,7 @@ func ExportPrivateKey(address, passphrase string) error {
 		if err != nil {
 			return err
 		}
-		fmt.Printf("%x\n", key.PrivateKey.D)
+		fmt.Printf("%064x\n", key.PrivateKey.D)
 	}
 	return nil
 }
