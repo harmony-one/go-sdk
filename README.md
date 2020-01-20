@@ -8,7 +8,18 @@ documentation on how to use the `hmy` CLI tools
 
 # Build
 
-Invoke `make` to build the `hmy` binary.
+Working directly on this repo can be challenging because of the upstream dependencies. Follow the
+README in the main repo for an already ready development environment:
+https://github.com/harmony-one/harmony/blob/master/README.md.
+
+...for the impatient:
+
+```
+$ docker run -it  harmonyone/main:stable /bin/bash
+$ cd ../go-sdk
+$ git pull -r origin master
+$ make
+```
 
 # Usage & Examples
 
