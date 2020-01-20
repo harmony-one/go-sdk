@@ -29,6 +29,7 @@ var (
 	noPrettyOutput  bool
 	node            string
 	keyStoreDir     string
+	filepath        string
 	request         = func(method string, params []interface{}) error {
 		if !noLatest {
 			params = append(params, "latest")
@@ -85,6 +86,7 @@ func init() {
 		},
 	})
 	RootCmd.PersistentFlags().BoolVarP(&useLedgerWallet, "ledger", "e", false, "Use ledger hardware wallet")
+	RootCmd.PersistentFlags().StringVar(&filepath, "file", "", "Absolute path to file containing arguments")
 	RootCmd.AddCommand(&cobra.Command{
 		Use:   "docs",
 		Short: fmt.Sprintf("Generate docs to a local %s directory", hmyDocsDir),
