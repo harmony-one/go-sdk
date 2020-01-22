@@ -37,6 +37,9 @@ var (
 	)
 )
 
+// getPassphrase fetches the correct passphrase depending on if a file is available to
+// read from or if the user wants to enter in their own passphrase. Otherwise, just use
+// the default passphrase.
 func getPassphrase() (string, error) {
 	if passphraseFilePath != "" {
 		if _, err := os.Stat(passphraseFilePath); os.IsNotExist(err) {

@@ -9,7 +9,7 @@ import (
 
 	"github.com/harmony-one/go-sdk/pkg/address"
 	"github.com/harmony-one/go-sdk/pkg/common"
-	common2 "github.com/harmony-one/go-sdk/pkg/common"
+	c "github.com/harmony-one/go-sdk/pkg/common"
 	"github.com/harmony-one/go-sdk/pkg/rpc"
 	"github.com/harmony-one/go-sdk/pkg/sharding"
 	"github.com/harmony-one/go-sdk/pkg/store"
@@ -17,48 +17,47 @@ import (
 	"github.com/harmony-one/go-sdk/pkg/validation"
 	"github.com/harmony-one/harmony/accounts"
 
+	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 )
 
 var (
-	fromAddress oneAddress
-	toAddress   oneAddress
-	amount      string
-	fromShardID uint32
-	toShardID   uint32
-	confirmWait uint32
-	chainName   = chainIDWrapper{chainID: &common.Chain.TestNet}
-	dryRun      bool
-	inputNonce  string
-	gasPrice    string
-	gasLimit    uint64
-	fileFlags   []transferFlags
-	txLogs      []transactionLog
-	errorFlag   = false
-	timeFormat  = "2006-01-02 15:04:05.000000"
+	fromAddress       oneAddress
+	toAddress         oneAddress
+	amount            string
+	fromShardID       uint32
+	toShardID         uint32
+	confirmWait       uint32
+	chainName         = chainIDWrapper{chainID: &common.Chain.TestNet}
+	dryRun            bool
+	inputNonce        string
+	gasPrice          string
+	gasLimit          uint64
+	transferFileFlags []transferFlags
+	timeFormat        = "2006-01-02 15:04:05.000000"
 )
 
 type transactionLog struct {
-	TimeSigned  string
-	FromAddress string
-	ToAddress   string
-	Amount      string
-	FromShardID uint32
-	ToShardID   uint32
-	TxHash      string
-	Error       string
+	TxHash      string      `json:"transaction-receipt,omitempty"`
+	Transaction interface{} `json:"transaction,omitempty"`
+	Receipt     interface{} `json:"blockchain-receipt,omitempty"`
+	RawTxn      string      `json:"raw-transaction,omitempty"`
+	Errors      []string    `json:"errors,omitempty"`
+	TimeSigned  string      `json:"time-signed-utc,omitempty"`
 }
 
 type transferFlags struct {
-	FromAddress *string
-	ToAddress   *string
-	Amount      *string
-	FromShardID *uint32
-	ToShardID   *uint32
-	UnlockP     *string
-	InputNonce  string
-	GasPrice    string
-	GasLimit    uint64
+	FromAddress      *string `json:"from"`
+	ToAddress        *string `json:"to"`
+	Amount           *string `json:"amount"`
+	FromShardID      *string `json:"from-shard"`
+	ToShardID        *string `json:"to-shard"`
+	PassphraseString *string `json:"passphrase-string"`
+	PassphraseFile   *string `json:"passphrase-file"`
+	InputNonce       *string `json:"nonce"`
+	GasPrice         *string `json:"gas-price"`
+	GasLimit         *string `json:"gas-limit"`
+	StopOnError      bool    `json:"stop-on-error"`
 }
 
 func handlerForShard(senderShard uint32, node string) (*rpc.HTTPMessenger, error) {
@@ -79,132 +78,158 @@ func handlerForShard(senderShard uint32, node string) (*rpc.HTTPMessenger, error
 	return nil, nil
 }
 
-func handlerForError(txLog *transactionLog, err error) *transactionLog {
-	// Adds error to transactionLog reference
-	txLog.Error = time.Now().UTC().Format(timeFormat) + " -- " + err.Error()
-	errorFlag = true
-	return txLog
+// handlerForError sets the error in the transaction logger to the given error.
+// It returns the given error for convenience.
+func handlerForError(txLog *transactionLog, err error) error {
+	if err != nil {
+		errorString := fmt.Sprintf("[%s] %s", time.Now().UTC().Format(timeFormat), err.Error())
+		txLog.Errors = append(txLog.Errors, errorString)
+	}
+	return err
 }
 
-func stringErrorConstructor(errorString string) transactionLog {
-	// Adds error in the form of a string to a new transactionLog and returns it
-	errorFlag = true
-	return transactionLog{
-		Error: time.Now().UTC().Format(timeFormat) + " -- " + errorString,
-	}
-}
-
-func handlerForTransaction() transactionLog {
-	// Executes each individual transaction
-	txLog := transactionLog{
-		FromAddress: fromAddress.String(),
-		ToAddress:   toAddress.String(),
-		Amount:      amount,
-		FromShardID: fromShardID,
-		ToShardID:   toShardID,
-	}
+// handlerForTransaction executes a single transaction and fills out the
+// transaction logger accordingly. Note that the vars need to be set before
+// calling this handler.
+func handlerForTransaction(txLog *transactionLog) error {
 	from := fromAddress.String()
 	s, err := sharding.Structure(node)
-	if err != nil {
-		return *handlerForError(&txLog, err)
+	if handlerForError(txLog, err) != nil {
+		return err
 	}
 	err = validation.ValidShardIDs(fromShardID, toShardID, uint32(len(s)))
-	if err != nil {
-		return *handlerForError(&txLog, err)
+	if handlerForError(txLog, err) != nil {
+		return err
 	}
 	networkHandler, err := handlerForShard(fromShardID, node)
-	if err != nil {
-		return *handlerForError(&txLog, err)
+	if handlerForError(txLog, err) != nil {
+		return err
 	}
+
 	var ctrlr *transaction.Controller
 	if useLedgerWallet {
 		account := accounts.Account{Address: address.Parse(from)}
 		ctrlr = transaction.NewController(networkHandler, nil, &account, *chainName.chainID, opts)
 	} else {
-		ks, acct, err := store.UnlockedKeystore(from, unlockP)
-		if err != nil {
-			return *handlerForError(&txLog, err)
+		ks, acct, err := store.UnlockedKeystore(from, passphrase)
+		if handlerForError(txLog, err) != nil {
+			return err
 		}
 		ctrlr = transaction.NewController(networkHandler, ks, acct, *chainName.chainID, opts)
 	}
 
 	nonce, err := getNonceFromInput(fromAddress.String(), inputNonce, networkHandler)
-	if err != nil {
-		return *handlerForError(&txLog, err)
+	if handlerForError(txLog, err) != nil {
+		return err
+	}
+	amt, err := c.NewDecFromString(amount)
+	if handlerForError(txLog, err) != nil {
+		return err
+	}
+	gPrice, err := c.NewDecFromString(gasPrice)
+	if handlerForError(txLog, err) != nil {
+		return err
 	}
 
-	amt, err := common2.NewDecFromString(amount)
-	if err != nil {
-		return *handlerForError(&txLog, err)
-	}
-
-	gPrice, err := common2.NewDecFromString(gasPrice)
-	if err != nil {
-		return *handlerForError(&txLog, err)
-	}
-
-	// Approximate Time of Signature
-	txLog.TimeSigned = time.Now().UTC().Format(timeFormat)
-	if transactionFailure := ctrlr.ExecuteTransaction(
+	txLog.TimeSigned = time.Now().UTC().Format(timeFormat) // Approximate time of signature
+	err = handlerForError(txLog, ctrlr.ExecuteTransaction(
 		toAddress.String(),
 		"",
 		amt, gPrice,
 		nonce, gasLimit,
 		int(fromShardID),
 		int(toShardID),
-	); transactionFailure != nil {
-		return *handlerForError(&txLog, transactionFailure)
+	))
+
+	if dryRun {
+		txLog.RawTxn = ctrlr.RawTransaction()
+		txLog.Transaction = make(map[string]interface{})
+		_ = json.Unmarshal([]byte(ctrlr.TransactionToJSON(false)), &txLog.Transaction)
+	} else {
+		txLog.TxHash = *ctrlr.ReceiptHash()
 	}
-	txLog.TxHash = *ctrlr.ReceiptHash()
-	switch {
-	case !dryRun && confirmWait == 0:
-		fmt.Println(fmt.Sprintf(`{"transaction-receipt":"%s"}`, *ctrlr.ReceiptHash()))
-	case !dryRun && confirmWait > 0:
-		fmt.Println(common.ToJSONUnsafe(ctrlr.Receipt(), !noPrettyOutput))
-	case dryRun:
-		fmt.Println("Txn:")
-		fmt.Println(ctrlr.TransactionToJSON(!noPrettyOutput))
-		fmt.Println("RawTxn:", ctrlr.RawTransaction())
+	txLog.Receipt = ctrlr.Receipt()["result"]
+	if confirmWait > 0 && txLog.Receipt == nil {
+		if err != nil {
+			err = handlerForError(txLog, errors.Wrap(err, "failed to confirm"))
+		} else {
+			err = handlerForError(txLog, errors.New("failed to confirm"))
+		}
 	}
-	return txLog
+
+	if givenFilePath == "" {
+		fmt.Println(common.ToJSONUnsafe(txLog, !noPrettyOutput))
+	}
+
+	return err
 }
 
-func handlerForBulkTransactions(index int) transactionLog {
-	// Sets flags for a transaction and calls handlerForTransaction()
-	// First check that all required flags are present
-	if fileFlags[index].FromAddress == nil || fileFlags[index].ToAddress == nil ||
-		fileFlags[index].Amount == nil {
-		return stringErrorConstructor("FromAddress/ToAddress/Amount are required fields")
+// handlerForBulkTransactions checks and sets all flags for a transaction
+// from the element at index of transferFileFlags, then calls handlerForTransaction.
+func handlerForBulkTransactions(txLog *transactionLog, index int) error {
+	txnFlags := transferFileFlags[index]
+
+	// Check for required fields.
+	if txnFlags.FromAddress == nil || txnFlags.ToAddress == nil || txnFlags.Amount == nil {
+		return handlerForError(txLog, errors.New("FromAddress/ToAddress/Amount are required fields"))
 	}
-	if fileFlags[index].FromShardID == nil || fileFlags[index].ToShardID == nil {
-		return stringErrorConstructor("FromShardID/ToShardID are required fields")
+	if txnFlags.FromShardID == nil || txnFlags.ToShardID == nil {
+		return handlerForError(txLog, errors.New("FromShardID/ToShardID are required fields"))
 	}
-	if err := fromAddress.Set(*fileFlags[index].FromAddress); err != nil {
-		return stringErrorConstructor(err.Error())
+
+	// Set required fields.
+	err := fromAddress.Set(*txnFlags.FromAddress)
+	if handlerForError(txLog, err) != nil {
+		return err
 	}
-	if err := toAddress.Set(*fileFlags[index].ToAddress); err != nil {
-		return stringErrorConstructor(err.Error())
+	err = toAddress.Set(*txnFlags.ToAddress)
+	if handlerForError(txLog, err) != nil {
+		return err
 	}
-	amount = *fileFlags[index].Amount
-	fromShardID = *fileFlags[index].FromShardID
-	toShardID = *fileFlags[index].ToShardID
-	if fileFlags[index].UnlockP != nil {
-		unlockP = *fileFlags[index].UnlockP
+	amount = *txnFlags.Amount
+	fromShard, err := strconv.ParseUint(*txnFlags.FromShardID, 10, 64)
+	if handlerForError(txLog, err) != nil {
+		return err
+	}
+	fromShardID = uint32(fromShard)
+	toShard, err := strconv.ParseUint(*txnFlags.ToShardID, 10, 64)
+	if handlerForError(txLog, err) != nil {
+		return err
+	}
+	toShardID = uint32(toShard)
+
+	// Set optional fields.
+	if txnFlags.PassphraseFile != nil {
+		passphraseFilePath = *txnFlags.PassphraseFile
+		passphrase, err = getPassphrase()
+		if handlerForError(txLog, err) != nil {
+			return err
+		}
+	} else if txnFlags.PassphraseString != nil {
+		passphrase = *txnFlags.PassphraseString
 	} else {
-		unlockP = common.DefaultPassphrase
+		passphrase = common.DefaultPassphrase
 	}
-	inputNonce = fileFlags[index].InputNonce
-	if fileFlags[index].GasPrice != "" {
-		gasPrice = fileFlags[index].GasPrice
+	if txnFlags.InputNonce != nil {
+		inputNonce = *txnFlags.InputNonce
 	} else {
-		gasPrice = "1"
+		inputNonce = "" // Reset to default for subsequent transactions
 	}
-	if fileFlags[index].GasLimit != 0 {
-		gasLimit = fileFlags[index].GasLimit
+	if txnFlags.GasPrice != nil {
+		gasPrice = *txnFlags.GasPrice
 	} else {
-		gasLimit = 21000
+		gasPrice = "1" // Reset to default for subsequent transactions
 	}
-	return handlerForTransaction()
+	if txnFlags.GasLimit != nil {
+		gasLimit, err = strconv.ParseUint(*txnFlags.GasLimit, 10, 64)
+		if handlerForError(txLog, err) != nil {
+			return err
+		}
+	} else {
+		gasLimit = 21000 // Reset to default for subsequent transactions
+	}
+
+	return handlerForTransaction(txLog)
 }
 
 func opts(ctlr *transaction.Controller) {
@@ -240,16 +265,16 @@ func init() {
 Create a transaction, sign it, and send off to the Harmony blockchain
 `,
 		PreRunE: func(cmd *cobra.Command, args []string) error {
-			if filepath == "" {
+			if givenFilePath == "" {
 				for _, flagName := range [...]string{"from", "to", "amount", "from-shard", "to-shard"} {
-					cmd.MarkFlagRequired(flagName)
+					_ = cmd.MarkFlagRequired(flagName)
 				}
 			} else {
-				data, err := ioutil.ReadFile(filepath)
+				data, err := ioutil.ReadFile(givenFilePath)
 				if err != nil {
 					return err
 				}
-				err = json.Unmarshal(data, &fileFlags)
+				err = json.Unmarshal(data, &transferFileFlags)
 				if err != nil {
 					return err
 				}
@@ -257,20 +282,35 @@ Create a transaction, sign it, and send off to the Harmony blockchain
 			return nil
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
-			if filepath == "" {
-				txLog := handlerForTransaction()
-				txLogs = append(txLogs, txLog)
+			if givenFilePath == "" {
+				pp, err := getPassphrase()
+				if err != nil {
+					return err
+				}
+				passphrase = pp // needed for passphrase assignment used in handler
+				return handlerForTransaction(&transactionLog{})
 			} else {
-				for i := range fileFlags {
-					txLog := handlerForBulkTransactions(i)
+				hasError := false
+				var txLogs []transactionLog
+				for i := range transferFileFlags {
+					var txLog transactionLog
+					err := handlerForBulkTransactions(&txLog, i)
 					txLogs = append(txLogs, txLog)
+					if err != nil {
+						hasError = true
+						if transferFileFlags[i].StopOnError {
+							break
+						}
+					}
+				}
+				fmt.Println(common.ToJSONUnsafe(txLogs, true))
+				if hasError {
+					return fmt.Errorf("one or more of your transactions returned an error " +
+						"-- check the log for more information")
+				} else {
+					return nil
 				}
 			}
-			println(common.ToJSONUnsafe(txLogs, true))
-			if errorFlag {
-				return fmt.Errorf("One or more of your transactions returned an error. Check the log for more information")
-			}
-			return nil
 		},
 	}
 
