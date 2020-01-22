@@ -90,7 +90,7 @@ func DefaultLocation() string {
 	return path.Join(uDir, c.DefaultConfigDirName, c.DefaultConfigAccountAliasesDirName)
 }
 
-func UnlockedKeystore(from, unlockP string) (*keystore.KeyStore, *accounts.Account, error) {
+func UnlockedKeystore(from, passphrase string) (*keystore.KeyStore, *accounts.Account, error) {
 	sender := address.Parse(from)
 	ks := FromAddress(from)
 	if ks == nil {
@@ -100,7 +100,7 @@ func UnlockedKeystore(from, unlockP string) (*keystore.KeyStore, *accounts.Accou
 	if lookupErr != nil {
 		return nil, nil, fmt.Errorf("could not find %s in keystore", from)
 	}
-	if unlockError := ks.Unlock(account, unlockP); unlockError != nil {
+	if unlockError := ks.Unlock(account, passphrase); unlockError != nil {
 		return nil, nil, errors.Wrap(NoUnlockBadPassphrase, unlockError.Error())
 	}
 	return ks, &account, nil
