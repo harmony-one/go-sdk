@@ -86,7 +86,7 @@ func init() {
 		},
 	})
 	RootCmd.PersistentFlags().BoolVarP(&useLedgerWallet, "ledger", "e", false, "Use ledger hardware wallet")
-	RootCmd.PersistentFlags().StringVar(&givenFilePath, "file", "", "Absolute path to file containing arguments")
+	RootCmd.PersistentFlags().StringVar(&givenFilePath, "file", "", "Path to file for given command when applicable")
 	RootCmd.AddCommand(&cobra.Command{
 		Use:   "docs",
 		Short: fmt.Sprintf("Generate docs to a local %s directory", hmyDocsDir),
