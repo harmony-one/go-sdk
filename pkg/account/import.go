@@ -2,6 +2,7 @@ package account
 
 import (
 	"encoding/hex"
+	"fmt"
 	"io/ioutil"
 	"path/filepath"
 	"strings"
@@ -16,12 +17,17 @@ import (
 
 // ImportFromPrivateKey allows import of an ECDSA private key
 func ImportFromPrivateKey(privateKey, name, passphrase string) (string, error) {
+	privateKey = strings.TrimPrefix(privateKey, "0x")
+
 	if name == "" {
 		name = generateName() + "-imported"
+		for store.DoesNamedAccountExist(name) {
+			name = generateName() + "-imported"
+		}
+	} else if store.DoesNamedAccountExist(name) {
+		return "", fmt.Errorf("account %s already exists", name)
 	}
-	if privateKey[:2] == "0x" {
-		privateKey = privateKey[2:]
-	}
+
 	privateKeyBytes, err := hex.DecodeString(privateKey)
 	if err != nil {
 		return "", err
@@ -64,23 +70,29 @@ func generateName() string {
 }
 
 // ImportKeyStore imports a keystore along with a password
-func ImportKeyStore(keypath, name, passphrase string) (string, error) {
-	keypath, err := filepath.Abs(keypath)
+func ImportKeyStore(keyPath, name, passphrase string) (string, error) {
+	keyPath, err := filepath.Abs(keyPath)
 	if err != nil {
 		return "", err
 	}
-	keyJSON, readError := ioutil.ReadFile(keypath)
+	keyJSON, readError := ioutil.ReadFile(keyPath)
 	if readError != nil {
 		return "", readError
 	}
+
 	if name == "" {
 		name = generateName() + "-imported"
+		for store.DoesNamedAccountExist(name) {
+			name = generateName() + "-imported"
+		}
+	} else if store.DoesNamedAccountExist(name) {
+		return "", fmt.Errorf("account %s already exists", name)
 	}
+
 	ks := store.FromAccountName(name)
 	_, err = ks.Import(keyJSON, passphrase, passphrase)
 	if err != nil {
 		return "", errors.Wrap(err, "could not import")
 	}
-
 	return name, nil
 }
