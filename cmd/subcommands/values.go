@@ -54,7 +54,7 @@ hmy --node="https://api.s1.p.hmny.io/" transfer --file <PATH_TO_JSON_FILE>
           "to-shard": "0",
           "amount": "1",
           "passphrase-string": "",
-          "nonce": "-1",
+          "nonce": "1",
           "stop-on-error": true
         },
         {
