@@ -64,6 +64,7 @@ func getPassphrase() (string, error) {
 		if string(repeatPass) != string(pass) {
 			return "", errors.New("passphrase does not match")
 		}
+		fmt.Println("") // provide feedback when passphrase is entered.
 		return string(repeatPass), nil
 	} else {
 		return c.DefaultPassphrase, nil
