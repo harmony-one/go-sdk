@@ -238,7 +238,7 @@ func (C *Controller) hardwareSignAndPrepareTxEncodedForSending() {
 }
 
 func (C *Controller) txConfirmation() {
-	if C.failure != nil {
+	if C.failure != nil || C.Behavior.DryRun {
 		return
 	}
 	if C.Behavior.ConfirmationWaitTime > 0 {
