@@ -29,7 +29,6 @@ var (
 	confirmWait uint32
 	chainName   = chainIDWrapper{chainID: &common.Chain.TestNet}
 	dryRun      bool
-	unlockP     string
 	inputNonce  string
 	gasPrice    string
 	gasLimit    uint64
@@ -286,10 +285,8 @@ Create a transaction, sign it, and send off to the Harmony blockchain
 	cmdTransfer.Flags().Uint32Var(&toShardID, "to-shard", 0, "target shard id")
 	cmdTransfer.Flags().Var(&chainName, "chain-id", "what chain ID to target")
 	cmdTransfer.Flags().Uint32Var(&confirmWait, "wait-for-confirm", 0, "only waits if non-zero value, in seconds")
-	cmdTransfer.Flags().StringVar(&unlockP,
-		"passphrase", common.DefaultPassphrase,
-		"passphrase to unlock sender's keystore",
-	)
+	cmdTransfer.Flags().BoolVar(&userProvidesPassphrase, "passphrase", false, ppPrompt)
+	cmdTransfer.Flags().StringVar(&passphraseFilePath, "passphrase-file", "", "path to a file containing the passphrase")
 
 	RootCmd.AddCommand(cmdTransfer)
 }

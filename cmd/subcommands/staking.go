@@ -114,7 +114,7 @@ func handleStakingTransaction(
 			return errors.New("error : delegator address doesn't match with ledger hardware addresss")
 		}
 	} else {
-		ks, acct, err = store.UnlockedKeystore(from, unlockP)
+		ks, acct, err = store.UnlockedKeystore(from, passphrase)
 		if err != nil {
 			return err
 		}
@@ -340,6 +340,11 @@ Create a new validator"
 				return err
 			}
 
+			passphrase, err = getPassphrase()
+			if err != nil {
+				return err
+			}
+
 			err = handleStakingTransaction(stakingTx, networkHandler, validatorAddress)
 			if err != nil {
 				return err
@@ -368,10 +373,8 @@ Create a new validator"
 	subCmdNewValidator.Flags().StringVar(&inputNonce, "nonce", "", "set nonce for transaction")
 	subCmdNewValidator.Flags().Var(&chainName, "chain-id", "what chain ID to target")
 	subCmdNewValidator.Flags().Uint32Var(&confirmWait, "wait-for-confirm", 0, "only waits if non-zero value, in seconds")
-	subCmdNewValidator.Flags().StringVar(&unlockP,
-		"passphrase", common.DefaultPassphrase,
-		"passphrase to unlock delegator's keystore",
-	)
+	subCmdNewValidator.Flags().BoolVar(&userProvidesPassphrase, "passphrase", false, ppPrompt)
+	subCmdNewValidator.Flags().StringVar(&passphraseFilePath, "passphrase-file", "", "path to a file containing the passphrase")
 
 	for _, flagName := range [...]string{"name", "identity", "website", "security-contact", "details", "rate", "max-rate",
 		"max-change-rate", "min-self-delegation", "max-total-delegation", "validator-addr", "bls-pubkeys", "amount"} {
@@ -468,6 +471,11 @@ Create a new validator"
 				return err
 			}
 
+			passphrase, err = getPassphrase()
+			if err != nil {
+				return err
+			}
+
 			err = handleStakingTransaction(stakingTx, networkHandler, validatorAddress)
 			if err != nil {
 				return err
@@ -493,10 +501,8 @@ Create a new validator"
 	subCmdEditValidator.Flags().StringVar(&inputNonce, "nonce", "", "set nonce for transaction")
 	subCmdEditValidator.Flags().Var(&chainName, "chain-id", "what chain ID to target")
 	subCmdEditValidator.Flags().Uint32Var(&confirmWait, "wait-for-confirm", 0, "only waits if non-zero value, in seconds")
-	subCmdEditValidator.Flags().StringVar(&unlockP,
-		"passphrase", common.DefaultPassphrase,
-		"passphrase to unlock delegator's keystore",
-	)
+	subCmdEditValidator.Flags().BoolVar(&userProvidesPassphrase, "passphrase", false, ppPrompt)
+	subCmdEditValidator.Flags().StringVar(&passphraseFilePath, "passphrase-file", "", "path to a file containing the passphrase")
 
 	for _, flagName := range [...]string{
 		"name", "identity", "website", "security-contact", "details", "rate",
@@ -537,6 +543,11 @@ Delegating to a validator
 				return err
 			}
 
+			passphrase, err = getPassphrase()
+			if err != nil {
+				return err
+			}
+
 			err = handleStakingTransaction(stakingTx, networkHandler, delegatorAddress)
 			if err != nil {
 				return err
@@ -553,10 +564,8 @@ Delegating to a validator
 	subCmdDelegate.Flags().StringVar(&inputNonce, "nonce", "", "set nonce for transaction")
 	subCmdDelegate.Flags().Var(&chainName, "chain-id", "what chain ID to target")
 	subCmdDelegate.Flags().Uint32Var(&confirmWait, "wait-for-confirm", 0, "only waits if non-zero value, in seconds")
-	subCmdDelegate.Flags().StringVar(&unlockP,
-		"passphrase", common.DefaultPassphrase,
-		"passphrase to unlock delegator's keystore",
-	)
+	subCmdDelegate.Flags().BoolVar(&userProvidesPassphrase, "passphrase", false, ppPrompt)
+	subCmdDelegate.Flags().StringVar(&passphraseFilePath, "passphrase-file", "", "path to a file containing the passphrase")
 
 	for _, flagName := range [...]string{"delegator-addr", "validator-addr", "amount"} {
 		subCmdDelegate.MarkFlagRequired(flagName)
@@ -594,6 +603,11 @@ Delegating to a validator
 				return err
 			}
 
+			passphrase, err = getPassphrase()
+			if err != nil {
+				return err
+			}
+
 			err = handleStakingTransaction(stakingTx, networkHandler, delegatorAddress)
 			if err != nil {
 				return err
@@ -610,10 +624,8 @@ Delegating to a validator
 	subCmdUnDelegate.Flags().StringVar(&inputNonce, "nonce", "", "set nonce for transaction")
 	subCmdUnDelegate.Flags().Var(&chainName, "chain-id", "what chain ID to target")
 	subCmdUnDelegate.Flags().Uint32Var(&confirmWait, "wait-for-confirm", 0, "only waits if non-zero value, in seconds")
-	subCmdUnDelegate.Flags().StringVar(&unlockP,
-		"passphrase", common.DefaultPassphrase,
-		"passphrase to unlock delegator's keystore",
-	)
+	subCmdUnDelegate.Flags().BoolVar(&userProvidesPassphrase, "passphrase", false, ppPrompt)
+	subCmdUnDelegate.Flags().StringVar(&passphraseFilePath, "passphrase-file", "", "path to a file containing the passphrase")
 
 	for _, flagName := range [...]string{"delegator-addr", "validator-addr", "amount"} {
 		subCmdUnDelegate.MarkFlagRequired(flagName)
@@ -646,6 +658,11 @@ Collect token rewards
 				return err
 			}
 
+			passphrase, err = getPassphrase()
+			if err != nil {
+				return err
+			}
+
 			err = handleStakingTransaction(stakingTx, networkHandler, delegatorAddress)
 			if err != nil {
 				return err
@@ -660,10 +677,8 @@ Collect token rewards
 	subCmdCollectRewards.Flags().StringVar(&inputNonce, "nonce", "", "set nonce for tx")
 	subCmdCollectRewards.Flags().Var(&chainName, "chain-id", "what chain ID to target")
 	subCmdCollectRewards.Flags().Uint32Var(&confirmWait, "wait-for-confirm", 0, "only waits if non-zero value, in seconds")
-	subCmdCollectRewards.Flags().StringVar(&unlockP,
-		"passphrase", common.DefaultPassphrase,
-		"passphrase to unlock delegator's keystore",
-	)
+	subCmdCollectRewards.Flags().BoolVar(&userProvidesPassphrase, "passphrase", false, ppPrompt)
+	subCmdCollectRewards.Flags().StringVar(&passphraseFilePath, "passphrase-file", "", "path to a file containing the passphrase")
 
 	for _, flagName := range [...]string{"delegator-addr"} {
 		subCmdCollectRewards.MarkFlagRequired(flagName)
