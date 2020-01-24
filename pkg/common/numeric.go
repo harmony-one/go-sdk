@@ -43,6 +43,9 @@ func NewDecFromString (i string) (numeric.Dec, error) {
 		b, _ := strconv.Atoi(tokens[1])
 		return a.Mul(Pow(numeric.NewDec(10), b)), nil
 	} else {
+		if strings.HasPrefix(i, ".") {
+			i = "0" + i
+		}
 		return numeric.NewDecFromStr(i)
 	}
 }
