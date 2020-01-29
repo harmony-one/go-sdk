@@ -74,19 +74,16 @@ func createStakingTransaction(nonce uint64, f staking.StakeMsgFulfiller) (*staki
 	if err != nil {
 		return nil, err
 	}
-	gPrice = gPrice.Mul(oneAsDec)
-
+	gPrice = gPrice.Quo(oneAsDec)
 	_, payload := f()
 	data, err := rlp.EncodeToBytes(payload)
 	if err != nil {
 		return nil, err
 	}
-
 	gasLimit, err := core.IntrinsicGas(data, false, true)
 	if err != nil {
 		return nil, err
 	}
-
 	stakingTx, err := staking.NewStakingTransaction(nonce, gasLimit, gPrice.TruncateInt(), f)
 	return stakingTx, err
 }
