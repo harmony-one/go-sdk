@@ -57,7 +57,7 @@ func DescribeLocalAccounts() {
 	}
 }
 
-// check if the given address is already imported in the local keystore
+// check if the given address is already imported in present twice
 func DoesAddressExistTwice(oneaddress string) bool {
 	count := 0
 	for _, name := range LocalAccounts() {
