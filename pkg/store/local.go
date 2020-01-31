@@ -57,24 +57,6 @@ func DescribeLocalAccounts() {
 	}
 }
 
-// check if the given address is already imported in present twice
-func DoesAddressExistTwice(oneaddress string) bool {
-	count := 0
-	for _, name := range LocalAccounts() {
-		ks := FromAccountName(name)
-		allAccounts := ks.Accounts()
-		for _, account := range allAccounts {
-			if oneaddress == address.ToBech32(account.Address) {
-				count++
-			}
-			if count == 2 {
-				return true
-			}
-		}
-	}
-	return false
-}
-
 func DoesNamedAccountExist(name string) bool {
 	for _, account := range LocalAccounts() {
 		if account == name {

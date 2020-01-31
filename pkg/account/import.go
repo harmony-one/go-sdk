@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/harmony-one/go-sdk/pkg/address"
+	"github.com/harmony-one/harmony/accounts/keystore"
 
 	"github.com/btcsuite/btcd/btcec"
 	mapset "github.com/deckarep/golang-set"
@@ -89,19 +90,19 @@ func ImportKeyStore(keyPath, name, passphrase string) (string, error) {
 	} else if store.DoesNamedAccountExist(name) {
 		return "", fmt.Errorf("account %s already exists", name)
 	}
+	key, err := keystore.DecryptKey(keyJSON, passphrase)
+	if err != nil {
+		return "", err
+	}
+	b32 := address.ToBech32(key.Address)
+	hasAddress := store.FromAddress(b32) != nil
+	if hasAddress {
+		return "", fmt.Errorf("address %s already exists in keystore", b32)
+	}
 	ks := store.FromAccountName(name)
 	_, err = ks.Import(keyJSON, passphrase, passphrase)
 	if err != nil {
 		return "", errors.Wrap(err, "could not import")
-	}
-	// now check if the one account wasn't already imported
-	allAccounts := ks.Accounts()
-	for _, account := range allAccounts {
-		oneaddress := address.ToBech32(account.Address)
-		if store.DoesAddressExistTwice(oneaddress) == true {
-			RemoveAccount(name)
-			return "", fmt.Errorf("account %s already exists", oneaddress)
-		}
 	}
 	return name, nil
 }
