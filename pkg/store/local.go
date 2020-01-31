@@ -46,6 +46,7 @@ var (
 	NoUnlockBadPassphrase = errors.New("could not unlock account with passphrase, perhaps need different phrase")
 )
 
+// DescribeLocalAccounts will display all the account alias name and their corresponding one address
 func DescribeLocalAccounts() {
 	fmt.Println(describe)
 	for _, name := range LocalAccounts() {
@@ -57,6 +58,8 @@ func DescribeLocalAccounts() {
 	}
 }
 
+// DoesNamedAccountExist return true if the given string name is an alias account already define, 
+// and return false otherwise
 func DoesNamedAccountExist(name string) bool {
 	for _, account := range LocalAccounts() {
 		if account == name {
@@ -66,6 +69,7 @@ func DoesNamedAccountExist(name string) bool {
 	return false
 }
 
+// FromAddress will return nil if the bech32 string is not found in the imported accounts
 func FromAddress(bech32 string) *keystore.KeyStore {
 	for _, name := range LocalAccounts() {
 		ks := FromAccountName(name)
@@ -78,6 +82,7 @@ func FromAddress(bech32 string) *keystore.KeyStore {
 	}
 	return nil
 }
+
 
 func FromAccountName(name string) *keystore.KeyStore {
 	uDir, _ := homedir.Dir()
