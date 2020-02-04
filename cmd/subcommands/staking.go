@@ -3,6 +3,7 @@ package cmd
 import (
 	"errors"
 	"fmt"
+	"math/big"
 	"strings"
 	"time"
 
@@ -159,22 +160,22 @@ func confirmTx(networkHandler *rpc.HTTPMessenger, confirmWaitTime uint32, txHash
 	}
 }
 
-func delegationAmountSanityCheck(minSelfDelegation numeric.Dec, maxTotalDelegation numeric.Dec, amount *numeric.Dec) error {
+func delegationAmountSanityCheck(minSelfDelegation *numeric.Dec, maxTotalDelegation *numeric.Dec, amount *numeric.Dec) error {
 	// MinSelfDelegation must be >= 1 ONE
-	if minSelfDelegation.LT(oneAsDec) {
+	if minSelfDelegation != nil && minSelfDelegation.LT(oneAsDec) {
 		return errMinSelfDelegationTooSmall
 	}
 
 	// MaxTotalDelegation must not be less than MinSelfDelegation
-	if !maxTotalDelegation.Equal(numeric.ZeroDec()) &&
-		maxTotalDelegation.LT(minSelfDelegation) {
+	if minSelfDelegation != nil && maxTotalDelegation != nil && !maxTotalDelegation.Equal(numeric.ZeroDec()) &&
+		maxTotalDelegation.LT(*minSelfDelegation) {
 		return errInvalidMaxTotalDelegation
 	}
 
 	// Amount must be >= MinSelfDelegation
-	if amount != nil && amount.LT(minSelfDelegation) &&
+	if minSelfDelegation != nil && maxTotalDelegation != nil && amount != nil && amount.LT(*minSelfDelegation) &&
 		(maxTotalDelegation.Equal(numeric.ZeroDec()) ||
-			(!maxTotalDelegation.Equal(numeric.ZeroDec()) && amount.GT(maxTotalDelegation))) {
+			(!maxTotalDelegation.Equal(numeric.ZeroDec()) && amount.GT(*maxTotalDelegation))) {
 		return errInvalidSelfDelegation
 	}
 
@@ -291,7 +292,7 @@ Create a new validator"
 			minSelfDel = minSelfDel.Mul(oneAsDec)
 			maxTotalDel = maxTotalDel.Mul(oneAsDec)
 
-			err = delegationAmountSanityCheck(minSelfDel, maxTotalDel, &amt)
+			err = delegationAmountSanityCheck(&minSelfDel, &maxTotalDel, &amt)
 			if err != nil {
 				return err
 			}
@@ -388,46 +389,70 @@ Create a new validator"
 				return err
 			}
 
-			commisionRate, err := numeric.NewDecFromStr(commisionRateStr)
-			if err != nil {
-				return err
+			var commisionRate *numeric.Dec
+			if commisionRateStr != "" {
+				cRate, err := numeric.NewDecFromStr(commisionRateStr)
+				if err != nil {
+					return err
+				}
+				commisionRate = &cRate
 			}
 
-			blsPubKeyRemove := new(bls.PublicKey)
-			err = blsPubKeyRemove.DeserializeHexStr(strings.TrimPrefix(slotKeyToRemove, "0x"))
-			if err != nil {
-				return err
+			var shardPubKeyRemove *shard.BlsPublicKey
+			if slotKeyToRemove != "" {
+				blsKey := new(bls.PublicKey)
+				err = blsKey.DeserializeHexStr(strings.TrimPrefix(slotKeyToRemove, "0x"))
+				if err != nil {
+					return err
+				}
+				shardKey := shard.BlsPublicKey{}
+				shardKey.FromLibBLSPublicKey(blsKey)
+				shardPubKeyRemove = &shardKey
 			}
 
-			shardPubKeyRemove := shard.BlsPublicKey{}
-			shardPubKeyRemove.FromLibBLSPublicKey(blsPubKeyRemove)
+			var shardPubKeyAdd *shard.BlsPublicKey
+			var sigBls *shard.BlsSignature
+			if slotKeyToAdd != "" {
+				blsKey := new(bls.PublicKey)
+				err = blsKey.DeserializeHexStr(strings.TrimPrefix(slotKeyToAdd, "0x"))
+				if err != nil {
+					return err
+				}
 
-			blsPubKeyAdd := new(bls.PublicKey)
-			err = blsPubKeyAdd.DeserializeHexStr(strings.TrimPrefix(slotKeyToAdd, "0x"))
-			if err != nil {
-				return err
+				shardKey := shard.BlsPublicKey{}
+				shardKey.FromLibBLSPublicKey(blsKey)
+				shardPubKeyAdd = &shardKey
+
+				sig, err := keys.VerifyBLS(strings.TrimPrefix(slotKeyToAdd, "0x"))
+				if err != nil {
+					return err
+				}
+				sigBls = &sig
 			}
 
-			shardPubKeyAdd := shard.BlsPublicKey{}
-			shardPubKeyAdd.FromLibBLSPublicKey(blsPubKeyAdd)
-
-			sigBls, err := keys.VerifyBLS(strings.TrimPrefix(slotKeyToAdd, "0x"))
-			if err != nil {
-				return err
+			var minSelfDel *numeric.Dec
+			var mSelDel *big.Int
+			if minSelfDelegation != "" {
+				amount, err := numeric.NewDecFromStr(minSelfDelegation)
+				if err != nil {
+					return err
+				}
+				amount = amount.Mul(oneAsDec)
+				minSelfDel = &amount
+				mSelDel = amount.RoundInt()
 			}
 
-			minSelfDel, e1 := numeric.NewDecFromStr(minSelfDelegation)
-			maxTotalDel, e2 := numeric.NewDecFromStr(maxTotalDelegation)
-
-			if e1 != nil {
-				return e1
+			var maxTotalDel *numeric.Dec
+			var mTotalDel *big.Int
+			if maxTotalDelegation != "" {
+				amount, err := numeric.NewDecFromStr(maxTotalDelegation)
+				if err != nil {
+					return err
+				}
+				amount = amount.Mul(oneAsDec)
+				maxTotalDel = &amount
+				mTotalDel = amount.RoundInt()
 			}
-			if e2 != nil {
-				return e2
-			}
-
-			minSelfDel = minSelfDel.Mul(oneAsDec)
-			maxTotalDel = maxTotalDel.Mul(oneAsDec)
 
 			err = delegationAmountSanityCheck(minSelfDel, maxTotalDel, nil)
 			if err != nil {
@@ -449,12 +474,12 @@ Create a new validator"
 				return staking.DirectiveEditValidator, staking.EditValidator{
 					address.Parse(validatorAddress.String()),
 					&desc,
-					&commisionRate,
-					minSelfDel.RoundInt(),
-					maxTotalDel.RoundInt(),
-					&shardPubKeyRemove,
-					&shardPubKeyAdd,
-					sigBls,
+					commisionRate,
+					mSelDel,
+					mTotalDel,
+					shardPubKeyRemove,
+					shardPubKeyAdd,
+					*sigBls,
 				}
 
 			}
@@ -487,8 +512,8 @@ Create a new validator"
 	subCmdEditValidator.Flags().StringVar(&validatorSecurityContact, "security-contact", "", "validator's security contact")
 	subCmdEditValidator.Flags().StringVar(&validatorDetails, "details", "", "validator's details")
 	subCmdEditValidator.Flags().StringVar(&commisionRateStr, "rate", "", "commission rate")
-	subCmdEditValidator.Flags().StringVar(&minSelfDelegation, "min-self-delegation", "0.0", "minimal self delegation")
-	subCmdEditValidator.Flags().StringVar(&maxTotalDelegation, "max-total-delegation", "0.0", "maximal total delegation")
+	subCmdEditValidator.Flags().StringVar(&minSelfDelegation, "min-self-delegation", "", "minimal self delegation")
+	subCmdEditValidator.Flags().StringVar(&maxTotalDelegation, "max-total-delegation", "", "maximal total delegation")
 	subCmdEditValidator.Flags().Var(&validatorAddress, "validator-addr", "validator's staking address")
 	subCmdEditValidator.Flags().StringVar(&slotKeyToAdd, "add-bls-key", "", "add BLS pubkey to slot")
 	subCmdEditValidator.Flags().StringVar(&slotKeyToRemove, "remove-bls-key", "", "remove BLS pubkey from slot")
@@ -501,13 +526,7 @@ Create a new validator"
 	subCmdEditValidator.Flags().BoolVar(&userProvidesPassphrase, "passphrase", false, ppPrompt)
 	subCmdEditValidator.Flags().StringVar(&passphraseFilePath, "passphrase-file", "", "path to a file containing the passphrase")
 
-	for _, flagName := range [...]string{
-		"name", "identity", "website", "security-contact", "details", "rate",
-		"min-self-delegation", "max-total-delegation", "validator-addr",
-		"remove-bls-key", "add-bls-key",
-	} {
-		subCmdEditValidator.MarkFlagRequired(flagName)
-	}
+	subCmdEditValidator.MarkFlagRequired("validator-addr")
 
 	subCmdDelegate := &cobra.Command{
 		Use:   "delegate",
