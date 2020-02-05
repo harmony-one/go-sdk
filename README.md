@@ -139,7 +139,10 @@ hmy --node="https://api.s1.p.hmny.io" staking collect-rewards \
 17. Check active validators
 hmy --node="https://api.s1.p.hmny.io" blockchain validator all-active
 
-18. Check in-memory record of failed staking transactions
+18. Get current staking utility metrics
+hmy --node="https://api.s0.p.hmny.io" blockchain utility-metrics
+
+19. Check in-memory record of failed staking transactions
 hmy failures staking
 ```
 

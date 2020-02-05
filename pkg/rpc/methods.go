@@ -60,6 +60,7 @@ type rpcEnumList struct {
 	GetPendingTxnsInPool                method
 	GetPendingCrosslinks                method
 	GetPendingCXReceipts                method
+	GetCurrentUtilityMetrics            method
 	ResendCX                            method
 }
 
@@ -113,6 +114,7 @@ var Method = rpcEnumList{
 	GetPendingTxnsInPool:                "hmy_pendingTransactions",
 	GetPendingCrosslinks:                "hmy_getPendingCrossLinks",
 	GetPendingCXReceipts:                "hmy_getPendingCXReceipts",
+	GetCurrentUtilityMetrics:            "hmy_getCurrentUtilityMetrics",
 	ResendCX:                            "hmy_resendCx",
 }
 
