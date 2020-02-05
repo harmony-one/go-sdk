@@ -161,6 +161,14 @@ High level information about transaction, like blockNumber, blockHash
 			noLatest = true
 			return request(rpc.Method.ResendCX, []interface{}{args[0]})
 		},
+	}, {
+		Use:   "utility-metrics",
+		Short: "Current utility metrics",
+		Args:  cobra.ExactArgs(1),
+		Long:  `Current staking utility metrics`,
+		RunE: func(cmd *cobra.Command, args []string) error {
+			return request(rpc.Method.GetCurrentUtilityMetrics, []interface{}{})
+		},
 	},
 		accountHistorySubCmd,
 	}
