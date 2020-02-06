@@ -7,15 +7,17 @@ import (
 	"path/filepath"
 	"strings"
 
+	"os"
 	"github.com/harmony-one/go-sdk/pkg/address"
 	"github.com/harmony-one/harmony/accounts/keystore"
+	c "github.com/harmony-one/go-sdk/pkg/common"
+	homedir "github.com/mitchellh/go-homedir"
 
 	"github.com/btcsuite/btcd/btcec"
 	mapset "github.com/deckarep/golang-set"
 	"github.com/harmony-one/go-sdk/pkg/common"
 	"github.com/harmony-one/go-sdk/pkg/mnemonic"
 	"github.com/harmony-one/go-sdk/pkg/store"
-	"github.com/pkg/errors"
 )
 
 // ImportFromPrivateKey allows import of an ECDSA private key
@@ -99,10 +101,15 @@ func ImportKeyStore(keyPath, name, passphrase string) (string, error) {
 	if hasAddress {
 		return "", fmt.Errorf("address %s already exists in keystore", b32)
 	}
-	ks := store.FromAccountName(name)
-	_, err = ks.Import(keyJSON, passphrase, passphrase)
+	uDir, _ := homedir.Dir()
+	path := filepath.Join(uDir, c.DefaultConfigDirName, c.DefaultConfigAccountAliasesDirName, name)	
+	err = os.MkdirAll(path, 0600)
 	if err != nil {
-		return "", errors.Wrap(err, "could not import")
+		return "", err
+	}
+	err = ioutil.WriteFile(filepath.Join(path, filepath.Base(keyPath)), keyJSON, 0600)
+	if err != nil {
+		return "", err
 	}
 	return name, nil
 }
