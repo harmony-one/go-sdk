@@ -3,21 +3,20 @@ package account
 import (
 	"encoding/hex"
 	"fmt"
+	"github.com/mitchellh/go-homedir"
+	"io"
 	"io/ioutil"
+	"os"
 	"path/filepath"
 	"strings"
 
-	"os"
-	"github.com/harmony-one/go-sdk/pkg/address"
-	"github.com/harmony-one/harmony/accounts/keystore"
-	c "github.com/harmony-one/go-sdk/pkg/common"
-	homedir "github.com/mitchellh/go-homedir"
-
 	"github.com/btcsuite/btcd/btcec"
 	mapset "github.com/deckarep/golang-set"
+	"github.com/harmony-one/go-sdk/pkg/address"
 	"github.com/harmony-one/go-sdk/pkg/common"
 	"github.com/harmony-one/go-sdk/pkg/mnemonic"
 	"github.com/harmony-one/go-sdk/pkg/store"
+	"github.com/harmony-one/harmony/accounts/keystore"
 )
 
 // ImportFromPrivateKey allows import of an ECDSA private key
@@ -74,6 +73,28 @@ func generateName() string {
 	return acct
 }
 
+func writeToFile(path string, data string) error {
+	currDir, _ := os.Getwd()
+	path, err := filepath.Abs(path)
+	if err != nil {
+		return err
+	}
+	os.MkdirAll(filepath.Dir(path), 0777)
+	os.Chdir(filepath.Dir(path))
+	file, err := os.Create(filepath.Base(path))
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+
+	_, err = io.WriteString(file, data)
+	if err != nil {
+		return err
+	}
+	os.Chdir(currDir)
+	return file.Sync()
+}
+
 // ImportKeyStore imports a keystore along with a password
 func ImportKeyStore(keyPath, name, passphrase string) (string, error) {
 	keyPath, err := filepath.Abs(keyPath)
@@ -102,12 +123,8 @@ func ImportKeyStore(keyPath, name, passphrase string) (string, error) {
 		return "", fmt.Errorf("address %s already exists in keystore", b32)
 	}
 	uDir, _ := homedir.Dir()
-	path := filepath.Join(uDir, c.DefaultConfigDirName, c.DefaultConfigAccountAliasesDirName, name)	
-	err = os.MkdirAll(path, 0600)
-	if err != nil {
-		return "", err
-	}
-	err = ioutil.WriteFile(filepath.Join(path, filepath.Base(keyPath)), keyJSON, 0600)
+	newPath := filepath.Join(uDir, common.DefaultConfigDirName, common.DefaultConfigAccountAliasesDirName, name, filepath.Base(keyPath))
+	err = writeToFile(newPath, string(keyJSON))
 	if err != nil {
 		return "", err
 	}
