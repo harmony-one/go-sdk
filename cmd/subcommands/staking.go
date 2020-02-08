@@ -62,6 +62,7 @@ var (
 	errInvalidSelfDelegation           = errors.New("amount value should be between min_self_delegation and max_total_delegation")
 	errInvalidTotalDelegation          = errors.New("total delegation can not be bigger than max_total_delegation")
 	errMinSelfDelegationTooSmall       = errors.New("min_self_delegation has to be greater than 1 ONE")
+	errMaxTotalDelegationTooSmall       = errors.New("max_self_delegation has to be greater than 1 ONE")
 	errInvalidMaxTotalDelegation       = errors.New("max_total_delegation can not be less than min_self_delegation")
 	errCommissionRateTooLarge          = errors.New("commission rate and change rate can not be larger than max commission rate")
 	errInvalidComissionRate            = errors.New("commission rate, change rate and max rate should be within 0-100 percent")
@@ -168,16 +169,20 @@ func delegationAmountSanityCheck(minSelfDelegation *numeric.Dec, maxTotalDelegat
 		return errMinSelfDelegationTooSmall
 	}
 
+	// MaxTotalDelegation must be a
+	if maxTotalDelegation != nil && maxTotalDelegation.LT(oneAsDec) {
+		return errMaxTotalDelegationTooSmall
+	}
+
 	// MaxTotalDelegation must not be less than MinSelfDelegation
-	if minSelfDelegation != nil && maxTotalDelegation != nil && !maxTotalDelegation.Equal(numeric.ZeroDec()) &&
+	if minSelfDelegation != nil && maxTotalDelegation != nil &&
 		maxTotalDelegation.LT(*minSelfDelegation) {
 		return errInvalidMaxTotalDelegation
 	}
 
 	// Amount must be >= MinSelfDelegation
-	if minSelfDelegation != nil && maxTotalDelegation != nil && amount != nil && amount.LT(*minSelfDelegation) &&
-		(maxTotalDelegation.Equal(numeric.ZeroDec()) ||
-			(!maxTotalDelegation.Equal(numeric.ZeroDec()) && amount.GT(*maxTotalDelegation))) {
+	if minSelfDelegation != nil && maxTotalDelegation != nil && amount != nil &&
+		(amount.LT(*minSelfDelegation) || amount.GT(*maxTotalDelegation)) {
 		return errInvalidSelfDelegation
 	}
 
