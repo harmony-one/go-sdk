@@ -59,18 +59,25 @@ var (
 )
 
 var (
-	errInvalidSelfDelegation           = errors.New("amount value should be between min_self_delegation and max_total_delegation")
-	errInvalidTotalDelegation          = errors.New("total delegation can not be bigger than max_total_delegation")
-	errMinSelfDelegationTooSmall       = errors.New("min_self_delegation has to be greater than 1 ONE")
-	errMaxTotalDelegationTooSmall       = errors.New("max_self_delegation has to be greater than 1 ONE")
-	errInvalidMaxTotalDelegation       = errors.New("max_total_delegation can not be less than min_self_delegation")
-	errCommissionRateTooLarge          = errors.New("commission rate and change rate can not be larger than max commission rate")
-	errInvalidComissionRate            = errors.New("commission rate, change rate and max rate should be within 0-100 percent")
-	errInvalidDescFieldName            = errors.New("exceeds maximum length of 140 characters for description field name")
-	errInvalidDescFieldIdentity        = errors.New("exceeds maximum length of 140 characters for description field identity")
-	errInvalidDescFieldWebsite         = errors.New("exceeds maximum length of 140 characters for description field website")
-	errInvalidDescFieldSecurityContact = errors.New("exceeds maximum length of 140 characters for description field security-contact")
-	errInvalidDescFieldDetails         = errors.New("exceeds maximum length of 280 characters for description field details")
+	errSelfDelegationTooSmall          = errors.New("amount can not be less than min-self-delegation")
+	errSelfDelegationTooLarge          = errors.New("amount can not be greater than max-total-delegation")
+	errInvalidTotalDelegation          = errors.New("max-total-delegation can not be bigger than max-total-delegation")
+	errMinSelfDelegationTooSmall       = errors.New("min-self-delegation can not be less than 1 ONE")
+	errMaxTotalDelegationTooSmall      = errors.New("max-self-delegation can not be less than 1 ONE")
+	errInvalidMaxTotalDelegation       = errors.New("max-total-delegation can not be less than min-self-delegation")
+	errCommissionRateTooLarge          = errors.New("rate can not be greater than max-commission-rate")
+	errChangeRateTooLarge              = errors.New("max-change-rate can not be greater than max-commission-rate")
+	errInvalidCommissionRateLow        = errors.New("rate can not be less than 0")
+	errInvalidCommissionRateHigh       = errors.New("rate can not be greater than 1")
+	errInvalidChangeRateLow            = errors.New("max-change-rate can not be less than 0")
+	errInvalidChangeRateHigh           = errors.New("max-change-rate can not be greater than 1")
+	errInvalidMaxRateLow               = errors.New("max-commission-rate can not be less than 0")
+	errInvalidMaxRateHigh              = errors.New("max-commission-rate can not be greater than 1")
+	errInvalidDescFieldName            = errors.New("exceeds maximum length of 140 characters for name")
+	errInvalidDescFieldIdentity        = errors.New("exceeds maximum length of 140 characters for identity")
+	errInvalidDescFieldWebsite         = errors.New("exceeds maximum length of 140 characters for website")
+	errInvalidDescFieldSecurityContact = errors.New("exceeds maximum length of 140 characters for security-contact")
+	errInvalidDescFieldDetails         = errors.New("exceeds maximum length of 280 characters for details")
 )
 
 func createStakingTransaction(nonce uint64, f staking.StakeMsgFulfiller) (*staking.StakingTransaction, error) {
@@ -181,9 +188,13 @@ func delegationAmountSanityCheck(minSelfDelegation *numeric.Dec, maxTotalDelegat
 	}
 
 	// Amount must be >= MinSelfDelegation
-	if minSelfDelegation != nil && maxTotalDelegation != nil && amount != nil &&
-		(amount.LT(*minSelfDelegation) || amount.GT(*maxTotalDelegation)) {
-		return errInvalidSelfDelegation
+	if minSelfDelegation != nil && maxTotalDelegation != nil && amount != nil {
+		if amount.LT(*minSelfDelegation) {
+			return errSelfDelegationTooSmall
+		}
+		if amount.GT(*maxTotalDelegation) {
+			return errSelfDelegationTooLarge
+		}
 	}
 
 	return nil
@@ -193,16 +204,28 @@ func rateSanityCheck(rate numeric.Dec, maxRate numeric.Dec, maxChangeRate numeri
 	hundredPercent := numeric.NewDec(1)
 	zeroPercent := numeric.NewDec(0)
 
-	if rate.LT(zeroPercent) || rate.GT(hundredPercent) {
-		return errInvalidComissionRate
+	if rate.LT(zeroPercent) {
+		return errInvalidCommissionRateLow
 	}
 
-	if maxRate.LT(zeroPercent) || maxRate.GT(hundredPercent) {
-		return errInvalidComissionRate
+	if rate.GT(hundredPercent) {
+		return errInvalidCommissionRateHigh
 	}
 
-	if maxChangeRate.LT(zeroPercent) || maxChangeRate.GT(hundredPercent) {
-		return errInvalidComissionRate
+	if maxRate.LT(zeroPercent) {
+		return errInvalidMaxRateLow
+	}
+
+	if maxRate.GT(hundredPercent) {
+		return errInvalidMaxRateHigh
+	}
+
+	if maxChangeRate.LT(zeroPercent) {
+		return errInvalidChangeRateLow
+	}
+
+	if maxChangeRate.GT(hundredPercent) {
+		return errInvalidChangeRateHigh
 	}
 
 	if rate.GT(maxRate) {
@@ -210,7 +233,7 @@ func rateSanityCheck(rate numeric.Dec, maxRate numeric.Dec, maxChangeRate numeri
 	}
 
 	if maxChangeRate.GT(maxRate) {
-		return errCommissionRateTooLarge
+		return errChangeRateTooLarge
 	}
 
 	return nil
