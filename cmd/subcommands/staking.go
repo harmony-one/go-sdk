@@ -78,7 +78,7 @@ func createStakingTransaction(nonce uint64, f staking.StakeMsgFulfiller) (*staki
 	if err != nil {
 		return nil, err
 	}
-	gPrice = gPrice.Quo(oneAsDec)
+	gPrice = gPrice.Mul(nanoAsDec)
 	_, payload := f()
 	data, err := rlp.EncodeToBytes(payload)
 	if err != nil {
