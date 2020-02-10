@@ -166,6 +166,7 @@ High level information about transaction, like blockNumber, blockHash
 		Short: "Current utility metrics",
 		Long:  `Current staking utility metrics`,
 		RunE: func(cmd *cobra.Command, args []string) error {
+			noLatest = true
 			return request(rpc.Method.GetCurrentUtilityMetrics, []interface{}{})
 		},
 	},
