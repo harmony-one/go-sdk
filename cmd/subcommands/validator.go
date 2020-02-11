@@ -25,7 +25,8 @@ var (
 		Args:    cobra.ExactArgs(1),
 		PreRunE: validateAddress,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return request(rpc.Method.GetValidatorMetrics, []interface{}{})
+			noLatest = true
+			return request(rpc.Method.GetValidatorMetrics, []interface{}{args[0]})
 		},
 	}, {
 		Use:     "information",
