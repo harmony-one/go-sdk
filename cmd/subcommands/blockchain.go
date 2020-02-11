@@ -156,7 +156,7 @@ High level information about transaction, like blockNumber, blockHash
 	}, {
 		Use:   "resend-cx",
 		Short: "Re-play a cross shard transaction",
-		Args: cobra.ExactArgs(1),
+		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			noLatest = true
 			return request(rpc.Method.ResendCX, []interface{}{args[0]})
@@ -166,6 +166,7 @@ High level information about transaction, like blockNumber, blockHash
 		Short: "Current utility metrics",
 		Long:  `Current staking utility metrics`,
 		RunE: func(cmd *cobra.Command, args []string) error {
+			noLatest = true
 			return request(rpc.Method.GetCurrentUtilityMetrics, []interface{}{})
 		},
 	},
