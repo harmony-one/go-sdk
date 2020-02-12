@@ -58,7 +58,7 @@ func DescribeLocalAccounts() {
 	}
 }
 
-// DoesNamedAccountExist return true if the given string name is an alias account already define, 
+// DoesNamedAccountExist return true if the given string name is an alias account already define,
 // and return false otherwise
 func DoesNamedAccountExist(name string) bool {
 	for _, account := range LocalAccounts() {
@@ -67,6 +67,16 @@ func DoesNamedAccountExist(name string) bool {
 		}
 	}
 	return false
+}
+
+// Returns one address for account name if exists
+func AddressFromAccountName(name string) (string, error) {
+	 ks := FromAccountName(name)
+	 // FIXME: Assume 1 account per keystore for now
+	 for _, account := range ks.Accounts() {
+		 return address.ToBech32(account.Address), nil
+	 }
+	 return "", fmt.Errorf("Keystore not found.")
 }
 
 // FromAddress will return nil if the bech32 string is not found in the imported accounts

@@ -9,18 +9,11 @@ import (
 	color "github.com/fatih/color"
 	"github.com/harmony-one/go-sdk/pkg/common"
 	"github.com/harmony-one/go-sdk/pkg/rpc"
+	"github.com/harmony-one/go-sdk/pkg/store"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"github.com/spf13/cobra/doc"
 )
-
-func validateAddress(cmd *cobra.Command, args []string) error {
-	addr := oneAddress{}
-	if err := addr.Set(args[0]); err != nil {
-		return err
-	}
-	return nil
-}
 
 var (
 	verbose         bool
@@ -114,4 +107,19 @@ func Execute() {
 		fmt.Println("check " + cookbook + " for valid examples or try adding a `--help` flag")
 		os.Exit(1)
 	}
+}
+
+func validateAddress(cmd *cobra.Command, args []string) error {
+	// Check if input valid one address
+	address := oneAddress{}
+	if err := address.Set(args[0]); err != nil {
+		// Check if input is valid account name
+		if acc, err := store.AddressFromAccountName(args[0]); err == nil {
+			addr = oneAddress{acc}
+			return nil
+		}
+		return fmt.Errorf("Invalid one address/Invalid account name: %s", args[0])
+	}
+	addr = address
+	return nil
 }
