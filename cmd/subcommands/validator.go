@@ -1,6 +1,8 @@
 package cmd
 
 import (
+	"fmt"
+
 	"github.com/harmony-one/go-sdk/pkg/rpc"
 	"github.com/spf13/cobra"
 )
@@ -26,7 +28,11 @@ var (
 		PreRunE: validateAddress,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			noLatest = true
-			return request(rpc.Method.GetValidatorMetrics, []interface{}{args[0]})
+			e := request(rpc.Method.GetValidatorMetrics, []interface{}{args[0]})
+			if e != nil {
+				fmt.Println("Metrics are only available for Validators that have participated in consensus committee.")
+			}
+			return e
 		},
 	}, {
 		Use:     "information",
