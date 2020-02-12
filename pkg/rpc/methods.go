@@ -50,6 +50,7 @@ type rpcEnumList struct {
 	GetActiveValidatorAddresses         method
 	GetAllValidatorAddresses            method
 	GetValidatorInformation             method
+	GetAllValidatorInformation          method
 	GetDelegationsByDelegator           method
 	GetDelegationsByValidator           method
 	GetCurrentTransactionErrorSink      method
@@ -104,6 +105,7 @@ var Method = rpcEnumList{
 	GetActiveValidatorAddresses:         "hmy_getActiveValidatorAddresses",
 	GetAllValidatorAddresses:            "hmy_getAllValidatorAddresses",
 	GetValidatorInformation:             "hmy_getValidatorInformation",
+	GetAllValidatorInformation:          "hmy_getAllValidatorInformation",
 	GetDelegationsByDelegator:           "hmy_getDelegationsByDelegator",
 	GetDelegationsByValidator:           "hmy_getDelegationsByValidator",
 	GetCurrentTransactionErrorSink:      "hmy_getCurrentTransactionErrorSink",
