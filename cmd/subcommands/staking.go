@@ -86,14 +86,15 @@ func createStakingTransaction(nonce uint64, f staking.StakeMsgFulfiller) (*staki
 		return nil, err
 	}
 	gPrice = gPrice.Mul(nanoAsDec)
-	_, payload := f()
+	directive, payload := f()
 	data, err := rlp.EncodeToBytes(payload)
 	if err != nil {
 		return nil, err
 	}
 	var gLimit uint64
 	if gasLimit == "" {
-		gLimit, err = core.IntrinsicGas(data, false, true, true)
+		isCreateValidator := (directive == staking.DirectiveCreateValidator)
+		gLimit, err = core.IntrinsicGas(data, false, true, isCreateValidator)
 		if err != nil {
 			return nil, err
 		}
