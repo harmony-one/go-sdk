@@ -40,10 +40,10 @@ var (
 		}
 		asJSON, _ := json.Marshal(success)
 		if noPrettyOutput {
-			fmt.Print(string(asJSON))
+			fmt.Println(string(asJSON))
 			return nil
 		}
-		fmt.Print(common.JSONPrettyFormat(string(asJSON)))
+		fmt.Println(common.JSONPrettyFormat(string(asJSON)))
 		return nil
 	}
 	// RootCmd is single entry point of the CLI
