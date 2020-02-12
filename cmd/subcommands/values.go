@@ -118,6 +118,9 @@ hmy --node="https://api.s1.p.hmny.io" blockchain validator all-active
 %s
 hmy failures staking
 
+%s
+hmy utility shard-for-bls 2d61379e44a772e5757e27ee2b3874254f56073e6bd226eb8b160371cc3c18b8c4977bd3dcb71fd57dc62bf0e143fd08
+
 `,
 		g("1.  Check account balance on given chain"),
 		g("2.  Check sent transaction"),
@@ -137,5 +140,6 @@ hmy failures staking
 		g("16. Collect block rewards as a delegator"),
 		g("17. Check active validators"),
 		g("18. Check in-memory record of failed staking transactions"),
+		g("19. Check which shard your BLS public key would be assigned to as a validator"),
 	)
 )

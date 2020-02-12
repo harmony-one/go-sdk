@@ -1,10 +1,14 @@
 package cmd
 
 import (
+	"encoding/json"
 	"fmt"
+	"math/big"
 
+	"github.com/harmony-one/bls/ffi/go/bls"
 	"github.com/harmony-one/go-sdk/pkg/address"
 	"github.com/harmony-one/go-sdk/pkg/rpc"
+	"github.com/harmony-one/harmony/shard"
 	"github.com/spf13/cobra"
 )
 
@@ -68,11 +72,27 @@ func init() {
 			return nil
 		},
 	}, {
-		Use:   "addr-to-bech32",
+		Use:   "shard-for-bls",
 		Args:  cobra.ExactArgs(1),
-		Short: "bech32 one-address of a 0x Address",
+		Short: "which shard (default assumes mainnet) this BLS key would be assigned to",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			// TODO Implement this
+			key := bls.PublicKey{}
+			if err := key.DeserializeHexStr(args[0]); err != nil {
+				return err
+			}
+			// TODO Need to take flag changing the shard count per chainID
+			shardBig := big.NewInt(4)
+			wrapper := shard.FromLibBLSPublicKeyUnsafe(&key)
+			shardID := int(new(big.Int).Mod(wrapper.Big(), shardBig).Int64())
+			type t struct {
+				ShardID int `json:"shard-id"`
+			}
+			result, err := json.Marshal(t{shardID})
+			if err != nil {
+				return err
+			}
+
+			fmt.Println(string(result))
 			return nil
 		},
 	},
