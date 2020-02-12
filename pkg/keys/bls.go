@@ -117,8 +117,8 @@ func GetPublicBlsKey(privateKeyHex string) error {
 
 }
 
-func VerifyBLSKeys(blsPubKeys []string) ([]shard.BlsSignature, error) {
-	blsSigs := make([]shard.BlsSignature, len(blsPubKeys))
+func VerifyBLSKeys(blsPubKeys []string) ([]shard.BLSSignature, error) {
+	blsSigs := make([]shard.BLSSignature, len(blsPubKeys))
 	for i := 0; i < len(blsPubKeys); i++ {
 		sig, err := VerifyBLS(strings.TrimPrefix(blsPubKeys[i], "0x"))
 		if err != nil {
@@ -129,8 +129,8 @@ func VerifyBLSKeys(blsPubKeys []string) ([]shard.BlsSignature, error) {
 	return blsSigs, nil
 }
 
-func VerifyBLS(blsPubKey string) (shard.BlsSignature, error) {
-	var sig shard.BlsSignature
+func VerifyBLS(blsPubKey string) (shard.BLSSignature, error) {
+	var sig shard.BLSSignature
 	// look for key file in the current directory
 	// if not ask for the absolute path
 	cwd, _ := os.Getwd()
@@ -174,7 +174,7 @@ func VerifyBLS(blsPubKey string) (shard.BlsSignature, error) {
 	signature := privateKey.SignHash(msgHash[:])
 
 	bytes := signature.Serialize()
-	if len(bytes) != shard.BlsSignatureSizeInBytes {
+	if len(bytes) != shard.BLSSignatureSizeInBytes {
 		return sig, errors.New("bls key length is not 96 bytes")
 	}
 	copy(sig[:], bytes)

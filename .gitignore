@@ -2,3 +2,4 @@ hmy
 hmy-docs
 dist
 .idea/
+*.key
