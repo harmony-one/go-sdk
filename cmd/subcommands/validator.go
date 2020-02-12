@@ -43,6 +43,13 @@ var (
 			noLatest = true
 			return request(rpc.Method.GetValidatorInformation, []interface{}{args[0]})
 		},
+	}, {
+		Use:     "all-information",
+		Short:   "all validators information",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			noLatest = true
+			return request(rpc.Method.GetAllValidatorInformation, []interface{}{args[0]})
+		},
 	},
 	}
 )
