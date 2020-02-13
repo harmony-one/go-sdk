@@ -11,7 +11,7 @@ require (
 	github.com/ethereum/go-ethereum v1.8.27
 	github.com/fatih/color v1.7.0
 	github.com/harmony-one/bls v0.0.6
-	github.com/harmony-one/harmony v1.9.0
+	github.com/harmony-one/harmony v1.3.1
 	github.com/karalabe/hid v1.0.0
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/pkg/errors v0.8.1
@@ -20,6 +20,3 @@ require (
 	github.com/valyala/fasthttp v1.2.0
 	golang.org/x/crypto v0.0.0-20191011191535-87dc89f01550
 )
-
-//TEMP: Remove this before merging
-replace github.com/harmony-one/harmony => /Users/janetliang/go/src/github.com/harmony-one/harmony
