@@ -168,7 +168,10 @@ func confirmTx(networkHandler *rpc.HTTPMessenger, confirmWaitTime uint32, txHash
 	for {
 		if start < 0 {
 			fmt.Println("Could not confirm", txHash, "even after", confirmWaitTime, "seconds")
-			fmt.Println("Try increasing the wait-for-confirm")
+			if err := reportError(rpc.Method.GetCurrentStakingErrorSink, txHash); err != nil {
+				fmt.Println(err)
+				fmt.Println("Try increasing the wait-for-confirm")
+			}
 			return
 		}
 		r, _ := networkHandler.SendRPC(rpc.Method.GetTransactionReceipt, []interface{}{txHash})
@@ -411,7 +414,7 @@ Create a new validator"
 	subCmdNewValidator.Flags().StringVar(&gasLimit, "gas-limit", "", "gas limit")
 	subCmdNewValidator.Flags().StringVar(&inputNonce, "nonce", "", "set nonce for transaction")
 	subCmdNewValidator.Flags().Var(&chainName, "chain-id", "what chain ID to target")
-	subCmdNewValidator.Flags().Uint32Var(&confirmWait, "wait-for-confirm", 0, "only waits if non-zero value, in seconds")
+	subCmdNewValidator.Flags().Uint32Var(&confirmWait, "wait-for-confirm", waitTime, "only waits if non-zero value, in seconds")
 	subCmdNewValidator.Flags().BoolVar(&userProvidesPassphrase, "passphrase", false, ppPrompt)
 	subCmdNewValidator.Flags().StringVar(&passphraseFilePath, "passphrase-file", "", "path to a file containing the passphrase")
 
@@ -573,7 +576,7 @@ Create a new validator"
 	subCmdEditValidator.Flags().StringVar(&gasLimit, "gas-limit", "", "gas limit")
 	subCmdEditValidator.Flags().StringVar(&inputNonce, "nonce", "", "set nonce for transaction")
 	subCmdEditValidator.Flags().Var(&chainName, "chain-id", "what chain ID to target")
-	subCmdEditValidator.Flags().Uint32Var(&confirmWait, "wait-for-confirm", 0, "only waits if non-zero value, in seconds")
+	subCmdEditValidator.Flags().Uint32Var(&confirmWait, "wait-for-confirm", waitTime, "only waits if non-zero value, in seconds")
 	subCmdEditValidator.Flags().BoolVar(&userProvidesPassphrase, "passphrase", false, ppPrompt)
 	subCmdEditValidator.Flags().StringVar(&passphraseFilePath, "passphrase-file", "", "path to a file containing the passphrase")
 
@@ -630,7 +633,7 @@ Delegating to a validator
 	subCmdDelegate.Flags().StringVar(&gasLimit, "gas-limit", "", "gas limit")
 	subCmdDelegate.Flags().StringVar(&inputNonce, "nonce", "", "set nonce for transaction")
 	subCmdDelegate.Flags().Var(&chainName, "chain-id", "what chain ID to target")
-	subCmdDelegate.Flags().Uint32Var(&confirmWait, "wait-for-confirm", 0, "only waits if non-zero value, in seconds")
+	subCmdDelegate.Flags().Uint32Var(&confirmWait, "wait-for-confirm", waitTime, "only waits if non-zero value, in seconds")
 	subCmdDelegate.Flags().BoolVar(&userProvidesPassphrase, "passphrase", false, ppPrompt)
 	subCmdDelegate.Flags().StringVar(&passphraseFilePath, "passphrase-file", "", "path to a file containing the passphrase")
 
@@ -690,7 +693,7 @@ Delegating to a validator
 	subCmdUnDelegate.Flags().StringVar(&gasLimit, "gas-limit", "", "gas limit")
 	subCmdUnDelegate.Flags().StringVar(&inputNonce, "nonce", "", "set nonce for transaction")
 	subCmdUnDelegate.Flags().Var(&chainName, "chain-id", "what chain ID to target")
-	subCmdUnDelegate.Flags().Uint32Var(&confirmWait, "wait-for-confirm", 0, "only waits if non-zero value, in seconds")
+	subCmdUnDelegate.Flags().Uint32Var(&confirmWait, "wait-for-confirm", waitTime, "only waits if non-zero value, in seconds")
 	subCmdUnDelegate.Flags().BoolVar(&userProvidesPassphrase, "passphrase", false, ppPrompt)
 	subCmdUnDelegate.Flags().StringVar(&passphraseFilePath, "passphrase-file", "", "path to a file containing the passphrase")
 
@@ -743,7 +746,7 @@ Collect token rewards
 	subCmdCollectRewards.Flags().StringVar(&gasLimit, "gas-limit", "", "gas limit")
 	subCmdCollectRewards.Flags().StringVar(&inputNonce, "nonce", "", "set nonce for tx")
 	subCmdCollectRewards.Flags().Var(&chainName, "chain-id", "what chain ID to target")
-	subCmdCollectRewards.Flags().Uint32Var(&confirmWait, "wait-for-confirm", 0, "only waits if non-zero value, in seconds")
+	subCmdCollectRewards.Flags().Uint32Var(&confirmWait, "wait-for-confirm", waitTime, "only waits if non-zero value, in seconds")
 	subCmdCollectRewards.Flags().BoolVar(&userProvidesPassphrase, "passphrase", false, ppPrompt)
 	subCmdCollectRewards.Flags().StringVar(&passphraseFilePath, "passphrase-file", "", "path to a file containing the passphrase")
 

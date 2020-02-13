@@ -22,6 +22,8 @@ import (
 	"github.com/spf13/cobra"
 )
 
+const waitTime = 40
+
 var (
 	fromAddress       oneAddress
 	toAddress         oneAddress
@@ -271,6 +273,28 @@ func getNonceFromInput(addr, inputNonce string, messenger rpc.T) (uint64, error)
 	}
 }
 
+type Error struct {
+	Msg    string `json:"error-message"`
+	TxHash string `json:"tx-hash-id"`
+}
+
+func reportError(method string, txHash string) error {
+	success, failure := rpc.Request(method, node, []interface{}{})
+	if failure != nil {
+		return failure
+	}
+	asJSON, _ := json.Marshal(success["result"])
+	var errs []Error
+	json.Unmarshal(asJSON, &errs)
+	for _, err := range errs {
+		if err.TxHash == txHash {
+			fmt.Println(fmt.Errorf("error: %s", err.Msg))
+			return nil
+		}
+	}
+	return errors.New("could not find error msg")
+}
+
 func init() {
 	cmdTransfer := &cobra.Command{
 		Use:   "transfer",
@@ -338,7 +362,7 @@ Create a transaction, sign it, and send off to the Harmony blockchain
 	cmdTransfer.Flags().Uint32Var(&fromShardID, "from-shard", 0, "source shard id")
 	cmdTransfer.Flags().Uint32Var(&toShardID, "to-shard", 0, "target shard id")
 	cmdTransfer.Flags().Var(&chainName, "chain-id", "what chain ID to target")
-	cmdTransfer.Flags().Uint32Var(&confirmWait, "wait-for-confirm", 0, "only waits if non-zero value, in seconds")
+	cmdTransfer.Flags().Uint32Var(&confirmWait, "wait-for-confirm", waitTime, "only waits if non-zero value, in seconds")
 	cmdTransfer.Flags().BoolVar(&userProvidesPassphrase, "passphrase", false, ppPrompt)
 	cmdTransfer.Flags().StringVar(&passphraseFilePath, "passphrase-file", "", "path to a file containing the passphrase")
 
