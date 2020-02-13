@@ -202,30 +202,32 @@ func keysSub() []*cobra.Command {
 	cmdImportSK.Flags().BoolVar(&userProvidesPassphrase, "passphrase", false, ppPrompt)
 
 	cmdExportSK := &cobra.Command{
-		Use:   "export-private-key <ACCOUNT_ADDRESS>",
-		Short: "Export the secp256k1 private key",
-		Args:  cobra.ExactArgs(1),
-		RunE: func(cmd *cobra.Command, args []string) error {
+		Use:     "export-private-key <ACCOUNT_ADDRESS>",
+		Short:   "Export the secp256k1 private key",
+		Args:    cobra.ExactArgs(1),
+		PreRunE: validateAddress,
+		RunE:    func(cmd *cobra.Command, args []string) error {
 			passphrase, err := getPassphrase()
 			if err != nil {
 				return err
 			}
-			return account.ExportPrivateKey(args[0], passphrase)
+			return account.ExportPrivateKey(addr.address, passphrase)
 		},
 	}
 	cmdExportSK.Flags().BoolVar(&userProvidesPassphrase, "passphrase", false, ppPrompt)
 	cmdExportSK.Flags().StringVar(&passphraseFilePath, "passphrase-file", "", "path to a file containing the passphrase")
 
 	cmdExportKS := &cobra.Command{
-		Use:   "export-ks <ACCOUNT_ADDRESS>",
-		Short: "Export the keystore file contents",
-		Args:  cobra.ExactArgs(1),
-		RunE: func(cmd *cobra.Command, args []string) error {
+		Use:     "export-ks <ACCOUNT_ADDRESS>",
+		Short:   "Export the keystore file contents",
+		Args:    cobra.ExactArgs(1),
+		PreRunE: validateAddress,
+		RunE:    func(cmd *cobra.Command, args []string) error {
 			passphrase, err := getPassphrase()
 			if err != nil {
 				return err
 			}
-			return account.ExportKeystore(args[0], passphrase)
+			return account.ExportKeystore(addr.address, passphrase)
 		},
 	}
 	cmdExportKS.Flags().BoolVar(&userProvidesPassphrase, "passphrase", false, ppPrompt)

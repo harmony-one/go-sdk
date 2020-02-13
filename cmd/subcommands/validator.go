@@ -28,7 +28,7 @@ var (
 		PreRunE: validateAddress,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			noLatest = true
-			e := request(rpc.Method.GetValidatorMetrics, []interface{}{args[0]})
+			e := request(rpc.Method.GetValidatorMetrics, []interface{}{addr.address})
 			if e != nil {
 				fmt.Println("Metrics are only available for Validators that have participated in consensus committee.")
 			}
@@ -41,7 +41,7 @@ var (
 		PreRunE: validateAddress,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			noLatest = true
-			return request(rpc.Method.GetValidatorInformation, []interface{}{args[0]})
+			return request(rpc.Method.GetValidatorInformation, []interface{}{addr.address})
 		},
 	}, {
 		Use:     "all-information",
