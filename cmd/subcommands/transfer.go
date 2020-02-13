@@ -135,12 +135,12 @@ func handlerForTransaction(txLog *transactionLog) error {
 	var gLimit uint64
 	if gasLimit == "" {
 		gLimit, err = core.IntrinsicGas([]byte(""), false, true, false)
-		if err != nil {
+		if handlerForError(txLog, err) != nil {
 			return err
 		}
 	} else {
 		tempLimit, e := strconv.ParseInt(gasLimit, 10, 64)
-		if e != nil {
+		if handlerForError(txLog, e) != nil {
 			return e
 		}
 		gLimit = uint64(tempLimit)
