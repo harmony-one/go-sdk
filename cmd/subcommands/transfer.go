@@ -16,6 +16,7 @@ import (
 	"github.com/harmony-one/go-sdk/pkg/transaction"
 	"github.com/harmony-one/go-sdk/pkg/validation"
 	"github.com/harmony-one/harmony/accounts"
+	"github.com/harmony-one/harmony/core"
 
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
@@ -32,7 +33,7 @@ var (
 	dryRun            bool
 	inputNonce        string
 	gasPrice          string
-	gasLimit          uint64
+	gasLimit          string
 	transferFileFlags []transferFlags
 	timeFormat        = "2006-01-02 15:04:05.000000"
 )
@@ -131,12 +132,28 @@ func handlerForTransaction(txLog *transactionLog) error {
 		return err
 	}
 
+	var gLimit uint64
+	if gasLimit == "" {
+		gLimit, err = core.IntrinsicGas([]byte(""), false, true, false)
+		if handlerForError(txLog, err) != nil {
+			return err
+		}
+	} else {
+		tempLimit, e := strconv.ParseInt(gasLimit, 10, 64)
+		if handlerForError(txLog, e) != nil {
+			return e
+		}
+		gLimit = uint64(tempLimit)
+	}
+
 	txLog.TimeSigned = time.Now().UTC().Format(timeFormat) // Approximate time of signature
 	err = handlerForError(txLog, ctrlr.ExecuteTransaction(
 		toAddress.String(),
 		"",
-		amt, gPrice,
-		nonce, gasLimit,
+		amt,
+		gPrice,
+		nonce,
+		gLimit,
 		int(fromShardID),
 		int(toShardID),
 	))
@@ -221,12 +238,9 @@ func handlerForBulkTransactions(txLog *transactionLog, index int) error {
 		gasPrice = "1" // Reset to default for subsequent transactions
 	}
 	if txnFlags.GasLimit != nil {
-		gasLimit, err = strconv.ParseUint(*txnFlags.GasLimit, 10, 64)
-		if handlerForError(txLog, err) != nil {
-			return err
-		}
+		gasLimit = *txnFlags.GasLimit
 	} else {
-		gasLimit = 21000 // Reset to default for subsequent transactions
+		gasLimit = "" // Reset to default for subsequent transactions
 	}
 
 	return handlerForTransaction(txLog)
@@ -319,7 +333,7 @@ Create a transaction, sign it, and send off to the Harmony blockchain
 	cmdTransfer.Flags().BoolVar(&dryRun, "dry-run", false, "do not send signed transaction")
 	cmdTransfer.Flags().StringVar(&amount, "amount", "0", "amount to send (ONE)")
 	cmdTransfer.Flags().StringVar(&gasPrice, "gas-price", "1", "gas price to pay (NANO)")
-	cmdTransfer.Flags().Uint64Var(&gasLimit, "gas-limit", 21000, "gas limit")
+	cmdTransfer.Flags().StringVar(&gasLimit, "gas-limit", "", "gas limit")
 	cmdTransfer.Flags().StringVar(&inputNonce, "nonce", "", "set nonce for tx")
 	cmdTransfer.Flags().Uint32Var(&fromShardID, "from-shard", 0, "source shard id")
 	cmdTransfer.Flags().Uint32Var(&toShardID, "to-shard", 0, "target shard id")
