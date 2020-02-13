@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"math/big"
-	"strconv"
 	"strings"
 	"time"
 
@@ -17,7 +16,6 @@ import (
 	"github.com/harmony-one/harmony/accounts"
 	"github.com/harmony-one/harmony/accounts/keystore"
 	"github.com/harmony-one/harmony/common/denominations"
-	"github.com/harmony-one/harmony/core"
 	"github.com/harmony-one/harmony/numeric"
 )
 
@@ -130,21 +128,11 @@ func (C *Controller) sendSignedTx() {
 	C.transactionForRPC.receiptHash = &r
 }
 
-func (C *Controller) setIntrinsicGas(gasLimit, inputData string) {
+func (C *Controller) setIntrinsicGas(gasLimit uint64) {
 	if C.failure != nil {
 		return
 	}
-	if gasLimit == "" {
-		gLimit, err := core.IntrinsicGas([]byte(inputData), false, true, false)
-		if err != nil {
-			C.failure = err
-			return
-		}
-		C.transactionForRPC.params["gas-limit"] = gLimit
-	} else {
-		gLimit, _ := strconv.ParseInt(gasLimit, 10, 64)
-		C.transactionForRPC.params["gas-limit"] = gLimit
-	}
+	C.transactionForRPC.params["gas-limit"] = gasLimit
 }
 
 func (C *Controller) setGasPrice(gasPrice numeric.Dec) {
@@ -275,13 +263,13 @@ func (C *Controller) txConfirmation() {
 // Each step in transaction creation, execution probably includes a mutation
 // Each becomes a no-op if failure occured in any previous step
 func (C *Controller) ExecuteTransaction(
-	to, inputData, gasLimit string,
-	amount, gasPrice numeric.Dec, nonce uint64,
+	to, inputData string,
+	amount, gasPrice numeric.Dec, nonce, gasLimit uint64,
 	fromShard, toShard int,
 ) error {
 	// WARNING Order of execution matters
 	C.setShardIDs(fromShard, toShard)
-	C.setIntrinsicGas(gasLimit, inputData)
+	C.setIntrinsicGas(gasLimit)
 	C.setGasPrice(gasPrice)
 	C.setAmount(amount)
 	C.verifyBalance()

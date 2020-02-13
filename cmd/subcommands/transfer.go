@@ -16,6 +16,7 @@ import (
 	"github.com/harmony-one/go-sdk/pkg/transaction"
 	"github.com/harmony-one/go-sdk/pkg/validation"
 	"github.com/harmony-one/harmony/accounts"
+	"github.com/harmony-one/harmony/core"
 
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
@@ -131,14 +132,28 @@ func handlerForTransaction(txLog *transactionLog) error {
 		return err
 	}
 
+	var gLimit uint64
+	if gasLimit == "" {
+		gLimit, err = core.IntrinsicGas([]byte(""), false, true, false)
+		if err != nil {
+			return err
+		}
+	} else {
+		tempLimit, e := strconv.ParseInt(gasLimit, 10, 64)
+		if e != nil {
+			return e
+		}
+		gLimit = uint64(tempLimit)
+	}
+
 	txLog.TimeSigned = time.Now().UTC().Format(timeFormat) // Approximate time of signature
 	err = handlerForError(txLog, ctrlr.ExecuteTransaction(
 		toAddress.String(),
 		"",
-		gasLimit,
 		amt,
 		gPrice,
 		nonce,
+		gLimit,
 		int(fromShardID),
 		int(toShardID),
 	))
