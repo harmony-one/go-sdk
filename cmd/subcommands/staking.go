@@ -155,8 +155,8 @@ func handleStakingTransaction(
 		return err
 	}
 	r, _ := reply["result"].(string)
-	if confirmWait > 0 {
-		confirmTx(networkHandler, confirmWait, r)
+	if timeout > 0 {
+		confirmTx(networkHandler, timeout, r)
 	} else {
 		fmt.Println(fmt.Sprintf(`{"transaction-receipt":"%s"}`, r))
 	}
@@ -414,7 +414,7 @@ Create a new validator"
 	subCmdNewValidator.Flags().StringVar(&gasLimit, "gas-limit", "", "gas limit")
 	subCmdNewValidator.Flags().StringVar(&inputNonce, "nonce", "", "set nonce for transaction")
 	subCmdNewValidator.Flags().Var(&chainName, "chain-id", "what chain ID to target")
-	subCmdNewValidator.Flags().Uint32Var(&confirmWait, "wait-for-confirm", waitTime, "only waits if non-zero value, in seconds")
+	subCmdNewValidator.Flags().Uint32Var(&timeout, "timeout", defaultTimeout, "set timeout in seconds. Set to 0 to not wait for tx confirm")
 	subCmdNewValidator.Flags().BoolVar(&userProvidesPassphrase, "passphrase", false, ppPrompt)
 	subCmdNewValidator.Flags().StringVar(&passphraseFilePath, "passphrase-file", "", "path to a file containing the passphrase")
 
@@ -576,7 +576,7 @@ Create a new validator"
 	subCmdEditValidator.Flags().StringVar(&gasLimit, "gas-limit", "", "gas limit")
 	subCmdEditValidator.Flags().StringVar(&inputNonce, "nonce", "", "set nonce for transaction")
 	subCmdEditValidator.Flags().Var(&chainName, "chain-id", "what chain ID to target")
-	subCmdEditValidator.Flags().Uint32Var(&confirmWait, "wait-for-confirm", waitTime, "only waits if non-zero value, in seconds")
+	subCmdEditValidator.Flags().Uint32Var(&timeout, "timeout", defaultTimeout, "set timeout in seconds. Set to 0 to not wait for tx confirm")
 	subCmdEditValidator.Flags().BoolVar(&userProvidesPassphrase, "passphrase", false, ppPrompt)
 	subCmdEditValidator.Flags().StringVar(&passphraseFilePath, "passphrase-file", "", "path to a file containing the passphrase")
 
@@ -633,7 +633,7 @@ Delegating to a validator
 	subCmdDelegate.Flags().StringVar(&gasLimit, "gas-limit", "", "gas limit")
 	subCmdDelegate.Flags().StringVar(&inputNonce, "nonce", "", "set nonce for transaction")
 	subCmdDelegate.Flags().Var(&chainName, "chain-id", "what chain ID to target")
-	subCmdDelegate.Flags().Uint32Var(&confirmWait, "wait-for-confirm", waitTime, "only waits if non-zero value, in seconds")
+	subCmdDelegate.Flags().Uint32Var(&timeout, "timeout", defaultTimeout, "set timeout in seconds. Set to 0 to not wait for tx confirm")
 	subCmdDelegate.Flags().BoolVar(&userProvidesPassphrase, "passphrase", false, ppPrompt)
 	subCmdDelegate.Flags().StringVar(&passphraseFilePath, "passphrase-file", "", "path to a file containing the passphrase")
 
@@ -693,7 +693,7 @@ Delegating to a validator
 	subCmdUnDelegate.Flags().StringVar(&gasLimit, "gas-limit", "", "gas limit")
 	subCmdUnDelegate.Flags().StringVar(&inputNonce, "nonce", "", "set nonce for transaction")
 	subCmdUnDelegate.Flags().Var(&chainName, "chain-id", "what chain ID to target")
-	subCmdUnDelegate.Flags().Uint32Var(&confirmWait, "wait-for-confirm", waitTime, "only waits if non-zero value, in seconds")
+	subCmdUnDelegate.Flags().Uint32Var(&timeout, "timeout", defaultTimeout, "set timeout in seconds. Set to 0 to not wait for tx confirm")
 	subCmdUnDelegate.Flags().BoolVar(&userProvidesPassphrase, "passphrase", false, ppPrompt)
 	subCmdUnDelegate.Flags().StringVar(&passphraseFilePath, "passphrase-file", "", "path to a file containing the passphrase")
 
@@ -746,7 +746,7 @@ Collect token rewards
 	subCmdCollectRewards.Flags().StringVar(&gasLimit, "gas-limit", "", "gas limit")
 	subCmdCollectRewards.Flags().StringVar(&inputNonce, "nonce", "", "set nonce for tx")
 	subCmdCollectRewards.Flags().Var(&chainName, "chain-id", "what chain ID to target")
-	subCmdCollectRewards.Flags().Uint32Var(&confirmWait, "wait-for-confirm", waitTime, "only waits if non-zero value, in seconds")
+	subCmdCollectRewards.Flags().Uint32Var(&timeout, "timeout", defaultTimeout, "set timeout in seconds. Set to 0 to not wait for tx confirm")
 	subCmdCollectRewards.Flags().BoolVar(&userProvidesPassphrase, "passphrase", false, ppPrompt)
 	subCmdCollectRewards.Flags().StringVar(&passphraseFilePath, "passphrase-file", "", "path to a file containing the passphrase")
 

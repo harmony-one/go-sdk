@@ -17,8 +17,7 @@ func NewTransaction(
 	shardID, toShardID uint32,
 	amount, gasPrice numeric.Dec,
 	data []byte) *Transaction {
-	// types.New
-	return types.NewCrossShardTransaction(nonce, &to, shardID, toShardID, amount.TruncateInt(), gasLimit, gasPrice.TruncateInt(), data)
+	return types.NewCrossShardTransaction(nonce, &to, shardID, toShardID, amount.TruncateInt(), gasLimit, gasPrice.TruncateInt(), data[:])
 }
 
 func GetNextNonce(addr string, messenger rpc.T) uint64 {
