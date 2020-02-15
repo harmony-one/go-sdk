@@ -22,7 +22,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-const waitTime = 40
+const defaultTimeout = 40
 
 var (
 	fromAddress       oneAddress
@@ -30,18 +30,18 @@ var (
 	amount            string
 	fromShardID       uint32
 	toShardID         uint32
-	confirmWait       uint32
 	chainName         = chainIDWrapper{chainID: &common.Chain.TestNet}
 	dryRun            bool
 	inputNonce        string
 	gasPrice          string
 	gasLimit          string
 	transferFileFlags []transferFlags
+	timeout           uint32
 	timeFormat        = "2006-01-02 15:04:05.000000"
 )
 
 type transactionLog struct {
-	TxHash      string      `json:"transaction-receipt,omitempty"`
+	TxHash      string      `json:"transaction-hash,omitempty"`
 	Transaction interface{} `json:"transaction,omitempty"`
 	Receipt     interface{} `json:"blockchain-receipt,omitempty"`
 	RawTxn      string      `json:"raw-transaction,omitempty"`
@@ -91,9 +91,9 @@ func handlerForError(txLog *transactionLog, err error) error {
 	return err
 }
 
-// handlerForTransaction executes a single transaction and fills out the
-// transaction logger accordingly. Note that the vars need to be set before
-// calling this handler.
+// handlerForTransaction executes a single transaction and fills out the transaction logger accordingly.
+//
+// Note that the vars need to be set before calling this handler.
 func handlerForTransaction(txLog *transactionLog) error {
 	from := fromAddress.String()
 	s, err := sharding.Structure(node)
@@ -149,37 +149,33 @@ func handlerForTransaction(txLog *transactionLog) error {
 	}
 
 	txLog.TimeSigned = time.Now().UTC().Format(timeFormat) // Approximate time of signature
-	err = handlerForError(txLog, ctrlr.ExecuteTransaction(
+	err = ctrlr.ExecuteTransaction(
+		nonce, gLimit,
 		toAddress.String(),
-		"",
-		amt,
-		gPrice,
-		nonce,
-		gLimit,
-		int(fromShardID),
-		int(toShardID),
-	))
+		int(fromShardID), int(toShardID),
+		amt, gPrice,
+		[]byte{},
+	)
 
 	if dryRun {
 		txLog.RawTxn = ctrlr.RawTransaction()
 		txLog.Transaction = make(map[string]interface{})
 		_ = json.Unmarshal([]byte(ctrlr.TransactionToJSON(false)), &txLog.Transaction)
 	} else if err == nil {
-		txLog.TxHash = *ctrlr.ReceiptHash()
+		txLog.TxHash = *ctrlr.TransactionHash()
 	}
 	txLog.Receipt = ctrlr.Receipt()["result"]
-	if confirmWait > 0 && txLog.Receipt == nil {
-		if err != nil {
-			err = handlerForError(txLog, errors.Wrap(err, "failed to confirm"))
+	if timeout > 0 && txLog.Receipt == nil {
+		// Report all transaction errors first...
+		for _, txError := range ctrlr.TransactionErrors() {
+			_ = handlerForError(txLog, txError.Error())
+		}
+		if err == nil {
+			err = handlerForError(txLog, err)
 		} else {
-			err = handlerForError(txLog, errors.New("failed to confirm"))
+			err = handlerForError(txLog, errors.New("Failed to confirm transaction"))
 		}
 	}
-
-	if givenFilePath == "" {
-		fmt.Println(common.ToJSONUnsafe(txLog, !noPrettyOutput))
-	}
-
 	return err
 }
 
@@ -255,8 +251,8 @@ func opts(ctlr *transaction.Controller) {
 	if useLedgerWallet {
 		ctlr.Behavior.SigningImpl = transaction.Ledger
 	}
-	if confirmWait > 0 {
-		ctlr.Behavior.ConfirmationWaitTime = confirmWait
+	if timeout > 0 {
+		ctlr.Behavior.ConfirmationWaitTime = timeout
 	}
 }
 
@@ -326,7 +322,10 @@ Create a transaction, sign it, and send off to the Harmony blockchain
 					return err
 				}
 				passphrase = pp // needed for passphrase assignment used in handler
-				return handlerForTransaction(&transactionLog{})
+				txLog := transactionLog{}
+				err = handlerForTransaction(&txLog)
+				fmt.Println(common.ToJSONUnsafe(txLog, !noPrettyOutput))
+				return err
 			} else {
 				hasError := false
 				var txLogs []transactionLog
@@ -362,7 +361,7 @@ Create a transaction, sign it, and send off to the Harmony blockchain
 	cmdTransfer.Flags().Uint32Var(&fromShardID, "from-shard", 0, "source shard id")
 	cmdTransfer.Flags().Uint32Var(&toShardID, "to-shard", 0, "target shard id")
 	cmdTransfer.Flags().Var(&chainName, "chain-id", "what chain ID to target")
-	cmdTransfer.Flags().Uint32Var(&confirmWait, "wait-for-confirm", 0, "only waits if non-zero value, in seconds")
+	cmdTransfer.Flags().Uint32Var(&timeout, "timeout", defaultTimeout, "set timeout in seconds. Set to 0 to not wait for confirm")
 	cmdTransfer.Flags().BoolVar(&userProvidesPassphrase, "passphrase", false, ppPrompt)
 	cmdTransfer.Flags().StringVar(&passphraseFilePath, "passphrase-file", "", "path to a file containing the passphrase")
 
