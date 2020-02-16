@@ -161,8 +161,8 @@ func handlerForTransaction(txLog *transactionLog) error {
 		txLog.RawTxn = ctrlr.RawTransaction()
 		txLog.Transaction = make(map[string]interface{})
 		_ = json.Unmarshal([]byte(ctrlr.TransactionToJSON(false)), &txLog.Transaction)
-	} else if err == nil {
-		txLog.TxHash = *ctrlr.TransactionHash()
+	} else if txHash := ctrlr.TransactionHash(); txHash != nil {
+		txLog.TxHash = *txHash
 	}
 	txLog.Receipt = ctrlr.Receipt()["result"]
 	if timeout > 0 && txLog.Receipt == nil {
