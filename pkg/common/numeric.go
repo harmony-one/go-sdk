@@ -6,17 +6,12 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/harmony-one/harmony/common/denominations"
 	"github.com/harmony-one/harmony/numeric"
 )
 
 var (
 	pattern, _ = regexp.Compile("[0-9]+\\.{0,1}[0-9]*e-{0,1}[0-9]+")
 )
-
-func NormalizeAmount(value *big.Int) *big.Int {
-	return value.Div(value, big.NewInt(denominations.Nano))
-}
 
 func Pow(base numeric.Dec, exp int) numeric.Dec {
 	if exp < 0 {
@@ -62,5 +57,7 @@ func NewDecFromHex(str string) numeric.Dec {
 	}
 	left := str[:half]
 	l, _ := big.NewInt(0).SetString(left, 16)
-	return numeric.NewDecFromBigInt(l).Mul(Pow(numeric.NewDec(16), len(right))).Add(numeric.NewDecFromBigInt(r))
+	return numeric.NewDecFromBigInt(l).Mul(
+		Pow(numeric.NewDec(16), len(right)),
+	).Add(numeric.NewDecFromBigInt(r))
 }
