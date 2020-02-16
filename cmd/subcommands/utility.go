@@ -59,49 +59,54 @@ func init() {
 
 	cmdUtilities.AddCommand(cmdMetrics)
 
-	cmdUtilities.AddCommand([]*cobra.Command{
-		{
-			Use:   "bech32-to-addr",
-			Args:  cobra.ExactArgs(1),
-			Short: "0x Address of a bech32 one-address",
-			RunE: func(cmd *cobra.Command, args []string) error {
-				addr, err := address.Bech32ToAddress(args[0])
-				if err != nil {
-					return err
-				}
-				fmt.Println(addr.Hex())
-				return nil
-			},
+	cmdUtilities.AddCommand([]*cobra.Command{{
+		Use:   "bech32-to-addr",
+		Args:  cobra.ExactArgs(1),
+		Short: "0x Address of a bech32 one-address",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			addr, err := address.Bech32ToAddress(args[0])
+			if err != nil {
+				return err
+			}
+			fmt.Println(addr.Hex())
+			return nil
 		},
-		// Temp utility that should be removed once resharding is implemented
-		{
-			Use:   "shard-for-bls",
-			Args:  cobra.ExactArgs(1),
-			Short: "which shard this BLS key would be assigned to",
-			RunE: func(cmd *cobra.Command, args []string) error {
-				key := bls.PublicKey{}
-				if err := key.DeserializeHexStr(args[0]); err != nil {
-					return err
-				}
-				reply, err := rpc.Request(rpc.Method.GetShardingStructure, node, []interface{}{})
-				if err != nil {
-					return err
-				}
-				shardBig := len(reply["result"].([]interface{})) // assume the response is a JSON Array
-				wrapper := shard.FromLibBLSPublicKeyUnsafe(&key)
-				shardID := int(new(big.Int).Mod(wrapper.Big(), big.NewInt(int64(shardBig))).Int64())
-				type t struct {
-					ShardID int `json:"shard-id"`
-				}
-				result, err := json.Marshal(t{shardID})
-				if err != nil {
-					return err
-				}
+	}, {
+		Use:   "committees",
+		Short: "current and previous committees",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			noLatest = true
+			return request(rpc.Method.GetSuperCommmittees, []interface{}{})
+		},
+	}, {
+		// Temp utility that should be removed once resharding implemented
+		Use:   "shard-for-bls",
+		Args:  cobra.ExactArgs(1),
+		Short: "which shard this BLS key would be assigned to",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			key := bls.PublicKey{}
+			if err := key.DeserializeHexStr(args[0]); err != nil {
+				return err
+			}
+			reply, err := rpc.Request(rpc.Method.GetShardingStructure, node, []interface{}{})
+			if err != nil {
+				return err
+			}
+			shardBig := len(reply["result"].([]interface{})) // assume the response is a JSON Array
+			wrapper := shard.FromLibBLSPublicKeyUnsafe(&key)
+			shardID := int(new(big.Int).Mod(wrapper.Big(), big.NewInt(int64(shardBig))).Int64())
+			type t struct {
+				ShardID int `json:"shard-id"`
+			}
+			result, err := json.Marshal(t{shardID})
+			if err != nil {
+				return err
+			}
 
-				fmt.Println(string(result))
-				return nil
-			},
+			fmt.Println(string(result))
+			return nil
 		},
+	},
 	}...)
 
 	RootCmd.AddCommand(cmdUtilities)
