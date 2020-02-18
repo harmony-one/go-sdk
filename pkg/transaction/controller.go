@@ -280,6 +280,11 @@ func (C *Controller) txConfirmation() {
 		txHash := *C.TransactionHash()
 		start := int(C.Behavior.ConfirmationWaitTime)
 		for {
+			r, _ := C.messenger.SendRPC(rpc.Method.GetTransactionReceipt, p{txHash})
+			if r["result"] != nil {
+				C.transactionForRPC.receipt = r
+				return
+			}
 			transactionErrors, err := GetError(txHash, C.messenger)
 			if err != nil {
 				errMsg := fmt.Sprintf(err.Error())
@@ -296,11 +301,6 @@ func (C *Controller) txConfirmation() {
 			}
 			if start < 0 {
 				C.executionError = fmt.Errorf("could not confirm transaction after %d seconds", C.Behavior.ConfirmationWaitTime)
-				return
-			}
-			r, _ := C.messenger.SendRPC(rpc.Method.GetTransactionReceipt, p{txHash})
-			if r["result"] != nil {
-				C.transactionForRPC.receipt = r
 				return
 			}
 			time.Sleep(time.Second)

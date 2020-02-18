@@ -169,6 +169,11 @@ func handleStakingTransaction(
 func confirmTx(networkHandler *rpc.HTTPMessenger, confirmWaitTime uint32, txHash string) error {
 	start := int(confirmWaitTime)
 	for {
+		r, _ := networkHandler.SendRPC(rpc.Method.GetTransactionReceipt, []interface{}{txHash})
+		if r["result"] != nil {
+			fmt.Println(common.ToJSONUnsafe(r, true))
+			return nil
+		}
 		if start < 0 {
 			transactionErrors, _ := transaction.GetError(txHash, networkHandler)
 			for _, txError := range transactionErrors {
@@ -176,11 +181,6 @@ func confirmTx(networkHandler *rpc.HTTPMessenger, confirmWaitTime uint32, txHash
 			}
 			fmt.Println("Try increasing the `timeout` or look for the transaction hash with `hmy blockchain transaction-receipt <txHash>`")
 			return fmt.Errorf("could not confirm", txHash, "even after", confirmWaitTime, "seconds")
-		}
-		r, _ := networkHandler.SendRPC(rpc.Method.GetTransactionReceipt, []interface{}{txHash})
-		if r["result"] != nil {
-			fmt.Println(common.ToJSONUnsafe(r, true))
-			return nil
 		}
 		transactionErrors, _ := transaction.GetError(txHash, networkHandler)
 		if len(transactionErrors) > 0 {
