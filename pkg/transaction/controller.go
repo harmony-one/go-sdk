@@ -116,12 +116,12 @@ func (C *Controller) TransactionErrors() Errors {
 	return C.transactionErrors
 }
 
-func (C *Controller) setShardIDs(fromShard, toShard int) {
+func (C *Controller) setShardIDs(fromShard, toShard uint32) {
 	if C.executionError != nil {
 		return
 	}
-	C.transactionForRPC.params["from-shard"] = uint32(fromShard)
-	C.transactionForRPC.params["to-shard"] = uint32(toShard)
+	C.transactionForRPC.params["from-shard"] = fromShard
+	C.transactionForRPC.params["to-shard"] = toShard
 }
 
 func (C *Controller) setIntrinsicGas(gasLimit uint64) {
@@ -135,11 +135,33 @@ func (C *Controller) setGasPrice(gasPrice numeric.Dec) {
 	if C.executionError != nil {
 		return
 	}
+	if gasPrice.Sign() == -1 {
+		C.executionError = ErrBadTransactionParam
+		errorMsg := fmt.Sprintf(
+			"can't set negative gas price: %d", gasPrice,
+		)
+		C.transactionErrors = append(C.transactionErrors, &Error{
+			ErrMessage:           &errorMsg,
+			TimestampOfRejection: time.Now().Unix(),
+		})
+		return
+	}
 	C.transactionForRPC.params["gas-price"] = gasPrice.Mul(nanoAsDec)
 }
 
 func (C *Controller) setAmount(amount numeric.Dec) {
 	if C.executionError != nil {
+		return
+	}
+	if amount.Sign() == -1 {
+		C.executionError = ErrBadTransactionParam
+		errorMsg := fmt.Sprintf(
+			"can't set negative amount: %d", amount,
+		)
+		C.transactionErrors = append(C.transactionErrors, &Error{
+			ErrMessage:           &errorMsg,
+			TimestampOfRejection: time.Now().Unix(),
+		})
 		return
 	}
 	balanceRPCReply, err := C.messenger.SendRPC(
@@ -169,6 +191,7 @@ func (C *Controller) setAmount(amount numeric.Dec) {
 			ErrMessage:           &errorMsg,
 			TimestampOfRejection: time.Now().Unix(),
 		})
+		return
 	}
 	C.transactionForRPC.params["transfer-amount"] = amountInAtto
 }
@@ -284,7 +307,7 @@ func (C *Controller) txConfirmation() {
 func (C *Controller) ExecuteTransaction(
 	nonce, gasLimit uint64,
 	to string,
-	shardID, toShardID int,
+	shardID, toShardID uint32,
 	amount, gasPrice numeric.Dec,
 	inputData []byte,
 ) error {

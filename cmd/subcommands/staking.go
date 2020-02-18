@@ -63,7 +63,7 @@ var (
 	errSelfDelegationTooLarge          = errors.New("amount can not be greater than max-total-delegation")
 	errInvalidTotalDelegation          = errors.New("max-total-delegation can not be bigger than max-total-delegation")
 	errMinSelfDelegationTooSmall       = errors.New("min-self-delegation can not be less than 1 ONE")
-	errMaxTotalDelegationTooSmall      = errors.New("max-self-delegation can not be less than 1 ONE")
+	errMaxTotalDelegationTooSmall      = errors.New("max-total-delegation can not be less than 1 ONE")
 	errInvalidMaxTotalDelegation       = errors.New("max-total-delegation can not be less than min-self-delegation")
 	errCommissionRateTooLarge          = errors.New("rate can not be greater than max-commission-rate")
 	errChangeRateTooLarge              = errors.New("max-change-rate can not be greater than max-commission-rate")
