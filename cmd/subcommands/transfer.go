@@ -170,7 +170,7 @@ func handlerForTransaction(txLog *transactionLog) error {
 		for _, txError := range ctrlr.TransactionErrors() {
 			_ = handlerForError(txLog, txError.Error())
 		}
-		if err == nil {
+		if err != nil {
 			err = handlerForError(txLog, err)
 		} else {
 			err = handlerForError(txLog, errors.New("Failed to confirm transaction"))
