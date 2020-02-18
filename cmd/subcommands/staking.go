@@ -3,6 +3,7 @@ package cmd
 import (
 	"errors"
 	"fmt"
+	"github.com/harmony-one/go-sdk/pkg/transaction"
 	"math/big"
 	"strconv"
 	"strings"
@@ -156,28 +157,36 @@ func handleStakingTransaction(
 	}
 	r, _ := reply["result"].(string)
 	if timeout > 0 {
-		confirmTx(networkHandler, timeout, r)
+		if err := confirmTx(networkHandler, timeout, r); err != nil {
+			return err
+		}
 	} else {
 		fmt.Println(fmt.Sprintf(`{"transaction-receipt":"%s"}`, r))
 	}
 	return nil
 }
 
-func confirmTx(networkHandler *rpc.HTTPMessenger, confirmWaitTime uint32, txHash string) {
+func confirmTx(networkHandler *rpc.HTTPMessenger, confirmWaitTime uint32, txHash string) error {
 	start := int(confirmWaitTime)
 	for {
 		if start < 0 {
-			fmt.Println("Could not confirm", txHash, "even after", confirmWaitTime, "seconds")
-			if err := reportError(rpc.Method.GetCurrentStakingErrorSink, txHash); err != nil {
-				fmt.Println(err)
-				fmt.Println("Try increasing the wait-for-confirm")
+			transactionErrors, _ := transaction.GetError(txHash, networkHandler)
+			for _, txError := range transactionErrors {
+				fmt.Println(txError.Error().Error())
 			}
-			return
+			return fmt.Errorf("could not confirm", txHash, "even after", confirmWaitTime, "seconds")
 		}
 		r, _ := networkHandler.SendRPC(rpc.Method.GetTransactionReceipt, []interface{}{txHash})
 		if r["result"] != nil {
 			fmt.Println(common.ToJSONUnsafe(r, true))
-			return
+			return nil
+		}
+		transactionErrors, _ := transaction.GetError(txHash, networkHandler)
+		if len(transactionErrors) > 0 {
+			for _, txError := range transactionErrors {
+				fmt.Println(txError.Error().Error())
+			}
+			return fmt.Errorf("staking transaction error")
 		}
 		time.Sleep(time.Second * 2)
 		start = start - 2

@@ -280,13 +280,21 @@ func (C *Controller) txConfirmation() {
 		txHash := *C.TransactionHash()
 		start := int(C.Behavior.ConfirmationWaitTime)
 		for {
+			transactionErrors, err := GetError(txHash, C.messenger)
+			if err != nil {
+				errMsg := fmt.Sprintf(err.Error())
+				C.transactionErrors = append(C.transactionErrors, &Error{
+					TxHashID:             &txHash,
+					ErrMessage:           &errMsg,
+					TimestampOfRejection: time.Now().Unix(),
+				})
+			}
+			C.transactionErrors = append(C.transactionErrors, transactionErrors...)
+			if len(transactionErrors) > 0 {
+				C.executionError = fmt.Errorf("error found for transaction hash: %s", txHash)
+				return
+			}
 			if start < 0 {
-				transactionErrors, err := GetError(txHash, C.messenger)
-				if err != nil {
-					C.executionError = err
-					return
-				}
-				C.transactionErrors = append(C.transactionErrors, transactionErrors...)
 				C.executionError = fmt.Errorf("could not confirm transaction after %d seconds", C.Behavior.ConfirmationWaitTime)
 				return
 			}
