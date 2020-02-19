@@ -110,6 +110,17 @@ Inputs of a transaction and r, s, v value of transaction
 			return request(rpc.Method.GetTransactionByHash, []interface{}{args[0]})
 		},
 	}, {
+		Use:   "staking-transaction-by-hash",
+		Short: "Get staking transaction by hash",
+		Args:  cobra.ExactArgs(1),
+		Long: `
+Inputs of a transaction and r, s, v value of transaction
+`,
+		RunE: func(cmd *cobra.Command, args []string) error {
+			noLatest = true
+			return request(rpc.Method.GetStakingTransactionByHash, []interface{}{args[0]})
+		},
+	}, {
 		Use:   "transaction-receipt",
 		Short: "Get information about a finalized transaction",
 		Args:  cobra.ExactArgs(1),
@@ -133,7 +144,7 @@ High level information about transaction, like blockNumber, blockHash
 		Args:    cobra.ExactArgs(1),
 		Long:    `Current nonce number of a one-address`,
 		PreRunE: validateAddress,
-		RunE:    func(cmd *cobra.Command, args []string) error {
+		RunE: func(cmd *cobra.Command, args []string) error {
 			return request(rpc.Method.GetTransactionCount, []interface{}{addr.address})
 		},
 	}, {

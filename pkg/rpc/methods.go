@@ -21,6 +21,7 @@ type rpcEnumList struct {
 	GetTransactionByBlockHashAndIndex   method
 	GetTransactionByBlockNumberAndIndex method
 	GetTransactionByHash                method
+	GetStakingTransactionByHash         method
 	GetTransactionReceipt               method
 	Syncing                             method
 	PeerCount                           method
@@ -79,6 +80,7 @@ var Method = rpcEnumList{
 	GetTransactionByBlockHashAndIndex:   "hmy_getTransactionByBlockHashAndIndex",
 	GetTransactionByBlockNumberAndIndex: "hmy_getTransactionByBlockNumberAndIndex",
 	GetTransactionByHash:                "hmy_getTransactionByHash",
+	GetStakingTransactionByHash:         "hmy_getStakingTransactionByHash",
 	GetTransactionReceipt:               "hmy_getTransactionReceipt",
 	Syncing:                             "hmy_syncing",
 	PeerCount:                           "net_peerCount",

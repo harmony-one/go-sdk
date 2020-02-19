@@ -179,7 +179,7 @@ func confirmTx(networkHandler *rpc.HTTPMessenger, confirmWaitTime uint32, txHash
 			for _, txError := range transactionErrors {
 				fmt.Println(txError.Error().Error())
 			}
-			fmt.Println("Try increasing the `timeout` or look for the transaction hash with `hmy blockchain transaction-receipt <txHash>`")
+			fmt.Println("Try increasing the `timeout` or look for the transaction receipt with `hmy blockchain transaction-receipt <txHash>`")
 			return fmt.Errorf("could not confirm %s even after %d seconds", txHash, confirmWaitTime)
 		}
 		transactionErrors, _ := transaction.GetError(txHash, networkHandler)
