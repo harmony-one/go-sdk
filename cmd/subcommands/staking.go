@@ -289,6 +289,7 @@ func stakingSubCommands() []*cobra.Command {
 	subCmdNewValidator := &cobra.Command{
 		Use:   "create-validator",
 		Short: "create a new validator",
+		Args:  cobra.ExactArgs(0),
 		Long: `
 Create a new validator"
 `,
@@ -438,6 +439,7 @@ Create a new validator"
 		Use:   "edit-validator",
 		Short: "edit a validator",
 		Long:  "Edit an existing validator",
+		Args:  cobra.ExactArgs(0),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			networkHandler, err := handlerForShard(0, node)
 			if err != nil {
@@ -596,6 +598,7 @@ Create a new validator"
 	subCmdDelegate := &cobra.Command{
 		Use:   "delegate",
 		Short: "delegating to a validator",
+		Args:  cobra.ExactArgs(0),
 		Long: `
 Delegating to a validator
 `,
@@ -660,6 +663,7 @@ Delegating to a validator
 	subCmdUnDelegate := &cobra.Command{
 		Use:   "undelegate",
 		Short: "removing delegation responsibility",
+		Args:  cobra.ExactArgs(0),
 		Long: `
  Removing delegation responsibility
 `,
@@ -725,6 +729,7 @@ Delegating to a validator
 	subCmdCollectRewards := &cobra.Command{
 		Use:   "collect-rewards",
 		Short: "collect token rewards",
+		Args:  cobra.ExactArgs(0),
 		Long: `
 Collect token rewards
 `,

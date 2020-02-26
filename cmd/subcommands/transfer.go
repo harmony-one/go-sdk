@@ -294,6 +294,7 @@ func init() {
 	cmdTransfer := &cobra.Command{
 		Use:   "transfer",
 		Short: "Create and send a transaction",
+		Args:  cobra.ExactArgs(0),
 		Long: `
 Create a transaction, sign it, and send off to the Harmony blockchain
 `,
