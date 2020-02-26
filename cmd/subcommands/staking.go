@@ -79,6 +79,7 @@ var (
 	errInvalidDescFieldWebsite         = errors.New("exceeds maximum length of 140 characters for website")
 	errInvalidDescFieldSecurityContact = errors.New("exceeds maximum length of 140 characters for security-contact")
 	errInvalidDescFieldDetails         = errors.New("exceeds maximum length of 280 characters for details")
+	errNegativeAmount                  = errors.New("amount can not be negative")
 )
 
 func createStakingTransaction(nonce uint64, f staking.StakeMsgFulfiller) (*staking.StakingTransaction, error) {
@@ -604,6 +605,11 @@ Delegating to a validator
 				return err
 			}
 
+			amt, _ := numeric.NewDecFromStr(stakingAmount)
+			if amt.IsNegative() {
+				return errNegativeAmount
+			}
+
 			delegateStakePayloadMaker := func() (staking.Directive, interface{}) {
 				amt, _ := numeric.NewDecFromStr(stakingAmount)
 				amt = amt.Mul(oneAsDec)
@@ -661,6 +667,11 @@ Delegating to a validator
 			networkHandler, err := handlerForShard(0, node)
 			if err != nil {
 				return err
+			}
+
+			amt, _ := numeric.NewDecFromStr(stakingAmount)
+			if amt.IsNegative() {
+				return errNegativeAmount
 			}
 
 			delegateStakePayloadMaker := func() (staking.Directive, interface{}) {
