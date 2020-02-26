@@ -30,6 +30,9 @@ debug:
 	source $(shell go env GOPATH)/src/github.com/harmony-one/harmony/scripts/setup_bls_build_flags.sh && $(env) go build $(flags) -o $(cli) -ldflags="$(ldflags)" cmd/main.go
 	cp $(cli) hmy
 
+install:all
+	cp $(cli) ~/.local/bin
+
 run-tests: test-rpc test-key;
 
 test-key:
