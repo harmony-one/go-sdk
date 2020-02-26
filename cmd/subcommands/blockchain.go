@@ -56,6 +56,7 @@ Query Harmony's blockchain for completed transaction, historic records
 		Long: `
 High level information about each transaction for given account
 `,
+    PreRunE: validateAddress,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			type historyParams struct {
 				Address   string `json:"address"`
@@ -66,12 +67,11 @@ High level information about each transaction for given account
 				Order     string `json:"order"`
 			}
 			noLatest = true
-			params := historyParams{addr.String(), 0, size, true, "", ""}
+			params := historyParams{args[0], 0, size, true, "", ""}
 			return request(rpc.Method.GetTransactionsHistory, []interface{}{params})
 		},
 	}
 
-	accountHistorySubCmd.Flags().Var(&addr, "address", "address to list transactions for")
 	accountHistorySubCmd.Flags().Int64Var(&size, "max-tx", 1000, "max number of transactions to list")
 
 	subCommands := []*cobra.Command{{
