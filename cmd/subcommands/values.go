@@ -113,7 +113,7 @@ hmy --node="https://api.s1.p.hmny.io" staking collect-rewards \
     --delegator-addr <SOME_ONE_ADDRESS> --passphrase 
 
 %s
-hmy --node="https://api.s1.p.hmny.io" blockchain validator all-active
+hmy --node="https://api.s1.p.hmny.io" blockchain validator elected
 
 %s
 hmy failures staking
@@ -138,7 +138,7 @@ hmy utility shard-for-bls 2d61379e44a772e5757e27ee2b3874254f56073e6bd226eb8b1603
 		g("14. Delegate an amount to a validator"),
 		g("15. Undelegate to a validator"),
 		g("16. Collect block rewards as a delegator"),
-		g("17. Check active validators"),
+		g("17. Check elected validators"),
 		g("18. Check in-memory record of failed staking transactions"),
 		g("19. Check which shard your BLS public key would be assigned to as a validator"),
 	)
