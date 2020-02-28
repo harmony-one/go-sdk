@@ -21,8 +21,8 @@ Note:
 1) Every subcommand recognizes a '--help' flag
 2) If a passphrase is used by a subcommand, one can enter their own passphrase interactively
    with the --passphrase option. Alternatively, one can pass their own passphrase via a file
-   using the --passphrase-file option. If no passphrase option is selected, the default 
-   passphrase of '' is used.   
+   using the --passphrase-file option. If no passphrase option is selected, the default
+   passphrase of '' is used.
 3) These examples use shard 1 of testnet as argument for --node
 
 Examples:
@@ -44,7 +44,7 @@ hmy --node="https://api.s1.p.hmny.io/" transfer \
 
 %s
 hmy --node="https://api.s1.p.hmny.io/" transfer --file <PATH_TO_JSON_FILE>
-    
+
     Example of JSON file format:
       [
         {
@@ -71,7 +71,7 @@ hmy --node="https://api.s1.p.hmny.io/" transfer --file <PATH_TO_JSON_FILE>
 hmy --node="https://api.s1.p.hmny.io" blockchain transaction-receipt <SOME_TX_HASH>
 
 %s
-hmy keys add --recover
+hmy keys recover-from-mnemonic <ACCOUNT_NAME>
 
 %s
 hmy keys import-ks <PATH_TO_KEYSTORE_JSON>.key
@@ -89,28 +89,28 @@ hmy keys generate-bls-key --bls-file-path /tmp/file.key
 hmy --node="https://api.s1.p.hmny.io" staking create-validator --amount 10 --validator-addr <SOME_ONE_ADDRESS> \
     --bls-pubkeys <BLS_KEY_1>,<BLS_KEY_2>,<BLS_KEY_3> \
     --identity foo --details bar --name baz --max-change-rate 0.1 --max-rate 0.1 --max-total-delegation 10 \
-    --min-self-delegation 10 --rate 0.1 --security-contact Leo  --website harmony.one --passphrase 
+    --min-self-delegation 10 --rate 0.1 --security-contact Leo  --website harmony.one --passphrase
 
 %s
 hmy --node="https://api.s1.p.hmny.io" staking edit-validator \
     --validator-addr <SOME_ONE_ADDRESS> --identity foo --details bar \
     --name baz --security-contact EK --website harmony.one \
     --min-self-delegation 0 --max-total-delegation 10 --rate 0.1\
-    --add-bls-key <SOME_BLS_KEY> --remove-bls-key <OTHER_BLS_KEY> --passphrase 
+    --add-bls-key <SOME_BLS_KEY> --remove-bls-key <OTHER_BLS_KEY> --passphrase
 
 %s
 hmy --node="https://api.s1.p.hmny.io" staking delegate \
     --delegator-addr <SOME_ONE_ADDRESS> --validator-addr <VALIDATOR_ONE_ADDRESS> \
-    --amount 10 --passphrase 
+    --amount 10 --passphrase
 
 %s
 hmy --node="https://api.s1.p.hmny.io" staking undelegate \
     --delegator-addr <SOME_ONE_ADDRESS> --validator-addr <VALIDATOR_ONE_ADDRESS> \
-    --amount 10 --passphrase 
+    --amount 10 --passphrase
 
 %s
 hmy --node="https://api.s1.p.hmny.io" staking collect-rewards \
-    --delegator-addr <SOME_ONE_ADDRESS> --passphrase 
+    --delegator-addr <SOME_ONE_ADDRESS> --passphrase
 
 %s
 hmy --node="https://api.s1.p.hmny.io" blockchain validator elected

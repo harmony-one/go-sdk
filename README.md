@@ -95,7 +95,7 @@ hmy --node="https://api.s1.p.hmny.io/" transfer --file <PATH_TO_JSON_FILE>
 hmy --node="https://api.s1.p.hmny.io" blockchain transaction-receipt <SOME_TX_HASH>
 
 7.  Import an account using the mnemonic. Prompts the user to give the mnemonic.
-hmy keys add --recover
+hmy keys recover-from-mnemonic <ACCOUNT_NAME>
 
 8.  Import an existing keystore file
 hmy keys import-ks <PATH_TO_KEYSTORE_JSON>.key
@@ -150,12 +150,12 @@ hmy failures staking
 
 One may find it useful to send a batch of transaction with 1 instance of the binary.
 To do this, one can specify a JSON file with the `transaction` subcommand to dictate a batch of transaction to send
-off **in sequential order**. 
+off **in sequential order**.
 
 Example:
 ```
 hmy --node="https://api.s1.p.hmny.io/" transfer --file ./batchTransactions.json
-``` 
+```
 
 > Note that the `--wait-for-confirm` and `--dry-run` options still apply when sending batched transactions
 
