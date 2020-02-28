@@ -27,6 +27,7 @@ const (
 
 var (
 	quietImport            bool
+	recoverFromMnemonic    bool
 	userProvidesPassphrase bool
 	passphraseFilePath     string
 	passphrase             string
@@ -109,14 +110,28 @@ func keysSub() []*cobra.Command {
 				Name:       args[0],
 				Passphrase: passphrase,
 			}
+			if recoverFromMnemonic {
+				color.Red("{Deprecated method} Use ./hmy keys recover-from-mnemonic instead.")
+				fmt.Println("Enter mnemonic to recover keys from")
+				scanner := bufio.NewScanner(os.Stdin)
+				scanner.Scan()
+				m := scanner.Text()
+				if !bip39.IsMnemonicValid(m) {
+					return mnemonic.InvalidMnemonic
+				}
+				acc.Mnemonic = m
+			}
 			if err := account.CreateNewLocalAccount(&acc); err != nil {
 				return err
 			}
-			color.Red(seedPhraseWarning)
-			fmt.Println(acc.Mnemonic)
+			if !recoverFromMnemonic {
+				color.Red(seedPhraseWarning)
+				fmt.Println(acc.Mnemonic)
+			}
 			return nil
 		},
 	}
+	cmdAdd.Flags().BoolVar(&recoverFromMnemonic, "recover", false, "create keys from a mnemonic")
 	cmdAdd.Flags().BoolVar(&userProvidesPassphrase, "passphrase", false, ppPrompt)
 	cmdAdd.Flags().StringVar(&passphraseFilePath, "passphrase-file", "", "path to a file containing the passphrase")
 
