@@ -111,7 +111,7 @@ func keysSub() []*cobra.Command {
 				Passphrase: passphrase,
 			}
 			if recoverFromMnemonic {
-				color.Red("{Deprecated method} Use ./hmy keys recover-from-mnemonic instead.")
+				fmt.Fprintf(os.Stderr, "deprecated method: use `./hmy keys recover-from-mnemonic` instead.\n")
 				fmt.Println("Enter mnemonic to recover keys from")
 				scanner := bufio.NewScanner(os.Stdin)
 				scanner.Scan()
