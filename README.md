@@ -52,22 +52,22 @@ Note:
 Examples:
 
 1.  Check account balance on given chain
-hmy --node="https://api.s1.p.hmny.io/" balances <SOME_ONE_ADDRESS>
+hmy --node="https://api.s1.t.hmny.io/" balances <SOME_ONE_ADDRESS>
 
 2.  Check sent transaction
-hmy --node="https://api.s1.p.hmny.io" blockchain transaction-by-hash <SOME_TX_HASH>
+hmy --node="https://api.s1.t.hmny.io" blockchain transaction-by-hash <SOME_TX_HASH>
 
 3.  List local account keys
 hmy keys list
 
-4.  Sending a transaction (add `--wait-for-confirm=10` to wait 10 seconds for confirmation)
-hmy --node="https://api.s1.p.hmny.io/" transfer \
+4.  Sending a transaction (waits 40 seconds for transaction confirmation)
+hmy --node="https://api.s1.t.hmny.io/" transfer \
     --from one1yc06ghr2p8xnl2380kpfayweguuhxdtupkhqzw \
     --to one1q6gkzcap0uruuu8r6sldxuu47pd4ww9w9t7tg6 \
     --from-shard 0 --to-shard 1 --amount 200
 
-5.  Sending a batch of transactions as dictated from a file (the `--wait-for-confirm` and `--dry-run` options still apply)
-hmy --node="https://api.s1.p.hmny.io/" transfer --file <PATH_TO_JSON_FILE>
+5.  Sending a batch of transactions as dictated from a file (the `--dry-run` options still apply)
+hmy --node="https://api.s1.t.hmny.io/" transfer --file <PATH_TO_JSON_FILE>
 
     Example of JSON file format:
       [
@@ -78,7 +78,7 @@ hmy --node="https://api.s1.p.hmny.io/" transfer --file <PATH_TO_JSON_FILE>
           "to-shard": "0",
           "amount": "1",
           "passphrase-string": "",
-          "nonce": "-1",
+          "nonce": "1",
           "stop-on-error": true
         },
         {
@@ -92,7 +92,7 @@ hmy --node="https://api.s1.p.hmny.io/" transfer --file <PATH_TO_JSON_FILE>
       ]
 
 6.  Check a completed transaction receipt
-hmy --node="https://api.s1.p.hmny.io" blockchain transaction-receipt <SOME_TX_HASH>
+hmy --node="https://api.s1.t.hmny.io" blockchain transaction-receipt <SOME_TX_HASH>
 
 7.  Import an account using the mnemonic. Prompts the user to give the mnemonic.
 hmy keys recover-from-mnemonic <ACCOUNT_NAME>
@@ -110,40 +110,43 @@ hmy keys export-private-key <ACCOUNT_ADDRESS> --passphrase
 hmy keys generate-bls-key --bls-file-path /tmp/file.key
 
 12. Create a new validator with a list of BLS keys
-hmy --node="https://api.s1.p.hmny.io" staking create-validator --amount 10 --validator-addr <SOME_ONE_ADDRESS> \
+hmy --node="https://api.s0.t.hmny.io" staking create-validator --amount 10 --validator-addr <SOME_ONE_ADDRESS> \
     --bls-pubkeys <BLS_KEY_1>,<BLS_KEY_2>,<BLS_KEY_3> \
     --identity foo --details bar --name baz --max-change-rate 0.1 --max-rate 0.1 --max-total-delegation 10 \
     --min-self-delegation 10 --rate 0.1 --security-contact Leo  --website harmony.one --passphrase
 
 13. Edit an existing validator
-hmy --node="https://api.s1.p.hmny.io" staking edit-validator \
+hmy --node="https://api.s0.t.hmny.io" staking edit-validator \
     --validator-addr <SOME_ONE_ADDRESS> --identity foo --details bar \
     --name baz --security-contact EK --website harmony.one \
     --min-self-delegation 0 --max-total-delegation 10 --rate 0.1\
     --add-bls-key <SOME_BLS_KEY> --remove-bls-key <OTHER_BLS_KEY> --passphrase
 
 14. Delegate an amount to a validator
-hmy --node="https://api.s1.p.hmny.io" staking delegate \
+hmy --node="https://api.s0.t.hmny.io" staking delegate \
     --delegator-addr <SOME_ONE_ADDRESS> --validator-addr <VALIDATOR_ONE_ADDRESS> \
     --amount 10 --passphrase
 
 15. Undelegate to a validator
-hmy --node="https://api.s1.p.hmny.io" staking undelegate \
+hmy --node="https://api.s0.t.hmny.io" staking undelegate \
     --delegator-addr <SOME_ONE_ADDRESS> --validator-addr <VALIDATOR_ONE_ADDRESS> \
     --amount 10 --passphrase
 
 16. Collect block rewards as a delegator
-hmy --node="https://api.s1.p.hmny.io" staking collect-rewards \
+hmy --node="https://api.s0.t.hmny.io" staking collect-rewards \
     --delegator-addr <SOME_ONE_ADDRESS> --passphrase
 
 17. Check active validators
-hmy --node="https://api.s1.p.hmny.io" blockchain validator all-active
+hmy --node="https://api.s0.t.hmny.io" blockchain validator all-active
 
 18. Get current staking utility metrics
-hmy --node="https://api.s0.p.hmny.io" blockchain utility-metrics
+hmy --node="https://api.s0.t.hmny.io" blockchain utility-metrics
 
 19. Check in-memory record of failed staking transactions
 hmy failures staking
+
+20. Check which shard your BLS public key would be assigned to as a validator
+hmy utility shard-for-bls 2d61379e44a772e5757e27ee2b3874254f56073e6bd226eb8b160371cc3c18b8c4977bd3dcb71fd57dc62bf0e143fd08
 ```
 
 # Sending batched transactions
@@ -154,7 +157,7 @@ off **in sequential order**.
 
 Example:
 ```
-hmy --node="https://api.s1.p.hmny.io/" transfer --file ./batchTransactions.json
+hmy --node="https://api.s1.t.hmny.io/" transfer --file ./batchTransactions.json
 ```
 
 > Note that the `--wait-for-confirm` and `--dry-run` options still apply when sending batched transactions
