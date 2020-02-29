@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"path"
+	"strings"
 
 	color "github.com/fatih/color"
 	"github.com/harmony-one/go-sdk/pkg/common"
@@ -47,6 +48,22 @@ var (
 		PersistentPreRun: func(cmd *cobra.Command, args []string) {
 			if verbose {
 				common.EnableAllVerbose()
+			}
+			if strings.HasPrefix(node, "api") || strings.HasPrefix(node, "ws") {
+				node = "https://" + node
+			} else {
+				switch URLcomponents := strings.Split(node, ":"); len(URLcomponents) {
+				case 1:
+					node = "http://" + node + ":9500"
+				case 2:
+					if strings.HasPrefix(node, "http") {
+						node = node + ":9500"
+					} else {
+						node = "http://" + node
+					}
+				default:
+					node = node
+				}
 			}
 		},
 		Long: fmt.Sprintf(`
