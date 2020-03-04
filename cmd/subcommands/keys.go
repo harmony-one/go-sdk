@@ -128,6 +128,8 @@ func keysSub() []*cobra.Command {
 				color.Red(seedPhraseWarning)
 				fmt.Println(acc.Mnemonic)
 			}
+			addr, _ := store.AddressFromAccountName(acc.Name)
+			fmt.Printf("ONE Address: %s\n", addr)
 			return nil
 		},
 	}
@@ -184,6 +186,8 @@ func keysSub() []*cobra.Command {
 	      return err
 			}
 			fmt.Println("Successfully recovered account from mnemonic!")
+			addr, _ := store.AddressFromAccountName(acc.Name)
+			fmt.Printf("ONE Address: %s\n", addr)
 			return nil
 		},
 	}
@@ -206,6 +210,8 @@ func keysSub() []*cobra.Command {
 			name, err := account.ImportKeyStore(args[0], userName, passphrase)
 			if !quietImport && err == nil {
 				fmt.Printf("Imported keystore given account alias of `%s`\n", name)
+				addr, _ := store.AddressFromAccountName(name)
+				fmt.Printf("ONE Address: %s\n", addr)
 			}
 			return err
 		},
@@ -214,7 +220,7 @@ func keysSub() []*cobra.Command {
 	cmdImportKS.Flags().StringVar(&passphraseFilePath, "passphrase-file", "", "path to a file containing the passphrase")
 	cmdImportKS.Flags().BoolVar(&quietImport, "quiet", false, "do not print out imported account name")
 
-	cmdImportSK := &cobra.Command{
+	cmdImportPK := &cobra.Command{
 		Use:   "import-private-key <secp256k1_PRIVATE_KEY> [ACCOUNT_NAME]",
 		Short: "Import an existing keystore key (only accept secp256k1 private keys)",
 		Args:  cobra.RangeArgs(1, 2),
@@ -230,13 +236,16 @@ func keysSub() []*cobra.Command {
 			name, err := account.ImportFromPrivateKey(args[0], userName, passphrase)
 			if !quietImport && err == nil {
 				fmt.Printf("Imported keystore given account alias of `%s`\n", name)
+				addr, _ := store.AddressFromAccountName(name)
+				fmt.Printf("ONE Address: %s\n", addr)
 			}
 			return err
 		},
 	}
-	cmdImportSK.Flags().BoolVar(&userProvidesPassphrase, "passphrase", false, ppPrompt)
+	cmdImportPK.Flags().BoolVar(&userProvidesPassphrase, "passphrase", false, ppPrompt)
+	cmdImportPK.Flags().BoolVar(&quietImport, "quiet", false, "do not print out imported account name")
 
-	cmdExportSK := &cobra.Command{
+	cmdExportPK := &cobra.Command{
 		Use:     "export-private-key <ACCOUNT_ADDRESS>",
 		Short:   "Export the secp256k1 private key",
 		Args:    cobra.ExactArgs(1),
@@ -249,8 +258,8 @@ func keysSub() []*cobra.Command {
 			return account.ExportPrivateKey(addr.address, passphrase)
 		},
 	}
-	cmdExportSK.Flags().BoolVar(&userProvidesPassphrase, "passphrase", false, ppPrompt)
-	cmdExportSK.Flags().StringVar(&passphraseFilePath, "passphrase-file", "", "path to a file containing the passphrase")
+	cmdExportPK.Flags().BoolVar(&userProvidesPassphrase, "passphrase", false, ppPrompt)
+	cmdExportPK.Flags().StringVar(&passphraseFilePath, "passphrase-file", "", "path to a file containing the passphrase")
 
 	cmdExportKS := &cobra.Command{
 		Use:     "export-ks <ACCOUNT_ADDRESS>",
@@ -325,8 +334,8 @@ func keysSub() []*cobra.Command {
 		},
 	}
 
-	return []*cobra.Command{cmdList, cmdLocation, cmdAdd, cmdRemove, cmdMnemonic, cmdRecoverMnemonic, cmdImportKS, cmdImportSK,
-		cmdExportKS, cmdExportSK, cmdGenerateBlsKey, cmdRecoverBlsKey, cmdSaveBlsKey, GetPublicBlsKey}
+	return []*cobra.Command{cmdList, cmdLocation, cmdAdd, cmdRemove, cmdMnemonic, cmdRecoverMnemonic, cmdImportKS, cmdImportPK,
+		cmdExportKS, cmdExportPK, cmdGenerateBlsKey, cmdRecoverBlsKey, cmdSaveBlsKey, GetPublicBlsKey}
 }
 
 func init() {
