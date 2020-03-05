@@ -49,7 +49,9 @@ var (
 			if verbose {
 				common.EnableAllVerbose()
 			}
-			if strings.HasPrefix(node, "api") || strings.HasPrefix(node, "ws") {
+			if strings.HasPrefix(node, "https://") {
+				//No op, already has protocol, should be endpoint
+			} else if strings.HasPrefix(node, "api") || strings.HasPrefix(node, "ws") {
 				node = "https://" + node
 			} else {
 				switch URLcomponents := strings.Split(node, ":"); len(URLcomponents) {
