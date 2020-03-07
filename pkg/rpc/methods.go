@@ -65,6 +65,7 @@ type rpcEnumList struct {
 	GetCurrentUtilityMetrics            method
 	ResendCX                            method
 	GetSuperCommmittees                 method
+	GetCurrentBadBlocks                 method
 }
 
 // Method is a list of known RPC methods
@@ -122,6 +123,7 @@ var Method = rpcEnumList{
 	GetCurrentUtilityMetrics:            "hmy_getCurrentUtilityMetrics",
 	ResendCX:                            "hmy_resendCx",
 	GetSuperCommmittees:                 "hmy_getSuperCommittees",
+	GetCurrentBadBlocks:                 "hmy_getCurrentBadBlocks",
 }
 
 // TODO Use Reflection here to avoid typing out the cases
