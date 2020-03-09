@@ -49,8 +49,9 @@ var (
 			if verbose {
 				common.EnableAllVerbose()
 			}
-			if strings.HasPrefix(node, "https://") {
-				//No op, already has protocol, should be endpoint
+			if strings.HasPrefix(node, "https://") || strings.HasPrefix(node, "http://") ||
+				strings.HasPrefix(node, "ws://") {
+				//No op, already has protocol, respect protocol default ports.
 			} else if strings.HasPrefix(node, "api") || strings.HasPrefix(node, "ws") {
 				node = "https://" + node
 			} else {
@@ -58,11 +59,7 @@ var (
 				case 1:
 					node = "http://" + node + ":9500"
 				case 2:
-					if strings.HasPrefix(node, "http") {
-						node = node + ":9500"
-					} else {
-						node = "http://" + node
-					}
+					node = "http://" + node
 				default:
 					node = node
 				}
