@@ -45,7 +45,7 @@ var (
 		Use:          "hmy",
 		Short:        "Harmony blockchain",
 		SilenceUsage: true,
-		PersistentPreRun: func(cmd *cobra.Command, args []string) {
+		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
 			if verbose {
 				common.EnableAllVerbose()
 			}
@@ -64,6 +64,30 @@ var (
 					node = node
 				}
 			}
+
+			if targetChain == "" {
+				if strings.Contains(node, ".t.") {
+					chainName = chainIDWrapper{chainID: &common.Chain.MainNet}
+				} else if strings.Contains(node, ".b.") {
+					chainName = chainIDWrapper{chainID: &common.Chain.TestNet}
+				} else if strings.Contains(node, ".os.") {
+					chainName = chainIDWrapper{chainID: &common.Chain.PangaeaNet}
+				} else if strings.Contains(node, ".ps.") {
+					chainName = chainIDWrapper{chainID: &common.Chain.PartnerNet}
+				} else if strings.Contains(node, ".stn.") {
+					chainName = chainIDWrapper{chainID: &common.Chain.StressNet}
+				} else {
+					chainName = chainIDWrapper{chainID: &common.Chain.TestNet}
+				}
+			} else {
+				chain, err := common.StringToChainID(targetChain)
+				if err != nil {
+					return err
+				}
+				chainName = chainIDWrapper{chainID: chain}
+			}
+
+			return nil
 		},
 		Long: fmt.Sprintf(`
 CLI interface to the Harmony blockchain
