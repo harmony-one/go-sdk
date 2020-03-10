@@ -32,7 +32,7 @@ var Chain = chainIDList{
 
 // AllChainIDs returns list of known chains
 func AllChainIDs() []string {
-	return []string{"mainnet", "testnet", "pangaea", "partner", "stress"}
+	return []string{"mainnet", "testnet", "pangaea", "devnet", "partner", "stress"}
 }
 
 // StringToChainID returns the ChainID wrapper for the given human name of a chain-id
@@ -44,6 +44,8 @@ func StringToChainID(name string) (*ChainID, error) {
 		return &Chain.TestNet, nil
 	case "pangaea":
 		return &Chain.PangaeaNet, nil
+	case "devnet":
+		return &Chain.TestNet, nil
 	case "partner":
 		return &Chain.PartnerNet, nil
 	case "stress":

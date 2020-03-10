@@ -73,7 +73,7 @@ var (
 				} else if strings.Contains(node, ".os.") {
 					chainName = chainIDWrapper{chainID: &common.Chain.PangaeaNet}
 				} else if strings.Contains(node, ".ps.") {
-					chainName = chainIDWrapper{chainID: &common.Chain.PartnerNet}
+					chainName = chainIDWrapper{chainID: &common.Chain.TestNet}
 				} else if strings.Contains(node, ".stn.") {
 					chainName = chainIDWrapper{chainID: &common.Chain.StressNet}
 				} else {
