@@ -58,7 +58,6 @@ func init() {
 	}...)
 
 	cmdUtilities.AddCommand(cmdMetrics)
-
 	cmdUtilities.AddCommand([]*cobra.Command{{
 		Use:   "bech32-to-addr",
 		Args:  cobra.ExactArgs(1),
@@ -69,6 +68,14 @@ func init() {
 				return err
 			}
 			fmt.Println(addr.Hex())
+			return nil
+		},
+	}, {
+		Use:   "addr-to-bech32",
+		Args:  cobra.ExactArgs(1),
+		Short: "bech32 one-address of an 0x address",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			fmt.Println(address.ToBech32(address.Parse(args[0])))
 			return nil
 		},
 	}, {
