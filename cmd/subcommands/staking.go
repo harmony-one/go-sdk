@@ -3,7 +3,6 @@ package cmd
 import (
 	"errors"
 	"fmt"
-	"github.com/harmony-one/go-sdk/pkg/transaction"
 	"math/big"
 	"strconv"
 	"strings"
@@ -18,6 +17,7 @@ import (
 	"github.com/harmony-one/go-sdk/pkg/ledger"
 	"github.com/harmony-one/go-sdk/pkg/rpc"
 	"github.com/harmony-one/go-sdk/pkg/store"
+	"github.com/harmony-one/go-sdk/pkg/transaction"
 	"github.com/harmony-one/harmony/accounts"
 	"github.com/harmony-one/harmony/accounts/keystore"
 	"github.com/harmony-one/harmony/common/denominations"
@@ -416,22 +416,35 @@ Create a new validator"
 	subCmdNewValidator.Flags().StringVar(&commisionMaxRateStr, "max-rate", "", "commision max rate")
 	subCmdNewValidator.Flags().StringVar(&commisionMaxChangeRateStr, "max-change-rate", "", "commission max change amount")
 	subCmdNewValidator.Flags().StringVar(&minSelfDelegation, "min-self-delegation", "0.0", "minimal self delegation")
-	subCmdNewValidator.Flags().StringVar(&maxTotalDelegation, "max-total-delegation", "0.0", "maximal total delegation")
-	subCmdNewValidator.Flags().Var(&validatorAddress, "validator-addr", "validator's staking address")
+	subCmdNewValidator.Flags().StringVar(
+		&maxTotalDelegation, "max-total-delegation", "0.0", "maximal total delegation",
+	)
+	subCmdNewValidator.Flags().Var(
+		&validatorAddress, "validator-addr", "validator's staking address",
+	)
 	subCmdNewValidator.Flags().StringSliceVar(
-		&stakingBlsPubKeys, "bls-pubkeys", []string{}, "validator's list of public BLS key addresses",
+		&stakingBlsPubKeys, "bls-pubkeys",
+		[]string{}, "validator's list of public BLS key addresses",
 	)
 	subCmdNewValidator.Flags().StringVar(&stakingAmount, "amount", "0.0", "staking amount")
 	subCmdNewValidator.Flags().StringVar(&gasPrice, "gas-price", "1", "gas price to pay")
 	subCmdNewValidator.Flags().StringVar(&gasLimit, "gas-limit", "", "gas limit")
 	subCmdNewValidator.Flags().StringVar(&inputNonce, "nonce", "", "set nonce for transaction")
 	subCmdNewValidator.Flags().StringVar(&targetChain, "chain-id", "", "what chain ID to target")
-	subCmdNewValidator.Flags().Uint32Var(&timeout, "timeout", defaultTimeout, "set timeout in seconds. Set to 0 to not wait for tx confirm")
+	subCmdNewValidator.Flags().Uint32Var(
+		&timeout, "timeout",
+		defaultTimeout, "set timeout in seconds. Set to 0 to not wait for tx confirm",
+	)
 	subCmdNewValidator.Flags().BoolVar(&userProvidesPassphrase, "passphrase", false, ppPrompt)
-	subCmdNewValidator.Flags().StringVar(&passphraseFilePath, "passphrase-file", "", "path to a file containing the passphrase")
+	subCmdNewValidator.Flags().StringVar(
+		&passphraseFilePath, "passphrase-file", "", "path to a file containing the passphrase",
+	)
 
-	for _, flagName := range [...]string{"name", "identity", "website", "security-contact", "details", "rate", "max-rate",
-		"max-change-rate", "min-self-delegation", "max-total-delegation", "validator-addr", "bls-pubkeys", "amount"} {
+	for _, flagName := range [...]string{
+		"name", "identity", "website", "security-contact",
+		"details", "rate", "max-rate", "max-change-rate",
+		"min-self-delegation", "max-total-delegation",
+		"validator-addr", "bls-pubkeys", "amount"} {
 		subCmdNewValidator.MarkFlagRequired(flagName)
 	}
 
@@ -441,7 +454,7 @@ Create a new validator"
 		Long:  "Edit an existing validator",
 		Args:  cobra.ExactArgs(0),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			networkHandler, err := handlerForShard(0, node)
+			networkHandler, err := handlerForShard(shard.BeaconChainShardID, node)
 			if err != nil {
 				return err
 			}
