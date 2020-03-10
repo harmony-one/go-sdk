@@ -47,7 +47,7 @@ Note:
    with the --passphrase option. Alternatively, one can pass their own passphrase via a file
    using the --passphrase-file option. If no passphrase option is selected, the default
    passphrase of '' is used.
-3) These examples use shard 1 of testnet as argument for --node
+3) These examples use shard 1 of Mainnet as argument for --node
 
 Examples:
 

@@ -30,7 +30,8 @@ var (
 	amount            string
 	fromShardID       uint32
 	toShardID         uint32
-	chainName         = chainIDWrapper{chainID: &common.Chain.TestNet}
+	targetChain       string
+	chainName         chainIDWrapper
 	dryRun            bool
 	inputNonce        string
 	gasPrice          string
@@ -360,7 +361,7 @@ Create a transaction, sign it, and send off to the Harmony blockchain
 	cmdTransfer.Flags().StringVar(&inputNonce, "nonce", "", "set nonce for tx")
 	cmdTransfer.Flags().Uint32Var(&fromShardID, "from-shard", 0, "source shard id")
 	cmdTransfer.Flags().Uint32Var(&toShardID, "to-shard", 0, "target shard id")
-	cmdTransfer.Flags().Var(&chainName, "chain-id", "what chain ID to target")
+	cmdTransfer.Flags().StringVar(&targetChain, "chain-id", "", "what chain ID to target")
 	cmdTransfer.Flags().Uint32Var(&timeout, "timeout", defaultTimeout, "set timeout in seconds. Set to 0 to not wait for confirm")
 	cmdTransfer.Flags().BoolVar(&userProvidesPassphrase, "passphrase", false, ppPrompt)
 	cmdTransfer.Flags().StringVar(&passphraseFilePath, "passphrase-file", "", "path to a file containing the passphrase")
