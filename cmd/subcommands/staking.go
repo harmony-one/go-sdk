@@ -24,6 +24,7 @@ import (
 	"github.com/harmony-one/harmony/core"
 	"github.com/harmony-one/harmony/numeric"
 	"github.com/harmony-one/harmony/shard"
+	"github.com/harmony-one/harmony/staking/effective"
 	staking "github.com/harmony-one/harmony/staking/types"
 	"github.com/spf13/cobra"
 )
@@ -95,7 +96,7 @@ func createStakingTransaction(nonce uint64, f staking.StakeMsgFulfiller) (*staki
 	}
 	var gLimit uint64
 	if gasLimit == "" {
-		isCreateValidator := (directive == staking.DirectiveCreateValidator)
+		isCreateValidator := directive == staking.DirectiveCreateValidator
 		gLimit, err = core.IntrinsicGas(data, false, true, isCreateValidator)
 		if err != nil {
 			return nil, err
@@ -540,13 +541,15 @@ Create a new validator"
 				return err
 			}
 
-			var isActive *bool
-			if active != "" {
-				val, err := strconv.ParseBool(active)
-				if err != nil {
-					return err
-				}
-				isActive = &val
+			EposStat := effective.Nil
+			active, err := strconv.ParseBool(active)
+			if err != nil {
+				return err
+			}
+			if active {
+				EposStat = effective.Active
+			} else {
+				EposStat = effective.Inactive
 			}
 
 			delegateStakePayloadMaker := func() (staking.Directive, interface{}) {
@@ -559,7 +562,7 @@ Create a new validator"
 					shardPubKeyRemove,
 					shardPubKeyAdd,
 					sigBls,
-					isActive,
+					EposStat,
 				}
 			}
 
