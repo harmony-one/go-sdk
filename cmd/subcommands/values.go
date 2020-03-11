@@ -40,7 +40,7 @@ hmy keys list
 hmy --node="https://api.s1.t.hmny.io/" transfer \
     --from one1yc06ghr2p8xnl2380kpfayweguuhxdtupkhqzw \
     --to one1q6gkzcap0uruuu8r6sldxuu47pd4ww9w9t7tg6 \
-    --from-shard 0 --to-shard 1 --amount 200
+    --from-shard 0 --to-shard 1 --amount 200 --passphrase
 
 %s
 hmy --node="https://api.s1.t.hmny.io/" transfer --file <PATH_TO_JSON_FILE>
