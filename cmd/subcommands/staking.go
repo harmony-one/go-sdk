@@ -542,14 +542,16 @@ Create a new validator"
 			}
 
 			EposStat := effective.Nil
-			active, err := strconv.ParseBool(active)
-			if err != nil {
-				return err
-			}
-			if active {
-				EposStat = effective.Active
-			} else {
-				EposStat = effective.Inactive
+			if active != "" {
+				active, err := strconv.ParseBool(active)
+				if err != nil {
+					return err
+				}
+				if active {
+					EposStat = effective.Active
+				} else {
+					EposStat = effective.Inactive
+				}
 			}
 
 			delegateStakePayloadMaker := func() (staking.Directive, interface{}) {
