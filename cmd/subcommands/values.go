@@ -40,7 +40,7 @@ hmy keys list
 hmy --node="https://api.s1.t.hmny.io/" transfer \
     --from one1yc06ghr2p8xnl2380kpfayweguuhxdtupkhqzw \
     --to one1q6gkzcap0uruuu8r6sldxuu47pd4ww9w9t7tg6 \
-    --from-shard 0 --to-shard 1 --amount 200
+    --from-shard 0 --to-shard 1 --amount 200 --passphrase
 
 %s
 hmy --node="https://api.s1.t.hmny.io/" transfer --file <PATH_TO_JSON_FILE>
@@ -86,37 +86,37 @@ hmy keys export-private-key <ACCOUNT_ADDRESS> --passphrase
 hmy keys generate-bls-key --bls-file-path /tmp/file.key
 
 %s
-hmy --node="https://api.s0.t.hmny.io" staking create-validator --amount 10 --validator-addr <SOME_ONE_ADDRESS> \
+hmy --node="https://api.s0.os.hmny.io" staking create-validator --amount 10 --validator-addr <SOME_ONE_ADDRESS> \
     --bls-pubkeys <BLS_KEY_1>,<BLS_KEY_2>,<BLS_KEY_3> \
     --identity foo --details bar --name baz --max-change-rate 0.1 --max-rate 0.1 --max-total-delegation 10 \
     --min-self-delegation 10 --rate 0.1 --security-contact Leo  --website harmony.one --passphrase
 
 %s
-hmy --node="https://api.s0.t.hmny.io" staking edit-validator \
+hmy --node="https://api.s0.os.hmny.io" staking edit-validator \
     --validator-addr <SOME_ONE_ADDRESS> --identity foo --details bar \
     --name baz --security-contact EK --website harmony.one \
     --min-self-delegation 0 --max-total-delegation 10 --rate 0.1\
     --add-bls-key <SOME_BLS_KEY> --remove-bls-key <OTHER_BLS_KEY> --passphrase
 
 %s
-hmy --node="https://api.s0.t.hmny.io" staking delegate \
+hmy --node="https://api.s0.os.hmny.io" staking delegate \
     --delegator-addr <SOME_ONE_ADDRESS> --validator-addr <VALIDATOR_ONE_ADDRESS> \
     --amount 10 --passphrase
 
 %s
-hmy --node="https://api.s0.t.hmny.io" staking undelegate \
+hmy --node="https://api.s0.os.hmny.io" staking undelegate \
     --delegator-addr <SOME_ONE_ADDRESS> --validator-addr <VALIDATOR_ONE_ADDRESS> \
     --amount 10 --passphrase
 
 %s
-hmy --node="https://api.s0.t.hmny.io" staking collect-rewards \
+hmy --node="https://api.s0.os.hmny.io" staking collect-rewards \
     --delegator-addr <SOME_ONE_ADDRESS> --passphrase
 
 %s
-hmy --node="https://api.s0.t.hmny.io" blockchain validator elected
+hmy --node="https://api.s0.os.hmny.io" blockchain validator elected
 
 %s
-hmy --node="https://api.s0.t.hmny.io" blockchain utility-metrics
+hmy --node="https://api.s0.os.hmny.io" blockchain utility-metrics
 
 %s
 hmy failures staking
