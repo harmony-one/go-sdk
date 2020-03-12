@@ -45,7 +45,7 @@ func StringToChainID(name string) (*ChainID, error) {
 	case "pangaea":
 		return &Chain.PangaeaNet, nil
 	case "devnet":
-		return &Chain.TestNet, nil
+		return &Chain.PartnerNet, nil
 	case "partner":
 		return &Chain.PartnerNet, nil
 	case "stressnet":
