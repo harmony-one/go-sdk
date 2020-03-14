@@ -25,7 +25,7 @@ func init() {
 				if err != nil {
 					return err
 				}
-				nodeRPCReply, err := rpc.Request(rpc.Method.GetNodeMetadata, node, []interface{}{})
+				nodeRPCReply, err := rpc.Request(rpc.Method.GetShardID, node, []interface{}{})
 				if err != nil {
 					return err
 				}
@@ -35,7 +35,7 @@ func init() {
 				var out bytes.Buffer
 				out.WriteString("[")
 				out.WriteString(fmt.Sprintf(`{"shard":%d, "amount":%s}`,
-					uint64(nodeRPCReply["result"].(map[string]interface{})["shard-id"].(float64)),
+					uint32(nodeRPCReply["result"].(float64)),
 					bln.String(),
 				))
 				out.WriteString("]")
