@@ -56,6 +56,7 @@ Query Harmony's blockchain for completed transaction, historic records
 		Long: `
 High level information about each transaction for given account
 `,
+    Args:    cobra.ExactArgs(1),
     PreRunE: validateAddress,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			type historyParams struct {
