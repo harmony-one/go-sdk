@@ -395,7 +395,7 @@ Create a new validator"
 				return err
 			}
 
-			passphrase, err = getPassphrase()
+			passphrase, err = getPassphrase(false)
 			if err != nil {
 				return err
 			}
@@ -577,7 +577,7 @@ Create a new validator"
 				return err
 			}
 
-			passphrase, err = getPassphrase()
+			passphrase, err = getPassphrase(false)
 			if err != nil {
 				return err
 			}
@@ -650,7 +650,7 @@ Delegating to a validator
 				return err
 			}
 
-			passphrase, err = getPassphrase()
+			passphrase, err = getPassphrase(false)
 			if err != nil {
 				return err
 			}
@@ -716,7 +716,7 @@ Delegating to a validator
 				return err
 			}
 
-			passphrase, err = getPassphrase()
+			passphrase, err = getPassphrase(false)
 			if err != nil {
 				return err
 			}
@@ -772,7 +772,7 @@ Collect token rewards
 				return err
 			}
 
-			passphrase, err = getPassphrase()
+			passphrase, err = getPassphrase(false)
 			if err != nil {
 				return err
 			}

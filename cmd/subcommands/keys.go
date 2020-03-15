@@ -41,7 +41,8 @@ var (
 // getPassphrase fetches the correct passphrase depending on if a file is available to
 // read from or if the user wants to enter in their own passphrase. Otherwise, just use
 // the default passphrase.
-func getPassphrase() (string, error) {
+// argument passphraseconfirmation is true when confirmation is required false otherwise 
+func getPassphrase(passphraseconfirmation bool) (string, error) {
 	if passphraseFilePath != "" {
 		if _, err := os.Stat(passphraseFilePath); os.IsNotExist(err) {
 			return "", errors.New(fmt.Sprintf("passphrase file not found at `%s`", passphraseFilePath))
@@ -58,16 +59,20 @@ func getPassphrase() (string, error) {
 		if err != nil {
 			return "", err
 		}
-		fmt.Println("Repeat the passphrase:")
-		repeatPass, err := terminal.ReadPassword(int(os.Stdin.Fd()))
-		if err != nil {
-			return "", err
+		if passphraseconfirmation {
+			fmt.Println("Repeat the passphrase:")
+			repeatPass, err := terminal.ReadPassword(int(os.Stdin.Fd()))
+			if err != nil {
+				return "", err
+			}
+			if string(repeatPass) != string(pass) {
+				return "", errors.New("passphrase does not match")
+			}
+			fmt.Println("") // provide feedback when passphrase is entered.
+			return string(repeatPass), nil
+		} else {
+			return string(pass), nil
 		}
-		if string(repeatPass) != string(pass) {
-			return "", errors.New("passphrase does not match")
-		}
-		fmt.Println("") // provide feedback when passphrase is entered.
-		return string(repeatPass), nil
 	} else {
 		return c.DefaultPassphrase, nil
 	}
@@ -104,7 +109,7 @@ func keysSub() []*cobra.Command {
 			if store.DoesNamedAccountExist(args[0]) {
 				return fmt.Errorf("account %s already exists", args[0])
 			}
-			passphrase, err := getPassphrase()
+			passphrase, err := getPassphrase(true)
 			if err != nil {
 				return err
 			}
@@ -168,7 +173,7 @@ func keysSub() []*cobra.Command {
 			if store.DoesNamedAccountExist(args[0]) {
 				return fmt.Errorf("account %s already exists", args[0])
 			}
-			passphrase, err := getPassphrase()
+			passphrase, err := getPassphrase(true)
 			if err != nil {
 				return err
 			}
@@ -205,7 +210,7 @@ func keysSub() []*cobra.Command {
 			if len(args) == 2 {
 				userName = args[1]
 			}
-			passphrase, err := getPassphrase()
+			passphrase, err := getPassphrase(false)
 			if err != nil {
 				return err
 			}
@@ -231,7 +236,7 @@ func keysSub() []*cobra.Command {
 			if len(args) == 2 {
 				userName = args[1]
 			}
-			passphrase, err := getPassphrase()
+			passphrase, err := getPassphrase(false)
 			if err != nil {
 				return err
 			}
@@ -253,7 +258,7 @@ func keysSub() []*cobra.Command {
 		Args:    cobra.ExactArgs(1),
 		PreRunE: validateAddress,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			passphrase, err := getPassphrase()
+			passphrase, err := getPassphrase(false)
 			if err != nil {
 				return err
 			}
@@ -269,7 +274,7 @@ func keysSub() []*cobra.Command {
 		Args:    cobra.ExactArgs(1),
 		PreRunE: validateAddress,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			passphrase, err := getPassphrase()
+			passphrase, err := getPassphrase(false)
 			if err != nil {
 				return err
 			}
@@ -283,7 +288,7 @@ func keysSub() []*cobra.Command {
 		Use:   "generate-bls-key",
 		Short: "Generate bls keys then encrypt and save the private key with a requested passphrase",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			passphrase, err := getPassphrase()
+			passphrase, err := getPassphrase(true)
 			if err != nil {
 				return err
 			}
@@ -300,7 +305,7 @@ func keysSub() []*cobra.Command {
 		Short: "Recover bls keys from an encrypted bls key file",
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			passphrase, err := getPassphrase()
+			passphrase, err := getPassphrase(false)
 			if err != nil {
 				return err
 			}
@@ -315,7 +320,7 @@ func keysSub() []*cobra.Command {
 		Short: "Encrypt and save the bls private key with a requested passphrase",
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			passphrase, err := getPassphrase()
+			passphrase, err := getPassphrase(true)
 			if err != nil {
 				return err
 			}
