@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"path"
+	"regexp"
 	"strings"
 
 	color "github.com/fatih/color"
@@ -24,6 +25,7 @@ var (
 	node            string
 	keyStoreDir     string
 	givenFilePath   string
+	endpoint        = regexp.MustCompile(`https://api\.s[0-9]\..*\.hmny\.io`)
 	request         = func(method string, params []interface{}) error {
 		if !noLatest {
 			params = append(params, "latest")
@@ -65,7 +67,7 @@ var (
 				}
 			}
 
-			if targetChain == "" {
+			if targetChain == "" && endpoint.Match([]byte(node)) {
 				if strings.Contains(node, ".t.") {
 					chainName = chainIDWrapper{chainID: &common.Chain.MainNet}
 				} else if strings.Contains(node, ".b.") {
