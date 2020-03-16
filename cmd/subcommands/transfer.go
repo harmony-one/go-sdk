@@ -216,7 +216,7 @@ func handlerForBulkTransactions(txLog *transactionLog, index int) error {
 	// Set optional fields.
 	if txnFlags.PassphraseFile != nil {
 		passphraseFilePath = *txnFlags.PassphraseFile
-		passphrase, err = getPassphrase(false)
+		passphrase, err = getPassphrase()
 		if handlerForError(txLog, err) != nil {
 			return err
 		}
@@ -318,7 +318,7 @@ Create a transaction, sign it, and send off to the Harmony blockchain
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if givenFilePath == "" {
-				pp, err := getPassphrase(false)
+				pp, err := getPassphrase()
 				if err != nil {
 					return err
 				}
