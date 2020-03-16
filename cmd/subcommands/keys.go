@@ -93,7 +93,7 @@ func getPassphraseWithConfirm() (string, error) {
 			return "", errors.New("passphrase does not match")
 		}
 		fmt.Println("") // provide feedback when passphrase is entered.
-		return string(repeatPass), nil		
+		return string(repeatPass), nil
 	} else {
 		return c.DefaultPassphrase, nil
 	}
