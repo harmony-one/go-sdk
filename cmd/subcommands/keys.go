@@ -40,8 +40,34 @@ var (
 
 // getPassphrase fetches the correct passphrase depending on if a file is available to
 // read from or if the user wants to enter in their own passphrase. Otherwise, just use
-// the default passphrase.
+// the default passphrase. No confirmation of passphrase
 func getPassphrase() (string, error) {
+	if passphraseFilePath != "" {
+		if _, err := os.Stat(passphraseFilePath); os.IsNotExist(err) {
+			return "", errors.New(fmt.Sprintf("passphrase file not found at `%s`", passphraseFilePath))
+		}
+		dat, err := ioutil.ReadFile(passphraseFilePath)
+		if err != nil {
+			return "", err
+		}
+		pw := strings.TrimSuffix(string(dat), "\n")
+		return pw, nil
+	} else if userProvidesPassphrase {
+		fmt.Println("Enter passphrase:")
+		pass, err := terminal.ReadPassword(int(os.Stdin.Fd()))
+		if err != nil {
+			return "", err
+		}
+		return string(pass), nil
+	} else {
+		return c.DefaultPassphrase, nil
+	}
+}
+
+// getPassphrase fetches the correct passphrase depending on if a file is available to
+// read from or if the user wants to enter in their own passphrase. Otherwise, just use
+// the default passphrase. Passphrase requires a confirmation
+func getPassphraseWithConfirm() (string, error) {
 	if passphraseFilePath != "" {
 		if _, err := os.Stat(passphraseFilePath); os.IsNotExist(err) {
 			return "", errors.New(fmt.Sprintf("passphrase file not found at `%s`", passphraseFilePath))
@@ -104,7 +130,7 @@ func keysSub() []*cobra.Command {
 			if store.DoesNamedAccountExist(args[0]) {
 				return fmt.Errorf("account %s already exists", args[0])
 			}
-			passphrase, err := getPassphrase()
+			passphrase, err := getPassphraseWithConfirm()
 			if err != nil {
 				return err
 			}
@@ -168,7 +194,7 @@ func keysSub() []*cobra.Command {
 			if store.DoesNamedAccountExist(args[0]) {
 				return fmt.Errorf("account %s already exists", args[0])
 			}
-			passphrase, err := getPassphrase()
+			passphrase, err := getPassphraseWithConfirm()
 			if err != nil {
 				return err
 			}
@@ -283,7 +309,7 @@ func keysSub() []*cobra.Command {
 		Use:   "generate-bls-key",
 		Short: "Generate bls keys then encrypt and save the private key with a requested passphrase",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			passphrase, err := getPassphrase()
+			passphrase, err := getPassphraseWithConfirm()
 			if err != nil {
 				return err
 			}
@@ -315,7 +341,7 @@ func keysSub() []*cobra.Command {
 		Short: "Encrypt and save the bls private key with a requested passphrase",
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			passphrase, err := getPassphrase()
+			passphrase, err := getPassphraseWithConfirm()
 			if err != nil {
 				return err
 			}
