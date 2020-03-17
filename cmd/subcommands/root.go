@@ -67,17 +67,19 @@ var (
 				}
 			}
 
-			if targetChain == "" && endpoint.Match([]byte(node)) {
-				if strings.Contains(node, ".t.") {
-					chainName = chainIDWrapper{chainID: &common.Chain.MainNet}
-				} else if strings.Contains(node, ".b.") {
-					chainName = chainIDWrapper{chainID: &common.Chain.TestNet}
-				} else if strings.Contains(node, ".os.") {
-					chainName = chainIDWrapper{chainID: &common.Chain.PangaeaNet}
-				} else if strings.Contains(node, ".ps.") {
-					chainName = chainIDWrapper{chainID: &common.Chain.PartnerNet}
-				} else if strings.Contains(node, ".stn.") {
-					chainName = chainIDWrapper{chainID: &common.Chain.StressNet}
+			if targetChain == "" {
+				if endpoint.Match([]byte(node)) {
+					if strings.Contains(node, ".t.") {
+						chainName = chainIDWrapper{chainID: &common.Chain.MainNet}
+					} else if strings.Contains(node, ".b.") {
+						chainName = chainIDWrapper{chainID: &common.Chain.TestNet}
+					} else if strings.Contains(node, ".os.") {
+						chainName = chainIDWrapper{chainID: &common.Chain.PangaeaNet}
+					} else if strings.Contains(node, ".ps.") {
+						chainName = chainIDWrapper{chainID: &common.Chain.PartnerNet}
+					} else if strings.Contains(node, ".stn.") {
+						chainName = chainIDWrapper{chainID: &common.Chain.StressNet}
+					}
 				} else {
 					chainName = chainIDWrapper{chainID: &common.Chain.TestNet}
 				}
@@ -116,7 +118,24 @@ func init() {
 		Use:   "cookbook",
 		Short: "Example usages of the most important, frequently used commands",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			fmt.Print(cookbookDoc)
+			var docNode, docNet string
+			if node == defaultNodeAddr || chainName.chainID == &common.Chain.MainNet {
+				docNode = `https://api.s0.t.hmny.io`
+				docNet = `Mainnet`
+			} else if chainName.chainID == &common.Chain.TestNet {
+				docNode = `https://api.s0.b.hmny.io`
+				docNet = `Long-Running Testnet`
+			} else if chainName.chainID == &common.Chain.PangaeaNet {
+				docNode = `https://api.s0.os.hmny.io`
+				docNet = `Open Staking Network`
+			} else if chainName.chainID == &common.Chain.PartnerNet {
+				docNode = `https://api.s0.ps.hmny.io`
+				docNet = `Partner Testnet`
+			} else if chainName.chainID == &common.Chain.StressNet {
+				docNode = `https://api.s0.stn.hmny.io`
+				docNet = `Stress Testing Network`
+			}
+			fmt.Print(strings.ReplaceAll(strings.ReplaceAll(cookbookDoc, `[NODE]`, docNode), `[NETWORK]`, docNet))
 			return nil
 		},
 	})
