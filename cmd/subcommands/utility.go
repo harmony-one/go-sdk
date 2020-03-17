@@ -120,8 +120,14 @@ func init() {
 			fmt.Println(string(result))
 			return nil
 		},
-	},
-	}...)
+	}, {
+		Use:   "last-cross-links",
+		Short: "last crosslinks processed",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			noLatest = true
+			return request(rpc.Method.GetLastCrossLinks, []interface{}{})
+		},
+	}}...)
 
 	RootCmd.AddCommand(cmdUtilities)
 }
