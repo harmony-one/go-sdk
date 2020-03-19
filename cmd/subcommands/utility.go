@@ -93,6 +93,13 @@ func init() {
 			return request(rpc.Method.GetCurrentBadBlocks, []interface{}{})
 		},
 	}, {
+		Use:   "shards",
+		Short: "sharding structure and end points",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			noLatest = true
+			return request(rpc.Method.GetShardingStructure, []interface{}{})
+		},
+	}, {
 		// Temp utility that should be removed once resharding implemented
 		Use:   "shard-for-bls",
 		Args:  cobra.ExactArgs(1),
