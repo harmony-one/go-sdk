@@ -1,24 +1,23 @@
 package common
 
 import (
+	"encoding/json"
 	"fmt"
 	"math/big"
 )
 
-//TODO Use reflection for these values instead of switch & slice given by AllChainIDs
-
 // ChainID is a wrapper around the human name for a chain and the actual Big.Int used
 type ChainID struct {
-	Name  string
-	Value *big.Int
+	Name  string   `json:"-"`
+	Value *big.Int `json:"chain-as-number"`
 }
 
 type chainIDList struct {
-	MainNet    ChainID
-	TestNet    ChainID
-	PangaeaNet ChainID
-	PartnerNet ChainID
-	StressNet  ChainID
+	MainNet    ChainID `json:"mainnet"`
+	TestNet    ChainID `json:"testnet"`
+	PangaeaNet ChainID `json:"pangaea"`
+	PartnerNet ChainID `json:"partner"`
+	StressNet  ChainID `json:"stress"`
 }
 
 // Chain is an enumeration of the known Chain-IDs
@@ -30,9 +29,9 @@ var Chain = chainIDList{
 	StressNet:  ChainID{"stress", big.NewInt(5)},
 }
 
-// AllChainIDs returns list of known chains
-func AllChainIDs() []string {
-	return []string{"mainnet", "testnet", "pangaea", "devnet", "partner", "stressnet"}
+func (c chainIDList) String() string {
+	s, _ := json.MarshalIndent(c, "", "  ")
+	return string(s)
 }
 
 // StringToChainID returns the ChainID wrapper for the given human name of a chain-id

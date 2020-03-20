@@ -56,8 +56,8 @@ Query Harmony's blockchain for completed transaction, historic records
 		Long: `
 High level information about each transaction for given account
 `,
-    Args:    cobra.ExactArgs(1),
-    PreRunE: validateAddress,
+		Args:    cobra.ExactArgs(1),
+		PreRunE: validateAddress,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			type historyParams struct {
 				Address   string `json:"address"`
@@ -87,7 +87,7 @@ High level information about each transaction for given account
 		Use:   "known-chains",
 		Short: "Print out the known chain-ids",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			fmt.Println(common.ToJSONUnsafe(common.AllChainIDs(), !noPrettyOutput))
+			fmt.Println(common.Chain.String())
 			return nil
 		},
 	}, {
