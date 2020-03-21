@@ -1,8 +1,10 @@
 package cmd
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
+	"net/http"
 	"os"
 	"path"
 	"regexp"
@@ -158,14 +160,30 @@ var (
 	// VersionWrapDump meant to be set from main.go
 	VersionWrapDump = ""
 	cookbook        = color.GreenString("hmy cookbook")
+	versionLink     = "https://harmony.one/hmycli_ver"
+	versionFormat   = regexp.MustCompile("v[0-9]+-[0-9]{6}")
 )
 
 // Execute kicks off the hmy CLI
 func Execute() {
 	RootCmd.SilenceErrors = true
 	if err := RootCmd.Execute(); err != nil {
-		fmt.Println(errors.Wrapf(err, "commit: %s, error", VersionWrapDump).Error())
-		fmt.Println("check " + cookbook + " for valid examples or try adding a `--help` flag")
+		resp, _ := http.Get(versionLink)
+		defer resp.Body.Close()
+		// If error, no op
+		if resp != nil && resp.StatusCode == 200{
+			buf := new(bytes.Buffer)
+			buf.ReadFrom(resp.Body)
+
+			currentVersion := versionFormat.FindAllString(buf.String(), 1)
+			if currentVersion != nil && currentVersion[0] != VersionWrapDump {
+				warnMsg := fmt.Sprintf("Warning: Using outdated version. Redownload to upgrade to %s\n", currentVersion[0])
+				fmt.Fprintf(os.Stderr, color.RedString(warnMsg))
+			}
+		}
+		errMsg := errors.Wrapf(err, "commit: %s, error", VersionWrapDump).Error()
+		fmt.Fprintf(os.Stderr, errMsg + "\n")
+		fmt.Fprintf(os.Stderr, "check " + cookbook + " for valid examples or try adding a `--help` flag\n")
 		os.Exit(1)
 	}
 }
