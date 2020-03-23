@@ -80,6 +80,7 @@ func RecoverBlsKeyFromFile(passphrase, filePath string) error {
 }
 
 func SaveBlsKey(passphrase, filePath, privateKeyHex string) error {
+	privateKeyHex = strings.TrimPrefix(privateKeyHex, "0x")
 	privateKey, err := getBlsKey(privateKeyHex)
 	if err != nil {
 		return err
@@ -183,12 +184,9 @@ func VerifyBLS(blsPubKey string) (shard.BLSSignature, error) {
 
 func getBlsKey(privateKeyHex string) (*ffiBls.SecretKey, error) {
 	privateKey := &ffiBls.SecretKey{}
-	if privateKeyHex[:2] == "0x" {
-		privateKeyHex = privateKeyHex[2:]
-	}
 	err := privateKey.DeserializeHexStr(string(privateKeyHex))
 	if err != nil {
-		return privateKey, err
+		return nil, err
 	}
 	return privateKey, nil
 }
