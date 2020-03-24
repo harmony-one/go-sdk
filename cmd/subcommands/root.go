@@ -13,6 +13,7 @@ import (
 	color "github.com/fatih/color"
 	"github.com/harmony-one/go-sdk/pkg/common"
 	"github.com/harmony-one/go-sdk/pkg/rpc"
+	"github.com/harmony-one/go-sdk/pkg/sharding"
 	"github.com/harmony-one/go-sdk/pkg/store"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
@@ -70,18 +71,15 @@ var (
 			}
 
 			if targetChain == "" {
-				if endpoint.Match([]byte(node)) {
-					if strings.Contains(node, ".t.") {
-						chainName = chainIDWrapper{chainID: &common.Chain.MainNet}
-					} else if strings.Contains(node, ".b.") {
+				if node == defaultNodeAddr {
+					routes, err := sharding.Structure(node)
+					if err != nil {
 						chainName = chainIDWrapper{chainID: &common.Chain.TestNet}
-					} else if strings.Contains(node, ".os.") {
-						chainName = chainIDWrapper{chainID: &common.Chain.PangaeaNet}
-					} else if strings.Contains(node, ".ps.") {
-						chainName = chainIDWrapper{chainID: &common.Chain.PartnerNet}
-					} else if strings.Contains(node, ".stn.") {
-						chainName = chainIDWrapper{chainID: &common.Chain.StressNet}
+					} else {
+						chainName = endpointToChainID(routes[0].HTTP)
 					}
+				} else if endpoint.Match([]byte(node)) {
+					chainName = endpointToChainID(node)
 				} else {
 					chainName = chainIDWrapper{chainID: &common.Chain.TestNet}
 				}
@@ -186,6 +184,21 @@ func Execute() {
 		fmt.Fprintf(os.Stderr, "check " + cookbook + " for valid examples or try adding a `--help` flag\n")
 		os.Exit(1)
 	}
+}
+
+func endpointToChainID(nodeAddr string) chainIDWrapper {
+	if strings.Contains(nodeAddr, ".t.") {
+		return chainIDWrapper{chainID: &common.Chain.MainNet}
+	} else if strings.Contains(nodeAddr, ".b.") {
+		return chainIDWrapper{chainID: &common.Chain.TestNet}
+	} else if strings.Contains(nodeAddr, ".os.") {
+		return chainIDWrapper{chainID: &common.Chain.PangaeaNet}
+	} else if strings.Contains(nodeAddr, ".ps.") {
+		return chainIDWrapper{chainID: &common.Chain.PartnerNet}
+	} else if strings.Contains(nodeAddr, ".stn.") {
+		return chainIDWrapper{chainID: &common.Chain.StressNet}
+	}
+	return chainIDWrapper{chainID: &common.Chain.TestNet}
 }
 
 func validateAddress(cmd *cobra.Command, args []string) error {
