@@ -2,14 +2,15 @@ package cmd
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/harmony-one/go-sdk/pkg/address"
 	"github.com/harmony-one/go-sdk/pkg/common"
-	c "github.com/harmony-one/go-sdk/pkg/common"
 	"github.com/harmony-one/go-sdk/pkg/rpc"
 	"github.com/harmony-one/go-sdk/pkg/sharding"
 	"github.com/harmony-one/go-sdk/pkg/store"
@@ -18,7 +19,6 @@ import (
 	"github.com/harmony-one/harmony/accounts"
 	"github.com/harmony-one/harmony/core"
 
-	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 )
 
@@ -126,13 +126,19 @@ func handlerForTransaction(txLog *transactionLog) error {
 	if handlerForError(txLog, err) != nil {
 		return err
 	}
-	amt, err := c.NewDecFromString(amount)
-	if handlerForError(txLog, err) != nil {
-		return err
+
+	amt, err := common.NewDecFromString(amount)
+	if err != nil  {
+		amtErr := fmt.Errorf("amount %w", err)
+		handlerForError(txLog, amtErr)
+		return amtErr
 	}
-	gPrice, err := c.NewDecFromString(gasPrice)
-	if handlerForError(txLog, err) != nil {
-		return err
+
+	gPrice, err := common.NewDecFromString(gasPrice)
+	if err != nil {
+		gasErr := fmt.Errorf("gas-price %w", err)
+		handlerForError(txLog, gasErr)
+		return gasErr
 	}
 
 	var gLimit uint64
@@ -142,6 +148,11 @@ func handlerForTransaction(txLog *transactionLog) error {
 			return err
 		}
 	} else {
+		if strings.HasPrefix(gasLimit, "-") {
+			limitErr := errors.New(fmt.Sprintf("gas-limit can not be negative: %s", gasLimit))
+			handlerForError(txLog, limitErr)
+			return limitErr
+		}
 		tempLimit, e := strconv.ParseInt(gasLimit, 10, 64)
 		if handlerForError(txLog, e) != nil {
 			return e
@@ -258,6 +269,9 @@ func opts(ctlr *transaction.Controller) {
 
 func getNonceFromInput(addr, inputNonce string, messenger rpc.T) (uint64, error) {
 	if inputNonce != "" {
+		if strings.HasPrefix(inputNonce, "-") {
+			return 0, errors.New(fmt.Sprintf("nonce can not be negative: %s", inputNonce))
+		}
 		nonce, err := strconv.ParseUint(inputNonce, 10, 64)
 		if err != nil {
 			return 0, err
