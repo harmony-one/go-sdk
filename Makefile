@@ -9,7 +9,6 @@ ldflags := -X main.version=v${version} -X main.commit=${commit}
 ldflags += -X main.builtAt=${built_at} -X main.builtBy=${built_by}
 cli := ./dist/hmy
 upload-path-darwin := 's3://pub.harmony.one/release/darwin-x86_64/mainnet/hmy'
-upload-path-darwin-version := 's3://pub.harmony.one/release/darwin-x86_64/mainnet/hmy_version'
 upload-path-linux := 's3://pub.harmony.one/release/linux-x86_64/mainnet/hmy'
 upload-path-linux-version := 's3://pub.harmony.one/release/linux-x86_64/mainnet/hmy_version'
 
@@ -46,9 +45,8 @@ test-rpc:
 # Notice assumes you have correct uploading credentials
 upload-darwin:all
 	aws --profile upload s3 cp ./hmy ${upload-path-darwin}
-	./hmy version &> ./hmy_version
-	aws --profile upload s3 cp ./hmy_version ${upload-path-darwin-version}
 
+# Only the linux build will upload the CLI version
 upload-linux:static
 	aws --profile upload s3 cp ./hmy ${upload-path-linux}
 	./hmy version &> ./hmy_version
