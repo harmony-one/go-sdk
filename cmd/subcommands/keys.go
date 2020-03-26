@@ -325,13 +325,18 @@ func keysSub() []*cobra.Command {
 
 	cmdGenerateMultiBlsKeys := &cobra.Command{
 		Use:   "generate-bls-keys",
-		Short: "Generates multiple bls keys for a given shard and then encrypts and saves the private key with a requested passphrase",
+		Short: "Generates multiple bls keys for a given shard network configuration and then encrypts and saves the private key with a requested passphrase",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			passphrase, err := getPassphraseWithConfirm()
-			if err != nil {
-				return err
+			passphrases := []string{}
+			for i := uint32(0); i < blsCount; i++ {
+				passphrase, err := getPassphraseWithConfirm()
+				if err != nil {
+					return err
+				}
+				passphrases = append(passphrases, passphrase)
 			}
-			return keys.GenMultiBlsKeys(passphrase, blsFilePath, node, blsCount, blsShardID)
+
+			return keys.GenMultiBlsKeys(passphrases, blsFilePath, node, blsCount, blsShardID)
 		},
 	}
 	cmdGenerateMultiBlsKeys.Flags().StringVar(&blsFilePath, "bls-file-path", "",
