@@ -1,6 +1,8 @@
 package common
 
 import (
+	"errors"
+	"fmt"
 	"math/big"
 	"regexp"
 	"strconv"
@@ -32,6 +34,9 @@ func Pow(base numeric.Dec, exp int) numeric.Dec {
 }
 
 func NewDecFromString(i string) (numeric.Dec, error) {
+	if strings.HasPrefix(i, "-") {
+		return numeric.ZeroDec(), errors.New(fmt.Sprintf("can not be negative: %s", i))
+	}
 	if pattern.FindString(i) != "" {
 		tokens := strings.Split(i, "e")
 		a, _ := numeric.NewDecFromStr(tokens[0])
