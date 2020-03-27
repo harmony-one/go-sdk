@@ -43,7 +43,11 @@ var (
 		PreRunE: validateAddress,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			noLatest = true
-			return request(rpc.Method.GetValidatorInformation, []interface{}{addr.address})
+			e := request(rpc.Method.GetValidatorInformation, []interface{}{addr.address})
+			if e != nil {
+				return fmt.Errorf("validator address not found: %s", addr.address)
+			}
+			return e
 		},
 	}, {
 		Use:     "information-by-block-number",
