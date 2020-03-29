@@ -22,6 +22,8 @@ var (
 	DebugTransaction = false
 	ErrNotAbsPath    = errors.New("keypath is not absolute path")
 	ErrBadKeyLength  = errors.New("Invalid private key (wrong length)")
+	ErrFoundNoKey    = errors.New("found no bls key file")
+	ErrFoundNoPass   = errors.New("found no passphrase file")
 )
 
 func init() {

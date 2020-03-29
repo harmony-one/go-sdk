@@ -118,10 +118,10 @@ func GetPublicBlsKey(privateKeyHex string) error {
 
 }
 
-func VerifyBLSKeys(blsPubKeys []string) ([]shard.BLSSignature, error) {
+func VerifyBLSKeys(blsPubKeys []string, blsPubKeyDir string) ([]shard.BLSSignature, error) {
 	blsSigs := make([]shard.BLSSignature, len(blsPubKeys))
 	for i := 0; i < len(blsPubKeys); i++ {
-		sig, err := VerifyBLS(strings.TrimPrefix(blsPubKeys[i], "0x"))
+		sig, err := VerifyBLS(strings.TrimPrefix(blsPubKeys[i], "0x"), blsPubKeyDir)
 		if err != nil {
 			return nil, err
 		}
@@ -130,30 +130,47 @@ func VerifyBLSKeys(blsPubKeys []string) ([]shard.BLSSignature, error) {
 	return blsSigs, nil
 }
 
-func VerifyBLS(blsPubKey string) (shard.BLSSignature, error) {
+func VerifyBLS(blsPubKey string, blsPubKeyDir string) (shard.BLSSignature, error) {
 	var sig shard.BLSSignature
-	// look for key file in the current directory
-	// if not ask for the absolute path
-	cwd, _ := os.Getwd()
-	filePath := fmt.Sprintf("%s/%s.key", cwd, blsPubKey)
-	encryptedPrivateKeyBytes, err := ioutil.ReadFile(filePath)
-	if err != nil {
-		reader := bufio.NewReader(os.Stdin)
-		fmt.Printf("For bls public key: %s\n", blsPubKey)
-		fmt.Println("Enter the absolute path to the encrypted bls private key file:")
-		filePath, _ := reader.ReadString('\n')
-		if !path.IsAbs(filePath) {
-			return sig, common.ErrNotAbsPath
-		}
-		filePath = strings.TrimSpace(filePath)
+	var encryptedPrivateKeyBytes []byte
+	var pass []byte
+	var err error
+	// specified blsPubKeyDir
+	if len(blsPubKeyDir) != 0 {
+		filePath := fmt.Sprintf("%s/%s.key", blsPubKeyDir, blsPubKey)
 		encryptedPrivateKeyBytes, err = ioutil.ReadFile(filePath)
 		if err != nil {
-			return sig, err
+			return sig, common.ErrFoundNoKey
 		}
+		passFile := fmt.Sprintf("%s/%s.pass", blsPubKeyDir, blsPubKey)
+		pass, err = ioutil.ReadFile(passFile)
+		if err != nil {
+			return sig, common.ErrFoundNoPass
+		}
+	} else {
+		// look for key file in the current directory
+		// if not ask for the absolute path
+		cwd, _ := os.Getwd()
+		filePath := fmt.Sprintf("%s/%s.key", cwd, blsPubKey)
+		encryptedPrivateKeyBytes, err = ioutil.ReadFile(filePath)
+		if err != nil {
+			reader := bufio.NewReader(os.Stdin)
+			fmt.Printf("For bls public key: %s\n", blsPubKey)
+			fmt.Println("Enter the absolute path to the encrypted bls private key file:")
+			filePath, _ := reader.ReadString('\n')
+			if !path.IsAbs(filePath) {
+				return sig, common.ErrNotAbsPath
+			}
+			filePath = strings.TrimSpace(filePath)
+			encryptedPrivateKeyBytes, err = ioutil.ReadFile(filePath)
+			if err != nil {
+				return sig, err
+			}
+		}
+		// ask passphrase for bls key twice
+		fmt.Println("Enter the bls passphrase:")
+		pass, _ = terminal.ReadPassword(int(os.Stdin.Fd()))
 	}
-	// ask passphrase for bls key twice
-	fmt.Println("Enter the bls passphrase:")
-	pass, _ := terminal.ReadPassword(int(os.Stdin.Fd()))
 
 	decryptedPrivateKeyBytes, err := decrypt(encryptedPrivateKeyBytes, string(pass))
 	if err != nil {

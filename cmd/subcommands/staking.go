@@ -52,6 +52,7 @@ var (
 	minSelfDelegation         string
 	maxTotalDelegation        string
 	stakingBlsPubKeys         []string
+	blsPubKeyDir              string
 	delegatorAddress          oneAddress
 	validatorAddress          oneAddress
 	stakingAmount             string
@@ -326,7 +327,7 @@ Create a new validator"
 				blsPubKeys[i].FromLibBLSPublicKey(blsPubKey)
 			}
 
-			blsSigs, err := keys.VerifyBLSKeys(stakingBlsPubKeys)
+			blsSigs, err := keys.VerifyBLSKeys(stakingBlsPubKeys, blsPubKeyDir)
 			if err != nil {
 				return err
 			}
@@ -427,6 +428,7 @@ Create a new validator"
 		&stakingBlsPubKeys, "bls-pubkeys",
 		[]string{}, "validator's list of public BLS key addresses",
 	)
+	subCmdNewValidator.Flags().StringVar(&blsPubKeyDir, "bls-pubkeys-dir", "", "directory to bls pubkeys storing pub.key, pub.pass files")
 	subCmdNewValidator.Flags().StringVar(&stakingAmount, "amount", "0.0", "staking amount")
 	subCmdNewValidator.Flags().StringVar(&gasPrice, "gas-price", "1", "gas price to pay")
 	subCmdNewValidator.Flags().StringVar(&gasLimit, "gas-limit", "", "gas limit")
@@ -494,7 +496,7 @@ Create a new validator"
 				shardKey.FromLibBLSPublicKey(blsKey)
 				shardPubKeyAdd = &shardKey
 
-				sig, err := keys.VerifyBLS(strings.TrimPrefix(slotKeyToAdd, "0x"))
+				sig, err := keys.VerifyBLS(strings.TrimPrefix(slotKeyToAdd, "0x"), blsPubKeyDir)
 				if err != nil {
 					return err
 				}
