@@ -23,7 +23,7 @@ func TestBlsKeyGeneration(t *testing.T) {
 		t.Errorf("TestBlsKeyGeneration - failed to make test key folder")
 	}
 
-	if err := GenBlsKeys(passphrase, absFilePath); err != nil {
+	if err := GenBlsKeys(&BlsKey{Passphrase: passphrase, FilePath: absFilePath}); err != nil {
 		t.Errorf("TestBlsKeyGeneration - failed to generate bls key using passphrase %s and path %s", passphrase, absFilePath)
 	}
 
@@ -48,27 +48,27 @@ func TestMultiBlsKeyGeneration(t *testing.T) {
 		filePath string
 		expected bool
 	}{
-		{node: "https://api.s0.os.hmny.io", count: 3, shardID: 0, filePath: "", expected: true},
-		{node: "https://api.s0.ps.hmny.io", count: 3, shardID: 0, filePath: "", expected: true},
-		{node: "https://api.s0.stn.hmny.io", count: 3, shardID: 0, filePath: "", expected: true},
-		{node: "https://api.s0.b.hmny.io", count: 3, shardID: 0, filePath: "", expected: true},
-		{node: "https://api.s0.t.hmny.io", count: 3, shardID: 0, filePath: "", expected: true},
+		{node: "https://api.s0.os.hmny.io", count: 3, shardID: 0, expected: true},
+		{node: "https://api.s0.ps.hmny.io", count: 3, shardID: 0, expected: true},
+		{node: "https://api.s0.stn.hmny.io", count: 3, shardID: 0, expected: true},
+		{node: "https://api.s0.b.hmny.io", count: 3, shardID: 0, expected: true},
+		{node: "https://api.s0.t.hmny.io", count: 3, shardID: 0, expected: true},
 
-		{node: "https://api.s0.os.hmny.io", count: 3, shardID: 4, filePath: "", expected: false},
-		{node: "https://api.s0.ps.hmny.io", count: 3, shardID: 4, filePath: "", expected: false},
-		{node: "https://api.s0.stn.hmny.io", count: 3, shardID: 4, filePath: "", expected: false},
-		{node: "https://api.s0.b.hmny.io", count: 3, shardID: 4, filePath: "", expected: false},
-		{node: "https://api.s0.t.hmny.io", count: 3, shardID: 4, filePath: "", expected: false},
+		{node: "https://api.s0.os.hmny.io", count: 3, shardID: 4, expected: false},
+		{node: "https://api.s0.ps.hmny.io", count: 3, shardID: 4, expected: false},
+		{node: "https://api.s0.stn.hmny.io", count: 3, shardID: 4, expected: false},
+		{node: "https://api.s0.b.hmny.io", count: 3, shardID: 4, expected: false},
+		{node: "https://api.s0.t.hmny.io", count: 3, shardID: 4, expected: false},
 	}
 
 	for _, test := range tests {
 		valid := false
-		passphrases := []string{}
+		blsKeys := []*BlsKey{}
 		for i := uint32(0); i < test.count; i++ {
-			passphrases = append(passphrases, "")
+			blsKeys = append(blsKeys, &BlsKey{Passphrase: "", FilePath: ""})
 		}
 
-		blsKeys, shardCount, err := generateMultipleBlsKeys(passphrases, test.filePath, test.node, test.count, test.shardID)
+		blsKeys, shardCount, err := generateMultipleBlsKeys(blsKeys, test.node, test.count, test.shardID)
 		if err != nil {
 			valid = false
 		}
