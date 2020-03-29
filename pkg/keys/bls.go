@@ -54,7 +54,13 @@ func NewBlsKey(privateKey *ffiBls.SecretKey, passphrase string) *BlsKey {
 // GenBlsKeys - generate a random bls key using the supplied passphrase, write it to disk at the given filePath
 func GenBlsKeys(passphrase, filePath string) error {
 	blsKey := NewBlsKey(bls.RandPrivateKey(), passphrase)
-	return writeBlsKeyToFile(filePath, blsKey)
+	out, err := writeBlsKeyToFile(filePath, blsKey)
+	if err != nil {
+		return err
+	}
+
+	fmt.Println(common.JSONPrettyFormat(out))
+	return nil
 }
 
 // GenMultiBlsKeys - generate multiple BLS keys for a given shard and node/network
@@ -64,10 +70,18 @@ func GenMultiBlsKeys(passphrases []string, filePath string, node string, count u
 		return err
 	}
 
+	outputs := []string{}
 	for _, blsKey := range blsKeys {
-		if err = writeBlsKeyToFile(filePath, blsKey); err != nil {
+		out, err := writeBlsKeyToFile(filePath, blsKey)
+		if err != nil {
 			return err
 		}
+
+		outputs = append(outputs, out)
+	}
+
+	if len(outputs) > 0 {
+		fmt.Println(common.JSONPrettyFormat(fmt.Sprintf("[%s]", strings.Join(outputs[:], ","))))
 	}
 
 	return nil
@@ -212,27 +226,27 @@ func getBlsKey(privateKeyHex string) (*ffiBls.SecretKey, error) {
 	return privateKey, nil
 }
 
-func writeBlsKeyToFile(filePath string, blsKey *BlsKey) error {
+func writeBlsKeyToFile(filePath string, blsKey *BlsKey) (string, error) {
 	if filePath == "" {
 		cwd, _ := os.Getwd()
 		filePath = fmt.Sprintf("%s/%s.key", cwd, blsKey.PublicKeyHex)
 	}
 	if !path.IsAbs(filePath) {
-		return common.ErrNotAbsPath
+		return "", common.ErrNotAbsPath
 	}
 	encryptedPrivateKeyStr, err := encrypt([]byte(blsKey.PrivateKeyHex), blsKey.Passphrase)
 	if err != nil {
-		return err
+		return "", err
 	}
 	err = writeToFile(filePath, encryptedPrivateKeyStr)
 	if err != nil {
-		return err
+		return "", err
 	}
 	out := fmt.Sprintf(`
 {"public-key" : "%s", "private-key" : "%s", "encrypted-private-key-path" : "%s"}`,
 		blsKey.PublicKeyHex, blsKey.PrivateKeyHex, filePath)
-	fmt.Println(common.JSONPrettyFormat(out))
-	return nil
+
+	return out, nil
 }
 
 func writeToFile(filename string, data string) error {
