@@ -159,7 +159,7 @@ var (
 	VersionWrapDump = ""
 	cookbook        = color.GreenString("hmy cookbook")
 	versionLink     = "https://harmony.one/hmycli_ver"
-	versionFormat   = regexp.MustCompile("v[0-9]+-[a-z0-9]{6}")
+	versionFormat   = regexp.MustCompile("v[0-9]+-[a-z0-9]{7}")
 )
 
 // Execute kicks off the hmy CLI
