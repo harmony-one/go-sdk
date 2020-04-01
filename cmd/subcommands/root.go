@@ -76,6 +76,9 @@ var (
 					if err != nil {
 						chainName = chainIDWrapper{chainID: &common.Chain.TestNet}
 					} else {
+						if len(routes) == 0 {
+							return errors.New("empty reply from sharding structure")
+						}
 						chainName = endpointToChainID(routes[0].HTTP)
 					}
 				} else if endpoint.Match([]byte(node)) {
@@ -169,7 +172,7 @@ func Execute() {
 		resp, _ := http.Get(versionLink)
 		defer resp.Body.Close()
 		// If error, no op
-		if resp != nil && resp.StatusCode == 200{
+		if resp != nil && resp.StatusCode == 200 {
 			buf := new(bytes.Buffer)
 			buf.ReadFrom(resp.Body)
 
@@ -180,8 +183,8 @@ func Execute() {
 			}
 		}
 		errMsg := errors.Wrapf(err, "commit: %s, error", VersionWrapDump).Error()
-		fmt.Fprintf(os.Stderr, errMsg + "\n")
-		fmt.Fprintf(os.Stderr, "check " + cookbook + " for valid examples or try adding a `--help` flag\n")
+		fmt.Fprintf(os.Stderr, errMsg+"\n")
+		fmt.Fprintf(os.Stderr, "check "+cookbook+" for valid examples or try adding a `--help` flag\n")
 		os.Exit(1)
 	}
 }
