@@ -2,11 +2,11 @@ package sharding
 
 import (
 	"bytes"
-	"fmt"
 	"encoding/json"
+	"fmt"
 
-	"github.com/harmony-one/go-sdk/pkg/rpc"
 	"github.com/harmony-one/go-sdk/pkg/common"
+	"github.com/harmony-one/go-sdk/pkg/rpc"
 	"github.com/harmony-one/harmony/common/denominations"
 	"github.com/harmony-one/harmony/numeric"
 )
@@ -33,7 +33,9 @@ func Structure(node string) ([]RPCRoutes, error) {
 		return nil, e
 	}
 	result := r{}
-	json.Unmarshal(p, &result)
+	if err := json.Unmarshal(p, &result); err != nil {
+		return nil, err
+	}
 	return result.Result, nil
 }
 
