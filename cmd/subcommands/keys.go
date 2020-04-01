@@ -33,6 +33,8 @@ var (
 	passphraseFilePath     string
 	passphrase             string
 	blsFilePath            string
+	blsShardID             uint32
+	blsCount               uint32
 	ppPrompt               = fmt.Sprintf(
 		"prompt for passphrase, otherwise use default passphrase: \"`%s`\"", c.DefaultPassphrase,
 	)
@@ -313,13 +315,54 @@ func keysSub() []*cobra.Command {
 			if err != nil {
 				return err
 			}
-			return keys.GenBlsKeys(passphrase, blsFilePath)
+
+			blsKey := &keys.BlsKey{
+				Passphrase: passphrase,
+				FilePath:   blsFilePath,
+			}
+
+			return keys.GenBlsKeys(blsKey)
 		},
 	}
 	cmdGenerateBlsKey.Flags().StringVar(&blsFilePath, "bls-file-path", "",
 		"absolute path of where to save encrypted bls private key")
 	cmdGenerateBlsKey.Flags().BoolVar(&userProvidesPassphrase, "passphrase", false, ppPrompt)
 	cmdGenerateBlsKey.Flags().StringVar(&passphraseFilePath, "passphrase-file", "", "path to a file containing the passphrase")
+
+	cmdGenerateMultiBlsKeys := &cobra.Command{
+		Use:   "generate-bls-keys",
+		Short: "Generates multiple bls keys for a given shard network configuration and then encrypts and saves the private key with a requested passphrase",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			blsKeys := []*keys.BlsKey{}
+
+			for i := uint32(0); i < blsCount; i++ {
+				keyFilePath := blsFilePath
+				if blsFilePath != "" {
+					fmt.Printf("Enter absolute path for key #%d:\n", i+1)
+					fmt.Scanln(&keyFilePath)
+				}
+
+				passphrase, err := getPassphraseWithConfirm()
+				if err != nil {
+					return err
+				}
+
+				blsKey := &keys.BlsKey{
+					Passphrase: passphrase,
+					FilePath:   keyFilePath,
+				}
+				blsKeys = append(blsKeys, blsKey)
+			}
+
+			return keys.GenMultiBlsKeys(blsKeys, node, blsCount, blsShardID)
+		},
+	}
+	cmdGenerateMultiBlsKeys.Flags().StringVar(&blsFilePath, "bls-file-path", "",
+		"absolute path of where to save encrypted bls private keys")
+	cmdGenerateMultiBlsKeys.Flags().BoolVar(&userProvidesPassphrase, "passphrase", false, ppPrompt)
+	cmdGenerateMultiBlsKeys.Flags().StringVar(&passphraseFilePath, "passphrase-file", "", "path to a file containing the passphrase")
+	cmdGenerateMultiBlsKeys.Flags().Uint32Var(&blsShardID, "shard", 0, "which shard to create bls keys for")
+	cmdGenerateMultiBlsKeys.Flags().Uint32Var(&blsCount, "count", 1, "how many bls keys to generate")
 
 	cmdRecoverBlsKey := &cobra.Command{
 		Use:   "recover-bls-key <ABSOLUTE_PATH_BLS_KEY>",
@@ -363,7 +406,7 @@ func keysSub() []*cobra.Command {
 	}
 
 	return []*cobra.Command{cmdList, cmdLocation, cmdAdd, cmdRemove, cmdMnemonic, cmdRecoverMnemonic, cmdImportKS, cmdImportPK,
-		cmdExportKS, cmdExportPK, cmdGenerateBlsKey, cmdRecoverBlsKey, cmdSaveBlsKey, GetPublicBlsKey}
+		cmdExportKS, cmdExportPK, cmdGenerateBlsKey, cmdGenerateMultiBlsKeys, cmdRecoverBlsKey, cmdSaveBlsKey, GetPublicBlsKey}
 }
 
 func init() {

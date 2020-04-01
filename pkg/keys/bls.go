@@ -11,12 +11,15 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
+	"math/big"
 	"os"
 	"path"
 	"strings"
 
 	ffiBls "github.com/harmony-one/bls/ffi/go/bls"
 	"github.com/harmony-one/go-sdk/pkg/common"
+	"github.com/harmony-one/go-sdk/pkg/sharding"
+	"github.com/harmony-one/go-sdk/pkg/validation"
 	"github.com/harmony-one/harmony/crypto/bls"
 	"github.com/harmony-one/harmony/crypto/hash"
 	"github.com/harmony-one/harmony/shard"
@@ -24,31 +27,67 @@ import (
 	"golang.org/x/crypto/ssh/terminal"
 )
 
-func GenBlsKeys(passphrase, filePath string) error {
-	privateKey := bls.RandPrivateKey()
-	publicKey := privateKey.GetPublicKey()
-	publicKeyHex := publicKey.SerializeToHexStr()
-	privateKeyHex := privateKey.SerializeToHexStr()
+//BlsKey - struct to represent bls key data
+type BlsKey struct {
+	PrivateKey     *ffiBls.SecretKey
+	PublicKey      *ffiBls.PublicKey
+	PublicKeyHex   string
+	PrivateKeyHex  string
+	Passphrase     string
+	FilePath       string
+	ShardPublicKey *shard.BlsPublicKey
+}
 
-	if filePath == "" {
-		cwd, _ := os.Getwd()
-		filePath = fmt.Sprintf("%s/%s.key", cwd, publicKeyHex)
+//Initialize - initialize a bls key and assign a random private bls key if not already done
+func (blsKey *BlsKey) Initialize() {
+	if blsKey.PrivateKey == nil {
+		blsKey.PrivateKey = bls.RandPrivateKey()
+		blsKey.PrivateKeyHex = blsKey.PrivateKey.SerializeToHexStr()
+		blsKey.PublicKey = blsKey.PrivateKey.GetPublicKey()
+		blsKey.PublicKeyHex = blsKey.PublicKey.SerializeToHexStr()
 	}
-	if !path.IsAbs(filePath) {
-		return common.ErrNotAbsPath
-	}
-	encryptedPrivateKeyStr, err := encrypt([]byte(privateKeyHex), passphrase)
+}
+
+//Reset - resets the currently assigned private and public key fields
+func (blsKey *BlsKey) Reset() {
+	blsKey.PrivateKey = nil
+	blsKey.PrivateKeyHex = ""
+	blsKey.PublicKey = nil
+	blsKey.PublicKeyHex = ""
+}
+
+// GenBlsKeys - generate a random bls key using the supplied passphrase, write it to disk at the given filePath
+func GenBlsKeys(blsKey *BlsKey) error {
+	blsKey.Initialize()
+	out, err := writeBlsKeyToFile(blsKey)
 	if err != nil {
 		return err
 	}
-	err = writeToFile(filePath, encryptedPrivateKeyStr)
-	if err != nil {
-		return err
-	}
-	out := fmt.Sprintf(`
-{"public-key" : "%s", "private-key" : "%s", "encrypted-private-key-path" : "%s"}`,
-		publicKeyHex, privateKeyHex, filePath)
 	fmt.Println(common.JSONPrettyFormat(out))
+	return nil
+}
+
+// GenMultiBlsKeys - generate multiple BLS keys for a given shard and node/network
+func GenMultiBlsKeys(blsKeys []*BlsKey, node string, count uint32, shardID uint32) error {
+	blsKeys, _, err := generateMultipleBlsKeys(blsKeys, node, count, shardID)
+	if err != nil {
+		return err
+	}
+
+	outputs := []string{}
+	for _, blsKey := range blsKeys {
+		out, err := writeBlsKeyToFile(blsKey)
+		if err != nil {
+			return err
+		}
+
+		outputs = append(outputs, out)
+	}
+
+	if len(outputs) > 0 {
+		fmt.Println(common.JSONPrettyFormat(fmt.Sprintf("[%s]", strings.Join(outputs[:], ","))))
+	}
+
 	return nil
 }
 
@@ -191,6 +230,29 @@ func getBlsKey(privateKeyHex string) (*ffiBls.SecretKey, error) {
 	return privateKey, nil
 }
 
+func writeBlsKeyToFile(blsKey *BlsKey) (string, error) {
+	if blsKey.FilePath == "" {
+		cwd, _ := os.Getwd()
+		blsKey.FilePath = fmt.Sprintf("%s/%s.key", cwd, blsKey.PublicKeyHex)
+	}
+	if !path.IsAbs(blsKey.FilePath) {
+		return "", common.ErrNotAbsPath
+	}
+	encryptedPrivateKeyStr, err := encrypt([]byte(blsKey.PrivateKeyHex), blsKey.Passphrase)
+	if err != nil {
+		return "", err
+	}
+	err = writeToFile(blsKey.FilePath, encryptedPrivateKeyStr)
+	if err != nil {
+		return "", err
+	}
+	out := fmt.Sprintf(`
+{"public-key" : "%s", "private-key" : "%s", "encrypted-private-key-path" : "%s"}`,
+		blsKey.PublicKeyHex, blsKey.PrivateKeyHex, blsKey.FilePath)
+
+	return out, nil
+}
+
 func writeToFile(filename string, data string) error {
 	file, err := os.Create(filename)
 	if err != nil {
@@ -256,4 +318,41 @@ func decryptRaw(data []byte, passphrase string) ([]byte, error) {
 	nonce, ciphertext := data[:nonceSize], data[nonceSize:]
 	plaintext, err := gcm.Open(nil, nonce, ciphertext, nil)
 	return plaintext, err
+}
+
+func generateMultipleBlsKeys(blsKeys []*BlsKey, node string, count uint32, shardID uint32) ([]*BlsKey, int, error) {
+	shardingStructure, err := sharding.Structure(node)
+	if err != nil {
+		return blsKeys, -1, err
+	}
+	shardCount := len(shardingStructure)
+
+	if !validation.ValidShardID(shardID, uint32(shardCount)) {
+		return blsKeys, shardCount, fmt.Errorf("node %s only supports a total of %d shards - supplied shard id %d isn't valid", node, shardCount, shardID)
+	}
+
+	for _, blsKey := range blsKeys {
+		for {
+			blsKey.Initialize()
+			shardPubKey := new(shard.BlsPublicKey)
+			if err = shardPubKey.FromLibBLSPublicKey(blsKey.PublicKey); err != nil {
+				return blsKeys, shardCount, err
+			}
+
+			if blsKeyMatchesShardID(shardPubKey, shardID, shardCount) {
+				blsKey.ShardPublicKey = shardPubKey
+				break
+			} else {
+				blsKey.Reset()
+			}
+		}
+	}
+
+	return blsKeys, shardCount, nil
+}
+
+func blsKeyMatchesShardID(pubKey *shard.BlsPublicKey, shardID uint32, shardCount int) bool {
+	bigShardCount := big.NewInt(int64(shardCount))
+	resolvedShardID := int(new(big.Int).Mod(pubKey.Big(), bigShardCount).Int64())
+	return int(shardID) == resolvedShardID
 }
