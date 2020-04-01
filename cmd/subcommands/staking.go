@@ -315,7 +315,7 @@ Create a new validator"
 				return err
 			}
 
-			blsPubKeys := make([]shard.BlsPublicKey, len(stakingBlsPubKeys))
+			blsPubKeys := make([]shard.BLSPublicKey, len(stakingBlsPubKeys))
 			for i := 0; i < len(stakingBlsPubKeys); i++ {
 				blsPubKey := new(bls.PublicKey)
 				err = blsPubKey.DeserializeHexStr(strings.TrimPrefix(stakingBlsPubKeys[i], "0x"))
@@ -469,19 +469,19 @@ Create a new validator"
 				commisionRate = &cRate
 			}
 
-			var shardPubKeyRemove *shard.BlsPublicKey
+			var shardPubKeyRemove *shard.BLSPublicKey
 			if slotKeyToRemove != "" {
 				blsKey := new(bls.PublicKey)
 				err = blsKey.DeserializeHexStr(strings.TrimPrefix(slotKeyToRemove, "0x"))
 				if err != nil {
 					return err
 				}
-				shardKey := shard.BlsPublicKey{}
+				shardKey := shard.BLSPublicKey{}
 				shardKey.FromLibBLSPublicKey(blsKey)
 				shardPubKeyRemove = &shardKey
 			}
 
-			var shardPubKeyAdd *shard.BlsPublicKey
+			var shardPubKeyAdd *shard.BLSPublicKey
 			var sigBls *shard.BLSSignature
 			if slotKeyToAdd != "" {
 				blsKey := new(bls.PublicKey)
@@ -490,7 +490,7 @@ Create a new validator"
 					return err
 				}
 
-				shardKey := shard.BlsPublicKey{}
+				shardKey := shard.BLSPublicKey{}
 				shardKey.FromLibBLSPublicKey(blsKey)
 				shardPubKeyAdd = &shardKey
 

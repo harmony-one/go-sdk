@@ -225,6 +225,8 @@ github.com/harmony-one/harmony v1.3.4 h1:oB75daEn78f8Bxdw6hpBBF2JklkbC3u+44ZRAeH
 github.com/harmony-one/harmony v1.3.4/go.mod h1:DtQ/D4hEowNTC6fROJWNIbQ6MK93Sl1/hAoajVSp3F4=
 github.com/harmony-one/harmony v1.9.0 h1:YmkOT7/bKO7uqW/G1df8uJzaZDfm0NqeHjWnv5EL8hE=
 github.com/harmony-one/harmony v1.9.0/go.mod h1:QSap+ZUyk1uetXfu0FVuaVcfbtr1LYqHG+u5eDeNM+A=
+github.com/harmony-one/harmony v1.9.1-0.20200401023838-11d528ecf75f h1:M/mEqGN5AJ5yZAbZSJDWfm06itl4kc0Nq5gSL6/xLMQ=
+github.com/harmony-one/harmony v1.9.1-0.20200401023838-11d528ecf75f/go.mod h1:vsLCYngIOvq4qhscoDmoE1Lxv9Ty2hjDnDKx4vc3iiQ=
 github.com/harmony-one/taggedrlp v0.1.2 h1:lAHV4UhBE45W+i7duAAWOgaQNUjDIG6rUydz/5Oqric=
 github.com/harmony-one/taggedrlp v0.1.2/go.mod h1:AK7o802368ESS3v4WZI5DzaHv9q0CsdgR9jPVJ6zleg=
 github.com/harmony-one/taggedrlp v0.1.4 h1:RZ+qy0VCzT+d/mTfq23gH3an5tSvxOhg6AddLDO6tKw=
@@ -767,6 +769,7 @@ golang.org/x/sync v0.0.0-20180314180146-1d60e4601c6f/go.mod h1:RxMgew5VJxzue5/jJ
 golang.org/x/sync v0.0.0-20181108010431-42b317875d0f/go.mod h1:RxMgew5VJxzue5/jJTE5uejpjVlOe/izrB70Jof72aM=
 golang.org/x/sync v0.0.0-20181221193216-37e7f081c4d4/go.mod h1:RxMgew5VJxzue5/jJTE5uejpjVlOe/izrB70Jof72aM=
 golang.org/x/sync v0.0.0-20190227155943-e225da77a7e6/go.mod h1:RxMgew5VJxzue5/jJTE5uejpjVlOe/izrB70Jof72aM=
+golang.org/x/sync v0.0.0-20190423024810-112230192c58 h1:8gQV6CLnAEikrhgkHFbMAEhagSSnXWGV915qUMm9mrU=
 golang.org/x/sync v0.0.0-20190423024810-112230192c58/go.mod h1:RxMgew5VJxzue5/jJTE5uejpjVlOe/izrB70Jof72aM=
 golang.org/x/sys v0.0.0-20171026204733-164713f0dfce/go.mod h1:STP8DvDyc/dI5b8T5hshtkjS+E42TnysNCUPdjciGhY=
 golang.org/x/sys v0.0.0-20180830151530-49385e6e1522/go.mod h1:STP8DvDyc/dI5b8T5hshtkjS+E42TnysNCUPdjciGhY=

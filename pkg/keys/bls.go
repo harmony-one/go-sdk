@@ -170,7 +170,7 @@ func VerifyBLS(blsPubKey string) (shard.BLSSignature, error) {
 		return sig, errors.New("bls key could not be verified")
 	}
 
-	messageBytes := []byte(types.BlsVerificationStr)
+	messageBytes := []byte(types.BLSVerificationStr)
 	msgHash := hash.Keccak256(messageBytes)
 	signature := privateKey.SignHash(msgHash[:])
 
