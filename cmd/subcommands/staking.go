@@ -331,9 +331,9 @@ Create a new validator"
 				return err
 			}
 
-			amt, e0 := numeric.NewDecFromStr(stakingAmount)
-			minSelfDel, e1 := numeric.NewDecFromStr(minSelfDelegation)
-			maxTotalDel, e2 := numeric.NewDecFromStr(maxTotalDelegation)
+			amt, e0 := common.NewDecFromString(stakingAmount)
+			minSelfDel, e1 := common.NewDecFromString(minSelfDelegation)
+			maxTotalDel, e2 := common.NewDecFromString(maxTotalDelegation)
 
 			if e0 != nil {
 				return e0
@@ -626,14 +626,15 @@ Delegating to a validator
 				return err
 			}
 
-			amt, _ := numeric.NewDecFromStr(stakingAmount)
-			if amt.IsNegative() {
-				return errNegativeAmount
+			_, e := common.NewDecFromString(stakingAmount)
+			if e != nil {
+				return e
 			}
 
 			delegateStakePayloadMaker := func() (staking.Directive, interface{}) {
-				amt, _ := numeric.NewDecFromStr(stakingAmount)
+				amt, _ := common.NewDecFromString(stakingAmount)
 				amt = amt.Mul(oneAsDec)
+
 				return staking.DirectiveDelegate, staking.Delegate{
 					address.Parse(delegatorAddress.String()),
 					address.Parse(validatorAddress.String()),
@@ -665,7 +666,7 @@ Delegating to a validator
 
 	subCmdDelegate.Flags().Var(&delegatorAddress, "delegator-addr", "delegator's address")
 	subCmdDelegate.Flags().Var(&validatorAddress, "validator-addr", "validator's address")
-	subCmdDelegate.Flags().StringVar(&stakingAmount, "amount", "0.0", "staking amount")
+	subCmdDelegate.Flags().StringVar(&stakingAmount, "amount", "0", "staking amount")
 	subCmdDelegate.Flags().StringVar(&gasPrice, "gas-price", "1", "gas price to pay")
 	subCmdDelegate.Flags().StringVar(&gasLimit, "gas-limit", "", "gas limit")
 	subCmdDelegate.Flags().StringVar(&inputNonce, "nonce", "", "set nonce for transaction")
@@ -691,13 +692,13 @@ Delegating to a validator
 				return err
 			}
 
-			amt, _ := numeric.NewDecFromStr(stakingAmount)
-			if amt.IsNegative() {
-				return errNegativeAmount
+			_, e := common.NewDecFromString(stakingAmount)
+			if e != nil {
+				return e
 			}
 
 			delegateStakePayloadMaker := func() (staking.Directive, interface{}) {
-				amt, _ := numeric.NewDecFromStr(stakingAmount)
+				amt, _ := common.NewDecFromString(stakingAmount)
 				amt = amt.Mul(oneAsDec)
 
 				return staking.DirectiveUndelegate, staking.Undelegate{
@@ -731,7 +732,7 @@ Delegating to a validator
 
 	subCmdUnDelegate.Flags().Var(&delegatorAddress, "delegator-addr", "delegator's address")
 	subCmdUnDelegate.Flags().Var(&validatorAddress, "validator-addr", "source validator's address")
-	subCmdUnDelegate.Flags().StringVar(&stakingAmount, "amount", "0.0", "staking amount")
+	subCmdUnDelegate.Flags().StringVar(&stakingAmount, "amount", "0", "staking amount")
 	subCmdUnDelegate.Flags().StringVar(&gasPrice, "gas-price", "1", "gas price to pay")
 	subCmdUnDelegate.Flags().StringVar(&gasLimit, "gas-limit", "", "gas limit")
 	subCmdUnDelegate.Flags().StringVar(&inputNonce, "nonce", "", "set nonce for transaction")
