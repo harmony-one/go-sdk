@@ -35,7 +35,7 @@ type BlsKey struct {
 	PrivateKeyHex  string
 	Passphrase     string
 	FilePath       string
-	ShardPublicKey *shard.BlsPublicKey
+	ShardPublicKey *shard.BLSPublicKey
 }
 
 //Initialize - initialize a bls key and assign a random private bls key if not already done
@@ -334,7 +334,7 @@ func generateMultipleBlsKeys(blsKeys []*BlsKey, node string, count uint32, shard
 	for _, blsKey := range blsKeys {
 		for {
 			blsKey.Initialize()
-			shardPubKey := new(shard.BlsPublicKey)
+			shardPubKey := new(shard.BLSPublicKey)
 			if err = shardPubKey.FromLibBLSPublicKey(blsKey.PublicKey); err != nil {
 				return blsKeys, shardCount, err
 			}
@@ -351,7 +351,7 @@ func generateMultipleBlsKeys(blsKeys []*BlsKey, node string, count uint32, shard
 	return blsKeys, shardCount, nil
 }
 
-func blsKeyMatchesShardID(pubKey *shard.BlsPublicKey, shardID uint32, shardCount int) bool {
+func blsKeyMatchesShardID(pubKey *shard.BLSPublicKey, shardID uint32, shardCount int) bool {
 	bigShardCount := big.NewInt(int64(shardCount))
 	resolvedShardID := int(new(big.Int).Mod(pubKey.Big(), bigShardCount).Int64())
 	return int(shardID) == resolvedShardID
