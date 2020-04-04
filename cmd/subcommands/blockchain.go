@@ -163,6 +163,13 @@ High level information about transaction, like blockNumber, blockHash
 			return request(rpc.Method.GetLatestBlockHeader, []interface{}{})
 		},
 	}, {
+		Use:   "latest-headers",
+		Short: "Get the latest chain headers",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			noLatest = true
+			return request(rpc.Method.GetLatestChainHeaders, []interface{}{})
+		},
+	}, {
 		Use:   "resend-cx",
 		Short: "Re-play a cross shard transaction",
 		Args:  cobra.ExactArgs(1),
