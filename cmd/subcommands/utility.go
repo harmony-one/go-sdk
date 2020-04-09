@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"math/big"
+	"strings"
 
 	"github.com/harmony-one/bls/ffi/go/bls"
 	"github.com/harmony-one/go-sdk/pkg/address"
@@ -105,8 +106,9 @@ func init() {
 		Args:  cobra.ExactArgs(1),
 		Short: "which shard this BLS key would be assigned to",
 		RunE: func(cmd *cobra.Command, args []string) error {
+			inputKey := strings.TrimPrefix(args[0], "0x")
 			key := bls.PublicKey{}
-			if err := key.DeserializeHexStr(args[0]); err != nil {
+			if err := key.DeserializeHexStr(inputKey); err != nil {
 				return err
 			}
 			reply, err := rpc.Request(rpc.Method.GetShardingStructure, node, []interface{}{})
