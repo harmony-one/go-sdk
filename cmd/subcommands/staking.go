@@ -598,6 +598,7 @@ Create a new validator"
 	subCmdEditValidator.Flags().StringVar(&validatorSecurityContact, "security-contact", "", "validator's security contact")
 	subCmdEditValidator.Flags().StringVar(&validatorDetails, "details", "", "validator's details")
 	subCmdEditValidator.Flags().StringVar(&commisionRateStr, "rate", "", "commission rate")
+	subCmdEditValidator.Flags().StringVar(&blsPubKeyDir, "bls-pubkeys-dir", "", "directory to bls pubkeys storing pub.key, pub.pass files")
 	subCmdEditValidator.Flags().StringVar(&minSelfDelegation, "min-self-delegation", "", "minimal self delegation")
 	subCmdEditValidator.Flags().StringVar(&maxTotalDelegation, "max-total-delegation", "", "maximal total delegation")
 	subCmdEditValidator.Flags().Var(&validatorAddress, "validator-addr", "validator's staking address")
