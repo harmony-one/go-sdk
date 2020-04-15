@@ -2,7 +2,8 @@ package account
 
 import (
 	"fmt"
-	
+	"path/filepath"
+
 	"github.com/harmony-one/go-sdk/pkg/store"
 	"github.com/harmony-one/harmony/accounts"
 )
@@ -20,15 +21,23 @@ func ExportPrivateKey(address, passphrase string) error {
 	return nil
 }
 
-func ExportKeystore(address, passphrase string) error {
+func ExportKeystore(address, path, passphrase string) (string, error) {
 	ks := store.FromAddress(address)
 	allAccounts := ks.Accounts()
+	dirPath, err := filepath.Abs(path)
+	if err != nil {
+		return "", err
+	}
+	outFile := filepath.Join(dirPath, fmt.Sprintf("%s.key", address))
 	for _, account := range allAccounts {
 		keyFile, err := ks.Export(accounts.Account{Address: account.Address}, passphrase, passphrase)
 		if err != nil {
-			return err
+			return "", err
 		}
-		fmt.Printf("%s\n", keyFile)
+		e := writeToFile(outFile, string(keyFile))
+		if e != nil {
+			return "", e
+		}
 	}
-	return nil
+	return outFile, nil
 }
