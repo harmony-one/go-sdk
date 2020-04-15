@@ -292,16 +292,20 @@ func keysSub() []*cobra.Command {
 	cmdExportPK.Flags().StringVar(&passphraseFilePath, "passphrase-file", "", "path to a file containing the passphrase")
 
 	cmdExportKS := &cobra.Command{
-		Use:     "export-ks <ACCOUNT_ADDRESS>",
+		Use:     "export-ks <ACCOUNT_ADDRESS> <OUTPUT_DIRECTORY>",
 		Short:   "Export the keystore file contents",
-		Args:    cobra.ExactArgs(1),
+		Args:    cobra.ExactArgs(2),
 		PreRunE: validateAddress,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			passphrase, err := getPassphrase()
 			if err != nil {
 				return err
 			}
-			return account.ExportKeystore(addr.address, passphrase)
+			file, e := account.ExportKeystore(addr.address, args[1], passphrase)
+			if file != "" {
+				fmt.Println("Exported keystore to", file)
+			}
+			return e
 		},
 	}
 	cmdExportKS.Flags().BoolVar(&userProvidesPassphrase, "passphrase", false, ppPrompt)

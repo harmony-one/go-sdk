@@ -37,7 +37,6 @@ func ListKeys(keystoreDir string) {
 	for _, account := range allAccounts {
 		fmt.Printf("%s\t\t %s\n", address.ToBech32(account.Address), account.URL)
 	}
-
 }
 
 func AddNewKey(password string) {
