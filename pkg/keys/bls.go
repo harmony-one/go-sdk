@@ -211,7 +211,8 @@ func VerifyBLS(blsPubKey string, blsPubKeyDir string) (shard.BLSSignature, error
 		pass, _ = terminal.ReadPassword(int(os.Stdin.Fd()))
 	}
 
-	decryptedPrivateKeyBytes, err := decrypt(encryptedPrivateKeyBytes, string(pass))
+	cleanPass := strings.TrimSpace(string(pass))
+	decryptedPrivateKeyBytes, err := decrypt(encryptedPrivateKeyBytes, cleanPass)
 	if err != nil {
 		return sig, err
 	}
