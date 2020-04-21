@@ -161,6 +161,7 @@ func handleStakingTransaction(
 	r, _ := reply["result"].(string)
 	if timeout > 0 {
 		if err := confirmTx(networkHandler, timeout, r); err != nil {
+			fmt.Println(fmt.Sprintf(`{"transaction-hash":"%s"}`, r))
 			return err
 		}
 	} else {
