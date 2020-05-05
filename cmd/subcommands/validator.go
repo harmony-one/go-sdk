@@ -24,19 +24,6 @@ var (
 			return request(rpc.Method.GetAllValidatorAddresses, []interface{}{})
 		},
 	}, {
-		Use:     "metrics",
-		Short:   "metrics about the performance of a validator",
-		Args:    cobra.ExactArgs(1),
-		PreRunE: validateAddress,
-		RunE: func(cmd *cobra.Command, args []string) error {
-			noLatest = true
-			e := request(rpc.Method.GetValidatorMetrics, []interface{}{addr.address})
-			if e != nil {
-				fmt.Println("Metrics are only available for Validators that have participated in consensus committee.")
-			}
-			return e
-		},
-	}, {
 		Use:     "information",
 		Short:   "original creation record of a validator",
 		Args:    cobra.ExactArgs(1),
