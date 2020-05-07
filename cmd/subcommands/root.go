@@ -131,9 +131,6 @@ func init() {
 			} else if chainName.chainID == &common.Chain.PangaeaNet {
 				docNode = `https://api.s0.os.hmny.io`
 				docNet = `Open Staking Network`
-			} else if chainName.chainID == &common.Chain.PartnerNet {
-				docNode = `https://api.s0.ps.hmny.io`
-				docNet = `Partner Testnet`
 			} else if chainName.chainID == &common.Chain.StressNet {
 				docNode = `https://api.s0.stn.hmny.io`
 				docNet = `Stress Testing Network`
@@ -196,8 +193,6 @@ func endpointToChainID(nodeAddr string) chainIDWrapper {
 		return chainIDWrapper{chainID: &common.Chain.TestNet}
 	} else if strings.Contains(nodeAddr, ".os.") {
 		return chainIDWrapper{chainID: &common.Chain.PangaeaNet}
-	} else if strings.Contains(nodeAddr, ".ps.") {
-		return chainIDWrapper{chainID: &common.Chain.PartnerNet}
 	} else if strings.Contains(nodeAddr, ".stn.") {
 		return chainIDWrapper{chainID: &common.Chain.StressNet}
 	}
