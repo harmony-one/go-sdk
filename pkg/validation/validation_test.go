@@ -34,6 +34,9 @@ func TestIsValidAddress(t *testing.T) {
 }
 
 func TestIsValidShard(t *testing.T) {
+	if err := ValidateNodeConnection("http://localhost:9500"); err != nil {
+		t.Skip()
+	}
 	s, _ := sharding.Structure("http://localhost:9500")
 
 	tests := []struct {
