@@ -3,12 +3,13 @@ package cmd
 import (
 	"fmt"
 
-	color "github.com/fatih/color"
+	"github.com/fatih/color"
 )
 
 const (
-	hmyDocsDir      = "hmy-docs"
-	defaultNodeAddr = "http://localhost:9500"
+	hmyDocsDir             = "hmy-docs"
+	defaultNodeAddr        = "http://localhost:9500"
+	defaultMainnetEndpoint = "https://api.s0.t.hmny.io/"
 )
 
 var (

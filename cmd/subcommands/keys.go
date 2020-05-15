@@ -9,16 +9,17 @@ import (
 	"strings"
 
 	"github.com/fatih/color"
+	"github.com/spf13/cobra"
+	"github.com/tyler-smith/go-bip39"
+	"golang.org/x/crypto/ssh/terminal"
+
 	"github.com/harmony-one/go-sdk/pkg/account"
 	c "github.com/harmony-one/go-sdk/pkg/common"
-
 	"github.com/harmony-one/go-sdk/pkg/keys"
 	"github.com/harmony-one/go-sdk/pkg/ledger"
 	"github.com/harmony-one/go-sdk/pkg/mnemonic"
 	"github.com/harmony-one/go-sdk/pkg/store"
-	"github.com/spf13/cobra"
-	"github.com/tyler-smith/go-bip39"
-	"golang.org/x/crypto/ssh/terminal"
+	"github.com/harmony-one/go-sdk/pkg/validation"
 )
 
 const (
@@ -325,7 +326,7 @@ func keysSub() []*cobra.Command {
 				FilePath:   blsFilePath,
 			}
 
-			return keys.GenBlsKeys(blsKey)
+			return keys.GenBlsKey(blsKey)
 		},
 	}
 	cmdGenerateBlsKey.Flags().StringVar(&blsFilePath, "bls-file-path", "",
@@ -337,6 +338,11 @@ func keysSub() []*cobra.Command {
 		Use:   "generate-bls-keys",
 		Short: "Generates multiple bls keys for a given shard network configuration and then encrypts and saves the private key with a requested passphrase",
 		RunE: func(cmd *cobra.Command, args []string) error {
+			if err := validation.ValidateNodeConnection(node); err != nil {
+				fmt.Fprintf(os.Stderr, "Cannot connect to node %v, using Harmony mainnet endpoint %v\n",
+					node, defaultMainnetEndpoint)
+				node = defaultMainnetEndpoint
+			}
 			blsKeys := []*keys.BlsKey{}
 
 			for i := uint32(0); i < blsCount; i++ {
@@ -358,7 +364,7 @@ func keysSub() []*cobra.Command {
 				blsKeys = append(blsKeys, blsKey)
 			}
 
-			return keys.GenMultiBlsKeys(blsKeys, node, blsCount, blsShardID)
+			return keys.GenMultiBlsKeys(blsKeys, node, blsShardID)
 		},
 	}
 	cmdGenerateMultiBlsKeys.Flags().StringVar(&blsFilePath, "bls-file-path", "",
