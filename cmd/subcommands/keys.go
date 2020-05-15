@@ -56,7 +56,7 @@ func getPassphrase() (string, error) {
 		pw := strings.TrimSuffix(string(dat), "\n")
 		return pw, nil
 	} else if userProvidesPassphrase {
-		fmt.Println("Enter passphrase:")
+		fmt.Println("Enter wallet keystore passphrase:")
 		pass, err := terminal.ReadPassword(int(os.Stdin.Fd()))
 		if err != nil {
 			return "", err

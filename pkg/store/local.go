@@ -43,7 +43,7 @@ func LocalAccounts() []string {
 
 var (
 	describe              = fmt.Sprintf("%-24s\t\t%23s\n", "NAME", "ADDRESS")
-	NoUnlockBadPassphrase = errors.New("could not unlock account with passphrase, perhaps need different phrase")
+	NoUnlockBadPassphrase = errors.New("could not unlock wallet with given passphrase")
 )
 
 // DescribeLocalAccounts will display all the account alias name and their corresponding one address
