@@ -200,6 +200,8 @@ func endpointToChainID(nodeAddr string) chainIDWrapper {
 		return chainIDWrapper{chainID: &common.Chain.PartnerNet}
 	} else if strings.Contains(nodeAddr, ".stn.") {
 		return chainIDWrapper{chainID: &common.Chain.StressNet}
+	} else if strings.Contains(nodeAddr, ".dry.") {
+		return chainIDWrapper{chainID: &common.Chain.MainNet}
 	}
 	return chainIDWrapper{chainID: &common.Chain.TestNet}
 }
