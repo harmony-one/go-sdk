@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"strconv"
+	"time"
 
 	"github.com/valyala/fasthttp"
 
@@ -44,6 +45,7 @@ func baseRequest(method string, node string, params interface{}) ([]byte, error)
 	if common.DebugRPC {
 		reqB := common.JSONPrettyFormat(string(requestBody))
 		respB := common.JSONPrettyFormat(string(body))
+		fmt.Printf("Response Timestamp: %s\n", time.Now().String())
 		fmt.Printf("URL: %s, Request Body: %s\n\n", node, reqB)
 		fmt.Printf("URL: %s, Response Body: %s\n\n", node, respB)
 	}
