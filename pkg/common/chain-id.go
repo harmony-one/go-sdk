@@ -49,6 +49,8 @@ func StringToChainID(name string) (*ChainID, error) {
 		return &Chain.PartnerNet, nil
 	case "stressnet":
 		return &Chain.StressNet, nil
+	case "dryrun":
+		return &Chain.MainNet, nil
 	default:
 		return nil, fmt.Errorf("unknown chain-id: %s", name)
 	}
