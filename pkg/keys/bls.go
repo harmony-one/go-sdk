@@ -208,6 +208,7 @@ func VerifyBLS(blsPubKey string, blsPubKeyDir string) (shard.BLSSignature, error
 	}
 
 	cleanPass := strings.TrimSpace(string(pass))
+	cleanPass = strings.ReplaceAll(cleanPass, "\t", "")
 	decryptedPrivateKeyBytes, err := decrypt(encryptedPrivateKeyBytes, cleanPass)
 	if err != nil {
 		return sig, err
