@@ -56,8 +56,8 @@ func (blsKey *BlsKey) Reset() {
 	blsKey.PublicKeyHex = ""
 }
 
-// GenBlsKeys - generate a random bls key using the supplied passphrase, write it to disk at the given filePath
-func GenBlsKeys(blsKey *BlsKey) error {
+// GenBlsKey - generate a random bls key using the supplied passphrase, write it to disk at the given filePath
+func GenBlsKey(blsKey *BlsKey) error {
 	blsKey.Initialize()
 	out, err := writeBlsKeyToFile(blsKey)
 	if err != nil {
@@ -68,26 +68,22 @@ func GenBlsKeys(blsKey *BlsKey) error {
 }
 
 // GenMultiBlsKeys - generate multiple BLS keys for a given shard and node/network
-func GenMultiBlsKeys(blsKeys []*BlsKey, node string, count uint32, shardID uint32) error {
-	blsKeys, _, err := generateMultipleBlsKeys(blsKeys, node, count, shardID)
+func GenMultiBlsKeys(blsKeys []*BlsKey, node string, shardID uint32) error {
+	blsKeys, _, err := genBlsKeyForNode(blsKeys, node, shardID)
 	if err != nil {
 		return err
 	}
-
 	outputs := []string{}
 	for _, blsKey := range blsKeys {
 		out, err := writeBlsKeyToFile(blsKey)
 		if err != nil {
 			return err
 		}
-
 		outputs = append(outputs, out)
 	}
-
 	if len(outputs) > 0 {
 		fmt.Println(common.JSONPrettyFormat(fmt.Sprintf("[%s]", strings.Join(outputs[:], ","))))
 	}
-
 	return nil
 }
 
@@ -338,7 +334,7 @@ func decryptRaw(data []byte, passphrase string) ([]byte, error) {
 	return plaintext, err
 }
 
-func generateMultipleBlsKeys(blsKeys []*BlsKey, node string, count uint32, shardID uint32) ([]*BlsKey, int, error) {
+func genBlsKeyForNode(blsKeys []*BlsKey, node string, shardID uint32) ([]*BlsKey, int, error) {
 	shardingStructure, err := sharding.Structure(node)
 	if err != nil {
 		return blsKeys, -1, err

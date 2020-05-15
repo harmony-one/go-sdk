@@ -16,6 +16,7 @@ type chainIDList struct {
 	MainNet    ChainID `json:"mainnet"`
 	TestNet    ChainID `json:"testnet"`
 	PangaeaNet ChainID `json:"pangaea"`
+	PartnerNet ChainID `json:"partner"`
 	StressNet  ChainID `json:"stress"`
 }
 
@@ -24,6 +25,7 @@ var Chain = chainIDList{
 	MainNet:    ChainID{"mainnet", big.NewInt(1)},
 	TestNet:    ChainID{"testnet", big.NewInt(2)},
 	PangaeaNet: ChainID{"pangaea", big.NewInt(3)},
+	PartnerNet: ChainID{"partner", big.NewInt(4)},
 	StressNet:  ChainID{"stress", big.NewInt(5)},
 }
 
@@ -41,6 +43,10 @@ func StringToChainID(name string) (*ChainID, error) {
 		return &Chain.TestNet, nil
 	case "pangaea":
 		return &Chain.PangaeaNet, nil
+	case "devnet":
+		return &Chain.PartnerNet, nil
+	case "partner":
+		return &Chain.PartnerNet, nil
 	case "stressnet":
 		return &Chain.StressNet, nil
 	default:

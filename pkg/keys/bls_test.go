@@ -23,7 +23,7 @@ func TestBlsKeyGeneration(t *testing.T) {
 		t.Errorf("TestBlsKeyGeneration - failed to make test key folder")
 	}
 
-	if err := GenBlsKeys(&BlsKey{Passphrase: passphrase, FilePath: absFilePath}); err != nil {
+	if err := GenBlsKey(&BlsKey{Passphrase: passphrase, FilePath: absFilePath}); err != nil {
 		t.Errorf("TestBlsKeyGeneration - failed to generate bls key using passphrase %s and path %s", passphrase, absFilePath)
 	}
 
@@ -34,7 +34,7 @@ func TestBlsKeyGeneration(t *testing.T) {
 	valid = !os.IsNotExist(err)
 
 	if !valid {
-		t.Errorf("GenBlsKeys - failed to generate a bls key using passphrase %s", "")
+		t.Errorf("GenBlsKey - failed to generate a bls key using passphrase %s", "")
 	}
 
 	os.RemoveAll(absFolderPath)
@@ -48,16 +48,7 @@ func TestMultiBlsKeyGeneration(t *testing.T) {
 		filePath string
 		expected bool
 	}{
-		{node: "https://api.s0.os.hmny.io", count: 3, shardID: 0, expected: true},
-		{node: "https://api.s0.ps.hmny.io", count: 3, shardID: 0, expected: true},
-		{node: "https://api.s0.stn.hmny.io", count: 3, shardID: 0, expected: true},
-		{node: "https://api.s0.b.hmny.io", count: 3, shardID: 0, expected: true},
 		{node: "https://api.s0.t.hmny.io", count: 3, shardID: 0, expected: true},
-
-		{node: "https://api.s0.os.hmny.io", count: 3, shardID: 4, expected: false},
-		{node: "https://api.s0.ps.hmny.io", count: 3, shardID: 4, expected: false},
-		{node: "https://api.s0.stn.hmny.io", count: 3, shardID: 4, expected: false},
-		{node: "https://api.s0.b.hmny.io", count: 3, shardID: 4, expected: false},
 		{node: "https://api.s0.t.hmny.io", count: 3, shardID: 4, expected: false},
 	}
 
@@ -68,7 +59,7 @@ func TestMultiBlsKeyGeneration(t *testing.T) {
 			blsKeys = append(blsKeys, &BlsKey{Passphrase: "", FilePath: ""})
 		}
 
-		blsKeys, shardCount, err := generateMultipleBlsKeys(blsKeys, test.node, test.count, test.shardID)
+		blsKeys, shardCount, err := genBlsKeyForNode(blsKeys, test.node, test.shardID)
 		if err != nil {
 			valid = false
 		}
@@ -85,7 +76,7 @@ func TestMultiBlsKeyGeneration(t *testing.T) {
 		valid = (successCount == int(test.count))
 
 		if valid != test.expected {
-			t.Errorf("generateMultipleBlsKeys - failed to generate %d keys for shard %d using node %s", test.count, test.shardID, test.node)
+			t.Errorf("genBlsKeyForNode - failed to generate %d keys for shard %d using node %s", test.count, test.shardID, test.node)
 		}
 	}
 }

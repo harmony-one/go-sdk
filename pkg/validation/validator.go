@@ -2,7 +2,9 @@ package validation
 
 import (
 	"fmt"
+	"net"
 	"regexp"
+	"time"
 )
 
 var (
@@ -39,4 +41,11 @@ func ValidShardID(shardID uint32, shardCount uint32) bool {
 	}
 
 	return true
+}
+
+// ValidateNodeConnection validates that the node can be connected to
+func ValidateNodeConnection(node string) error {
+	timeout := time.Duration(1 * time.Second)
+	_, err := net.DialTimeout("tcp", node, timeout)
+	return err
 }
