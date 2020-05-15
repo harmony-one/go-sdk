@@ -57,7 +57,6 @@ type rpcEnumList struct {
 	GetDelegationsByDelegator               method
 	GetDelegationsByValidator               method
 	GetCurrentTransactionErrorSink          method
-	GetValidatorMetrics                     method
 	GetMedianRawStakeSnapshot               method
 	GetCurrentStakingErrorSink              method
 	GetTransactionsHistory                  method
@@ -120,7 +119,6 @@ var Method = rpcEnumList{
 	GetDelegationsByDelegator:               "hmy_getDelegationsByDelegator",
 	GetDelegationsByValidator:               "hmy_getDelegationsByValidator",
 	GetCurrentTransactionErrorSink:          "hmy_getCurrentTransactionErrorSink",
-	GetValidatorMetrics:                     "hmy_getValidatorMetrics",
 	GetMedianRawStakeSnapshot:               "hmy_getMedianRawStakeSnapshot",
 	GetCurrentStakingErrorSink:              "hmy_getCurrentStakingErrorSink",
 	GetTransactionsHistory:                  "hmy_getTransactionsHistory",
