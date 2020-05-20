@@ -388,7 +388,7 @@ Create a new validator"
 				}
 			}
 
-			nonce, err := getNonceFromInput(validatorAddress.String(), inputNonce, networkHandler)
+			nonce, err := getNonce(validatorAddress.String(), networkHandler)
 			if err != nil {
 				return err
 			}
@@ -410,6 +410,7 @@ Create a new validator"
 		},
 	}
 
+	subCmdNewValidator.Flags().BoolVar(&trueNonce, "true-nonce", false, "send transaction with on-chain nonce")
 	subCmdNewValidator.Flags().StringVar(&validatorName, "name", "", "validator's name")
 	subCmdNewValidator.Flags().StringVar(&validatorIdentity, "identity", "", "validator's identity")
 	subCmdNewValidator.Flags().StringVar(&validatorWebsite, "website", "", "validator's website")
@@ -571,7 +572,7 @@ Create a new validator"
 				}
 			}
 
-			nonce, err := getNonceFromInput(validatorAddress.String(), inputNonce, networkHandler)
+			nonce, err := getNonce(validatorAddress.String(), networkHandler)
 			if err != nil {
 				return err
 			}
@@ -593,6 +594,7 @@ Create a new validator"
 		},
 	}
 
+	subCmdEditValidator.Flags().BoolVar(&trueNonce, "true-nonce", false, "send transaction with on-chain nonce")
 	subCmdEditValidator.Flags().StringVar(&validatorName, "name", "", "validator's name")
 	subCmdEditValidator.Flags().StringVar(&validatorIdentity, "identity", "", "validator's identity")
 	subCmdEditValidator.Flags().StringVar(&validatorWebsite, "website", "", "validator's website")
@@ -646,7 +648,7 @@ Delegating to a validator
 				}
 			}
 
-			nonce, err := getNonceFromInput(delegatorAddress.String(), inputNonce, networkHandler)
+			nonce, err := getNonce(delegatorAddress.String(), networkHandler)
 			if err != nil {
 				return err
 			}
@@ -668,6 +670,7 @@ Delegating to a validator
 		},
 	}
 
+	subCmdDelegate.Flags().BoolVar(&trueNonce, "true-nonce", false, "send transaction with on-chain nonce")
 	subCmdDelegate.Flags().Var(&delegatorAddress, "delegator-addr", "delegator's address")
 	subCmdDelegate.Flags().Var(&validatorAddress, "validator-addr", "validator's address")
 	subCmdDelegate.Flags().StringVar(&stakingAmount, "amount", "0", "staking amount")
@@ -712,7 +715,7 @@ Delegating to a validator
 				}
 			}
 
-			nonce, err := getNonceFromInput(delegatorAddress.String(), inputNonce, networkHandler)
+			nonce, err := getNonce(delegatorAddress.String(), networkHandler)
 			if err != nil {
 				return err
 			}
@@ -734,6 +737,7 @@ Delegating to a validator
 		},
 	}
 
+	subCmdUnDelegate.Flags().BoolVar(&trueNonce, "true-nonce", false, "send transaction with on-chain nonce")
 	subCmdUnDelegate.Flags().Var(&delegatorAddress, "delegator-addr", "delegator's address")
 	subCmdUnDelegate.Flags().Var(&validatorAddress, "validator-addr", "source validator's address")
 	subCmdUnDelegate.Flags().StringVar(&stakingAmount, "amount", "0", "staking amount")
@@ -768,7 +772,7 @@ Collect token rewards
 				}
 			}
 
-			nonce, err := getNonceFromInput(delegatorAddress.String(), inputNonce, networkHandler)
+			nonce, err := getNonce(delegatorAddress.String(), networkHandler)
 			if err != nil {
 				return err
 			}
@@ -790,6 +794,7 @@ Collect token rewards
 		},
 	}
 
+	subCmdCollectRewards.Flags().BoolVar(&trueNonce, "true-nonce", false, "send transaction with on-chain nonce")
 	subCmdCollectRewards.Flags().Var(&delegatorAddress, "delegator-addr", "delegator's address")
 	subCmdCollectRewards.Flags().StringVar(&gasPrice, "gas-price", "1", "gas price to pay")
 	subCmdCollectRewards.Flags().StringVar(&gasLimit, "gas-limit", "", "gas limit")

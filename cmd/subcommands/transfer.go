@@ -33,6 +33,7 @@ var (
 	targetChain       string
 	chainName         chainIDWrapper
 	dryRun            bool
+	trueNonce         bool
 	inputNonce        string
 	gasPrice          string
 	gasLimit          string
@@ -62,6 +63,7 @@ type transferFlags struct {
 	GasPrice         *string `json:"gas-price"`
 	GasLimit         *string `json:"gas-limit"`
 	StopOnError      bool    `json:"stop-on-error"`
+	TrueNonce        bool    `json:"true-nonce"`
 }
 
 func handlerForShard(senderShard uint32, node string) (*rpc.HTTPMessenger, error) {
@@ -122,13 +124,13 @@ func handlerForTransaction(txLog *transactionLog) error {
 		ctrlr = transaction.NewController(networkHandler, ks, acct, *chainName.chainID, opts)
 	}
 
-	nonce, err := getNonceFromInput(fromAddress.String(), inputNonce, networkHandler)
-	if handlerForError(txLog, err) != nil {
+	nonce, err := getNonce(fromAddress.String(), networkHandler)
+	if err != nil {
 		return err
 	}
 
 	amt, err := common.NewDecFromString(amount)
-	if err != nil  {
+	if err != nil {
 		amtErr := fmt.Errorf("amount %w", err)
 		handlerForError(txLog, amtErr)
 		return amtErr
@@ -251,6 +253,7 @@ func handlerForBulkTransactions(txLog *transactionLog, index int) error {
 	} else {
 		gasLimit = "" // Reset to default for subsequent transactions
 	}
+	trueNonce = txnFlags.TrueNonce
 
 	return handlerForTransaction(txLog)
 }
@@ -267,6 +270,14 @@ func opts(ctlr *transaction.Controller) {
 	}
 }
 
+func getNonce(address string, messenger rpc.T) (uint64, error) {
+	if trueNonce {
+		// cannot define nonce when using true nonce
+		return transaction.GetNextNonce(address, messenger), nil
+	}
+	return getNonceFromInput(address, inputNonce, messenger)
+}
+
 func getNonceFromInput(addr, inputNonce string, messenger rpc.T) (uint64, error) {
 	if inputNonce != "" {
 		if strings.HasPrefix(inputNonce, "-") {
@@ -279,7 +290,7 @@ func getNonceFromInput(addr, inputNonce string, messenger rpc.T) (uint64, error)
 			return nonce, nil
 		}
 	} else {
-		return transaction.GetNextNonce(addr, messenger), nil
+		return transaction.GetNextPendingNonce(addr, messenger), nil
 	}
 }
 
@@ -318,6 +329,9 @@ Create a transaction, sign it, and send off to the Harmony blockchain
 				for _, flagName := range [...]string{"from", "to", "amount", "from-shard", "to-shard"} {
 					_ = cmd.MarkFlagRequired(flagName)
 				}
+				if trueNonce && inputNonce != "" {
+					return fmt.Errorf("cannot specify nonce when using true on-chain nonce")
+				}
 			} else {
 				data, err := ioutil.ReadFile(givenFilePath)
 				if err != nil {
@@ -326,6 +340,11 @@ Create a transaction, sign it, and send off to the Harmony blockchain
 				err = json.Unmarshal(data, &transferFileFlags)
 				if err != nil {
 					return err
+				}
+				for i, batchTx := range transferFileFlags {
+					if batchTx.TrueNonce && batchTx.InputNonce != nil {
+						return fmt.Errorf("cannot specify nonce when using true on-chain nonce for transaction number %v in batch", i+1)
+					}
 				}
 			}
 			return nil
@@ -369,6 +388,7 @@ Create a transaction, sign it, and send off to the Harmony blockchain
 	cmdTransfer.Flags().Var(&fromAddress, "from", "sender's one address, keystore must exist locally")
 	cmdTransfer.Flags().Var(&toAddress, "to", "the destination one address")
 	cmdTransfer.Flags().BoolVar(&dryRun, "dry-run", false, "do not send signed transaction")
+	cmdTransfer.Flags().BoolVar(&trueNonce, "true-nonce", false, "send transaction with on-chain nonce")
 	cmdTransfer.Flags().StringVar(&amount, "amount", "0", "amount to send (ONE)")
 	cmdTransfer.Flags().StringVar(&gasPrice, "gas-price", "1", "gas price to pay (NANO)")
 	cmdTransfer.Flags().StringVar(&gasLimit, "gas-limit", "", "gas limit")
