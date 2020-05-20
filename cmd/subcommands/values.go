@@ -101,7 +101,7 @@ Check README for details on json file format.
 ./hmy --node=[NODE] failures staking
 
 %s
-./hmy --node=[NODE] utility shard-for-bls 2d61379e44a772e5757e27ee2b3874254f56073e6bd226eb8b160371cc3c18b8c4977bd3dcb71fd57dc62bf0e143fd08
+./hmy --node=[NODE] utility shard-for-bls <BLS_PUBLIC_KEY>
 
 `,
 		g("1.  Check account balance on given chain"),

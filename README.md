@@ -124,7 +124,7 @@ Check README for details on json file format.
 ./hmy --node=https://api.s0.t.hmny.io failures staking
 
 20. Check which shard your BLS public key would be assigned to as a validator
-./hmy --node=https://api.s0.t.hmny.io utility shard-for-bls 2d61379e44a772e5757e27ee2b3874254f56073e6bd226eb8b160371cc3c18b8c4977bd3dcb71fd57dc62bf0e143fd08
+./hmy --node=https://api.s0.t.hmny.io utility shard-for-bls <BLS_PUBLIC_KEY>
 ```
 
 # Sending batched transactions
@@ -156,7 +156,7 @@ The JSON file will be a JSON array where each element has the following attribut
 | `gas-price`         | string     | [*Optional*] The gas price to pay in NANO (1e-9 of $ONE), default is 1. |
 | `gas-limit`         | string     | [*Optional*] The gas limit, default is 21000. |
 | `stop-on-error`     | boolean    | [*Optional*] If true, stop sending transactions if an error occurred, default is false. |
-| `true-nonce`        | boolean    | [*Optional*] If true, send transaction using true on-chain nonce. Cannot be used with `nonce`. If non is provided, use tx pool nonce. |
+| `true-nonce`        | boolean    | [*Optional*] If true, send transaction using true on-chain nonce. Cannot be used with `nonce`. If none is provided, use tx pool nonce. |
 
 Example of JSON file:
 
