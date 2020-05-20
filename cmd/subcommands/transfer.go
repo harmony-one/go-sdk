@@ -124,14 +124,9 @@ func handlerForTransaction(txLog *transactionLog) error {
 		ctrlr = transaction.NewController(networkHandler, ks, acct, *chainName.chainID, opts)
 	}
 
-	var nonce uint64
-	if trueNonce {
-		nonce = transaction.GetNextNonce(fromAddress.String(), networkHandler)
-	} else {
-		nonce, err = getNonceFromInput(fromAddress.String(), inputNonce, networkHandler)
-		if handlerForError(txLog, err) != nil {
-			return err
-		}
+	nonce, err := getNonce(fromAddress.String(), networkHandler)
+	if err != nil {
+		return err
 	}
 
 	amt, err := common.NewDecFromString(amount)
@@ -273,6 +268,14 @@ func opts(ctlr *transaction.Controller) {
 	if timeout > 0 {
 		ctlr.Behavior.ConfirmationWaitTime = timeout
 	}
+}
+
+func getNonce(address string, messenger rpc.T) (uint64, error) {
+	if trueNonce {
+		// cannot define nonce when using true nonce
+		return transaction.GetNextNonce(address, messenger), nil
+	}
+	return getNonceFromInput(address, inputNonce, messenger)
 }
 
 func getNonceFromInput(addr, inputNonce string, messenger rpc.T) (uint64, error) {

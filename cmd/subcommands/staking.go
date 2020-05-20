@@ -388,14 +388,9 @@ Create a new validator"
 				}
 			}
 
-			var nonce uint64
-			if trueNonce {
-				nonce = transaction.GetNextNonce(validatorAddress.String(), networkHandler)
-			} else {
-				nonce, err = getNonceFromInput(validatorAddress.String(), inputNonce, networkHandler)
-				if err != nil {
-					return err
-				}
+			nonce, err := getNonce(validatorAddress.String(), networkHandler)
+			if err != nil {
+				return err
 			}
 			stakingTx, err := createStakingTransaction(nonce, delegateStakePayloadMaker)
 			if err != nil {
@@ -577,14 +572,9 @@ Create a new validator"
 				}
 			}
 
-			var nonce uint64
-			if trueNonce {
-				nonce = transaction.GetNextNonce(validatorAddress.String(), networkHandler)
-			} else {
-				nonce, err = getNonceFromInput(validatorAddress.String(), inputNonce, networkHandler)
-				if err != nil {
-					return err
-				}
+			nonce, err := getNonce(validatorAddress.String(), networkHandler)
+			if err != nil {
+				return err
 			}
 			stakingTx, err := createStakingTransaction(nonce, delegateStakePayloadMaker)
 			if err != nil {
@@ -658,14 +648,9 @@ Delegating to a validator
 				}
 			}
 
-			var nonce uint64
-			if trueNonce {
-				nonce = transaction.GetNextNonce(delegatorAddress.String(), networkHandler)
-			} else {
-				nonce, err = getNonceFromInput(delegatorAddress.String(), inputNonce, networkHandler)
-				if err != nil {
-					return err
-				}
+			nonce, err := getNonce(delegatorAddress.String(), networkHandler)
+			if err != nil {
+				return err
 			}
 			stakingTx, err := createStakingTransaction(nonce, delegateStakePayloadMaker)
 			if err != nil {
@@ -730,14 +715,9 @@ Delegating to a validator
 				}
 			}
 
-			var nonce uint64
-			if trueNonce {
-				nonce = transaction.GetNextNonce(delegatorAddress.String(), networkHandler)
-			} else {
-				nonce, err = getNonceFromInput(delegatorAddress.String(), inputNonce, networkHandler)
-				if err != nil {
-					return err
-				}
+			nonce, err := getNonce(delegatorAddress.String(), networkHandler)
+			if err != nil {
+				return err
 			}
 			stakingTx, err := createStakingTransaction(nonce, delegateStakePayloadMaker)
 			if err != nil {
@@ -792,14 +772,9 @@ Collect token rewards
 				}
 			}
 
-			var nonce uint64
-			if trueNonce {
-				nonce = transaction.GetNextNonce(delegatorAddress.String(), networkHandler)
-			} else {
-				nonce, err = getNonceFromInput(delegatorAddress.String(), inputNonce, networkHandler)
-				if err != nil {
-					return err
-				}
+			nonce, err := getNonce(delegatorAddress.String(), networkHandler)
+			if err != nil {
+				return err
 			}
 			stakingTx, err := createStakingTransaction(nonce, delegateStakePayloadMaker)
 			if err != nil {
