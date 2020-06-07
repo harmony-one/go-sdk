@@ -35,7 +35,7 @@ import urllib.error
 import json
 
 script_directory = os.path.dirname(os.path.realpath(__file__))
-hmy_path = f"{script_directory}/hmy"
+_hmy_call_and_prefix = [f"{script_directory}/hmy"]
 chain_id_options = {"mainnet", "testnet", "stressnet", "partner", "dryrun"}
 default_passphrase = ""
 
@@ -60,11 +60,15 @@ def _hmy(cli_args, timeout=200):
     """
     Helper function to call the CLI with the given args.
 
+    Assumes `_setup_hmy` has been called prior to using this function.
+
     Raises subprocess.CalledProcessError if call errored.
     """
+    assert isinstance(cli_args, list)
+    hmy_and_args = _hmy_call_and_prefix + [str(x) for x in cli_args]
     if args.verbose:
-        return subprocess.check_output(f"{hmy_path} {cli_args} --verbose", shell=True, env=os.environ, timeout=timeout).decode()
-    return subprocess.check_output(f"{hmy_path} {cli_args}", shell=True, env=os.environ, timeout=timeout).decode()
+        hmy_and_args.append("--verbose")
+    return subprocess.check_output(hmy_and_args, env=os.environ, timeout=timeout).decode()
 
 
 def get_shard_count(node):
@@ -74,7 +78,7 @@ def get_shard_count(node):
     Will raise a KeyError if the RPC returns back an error.
     Will raise a subprocess.CalledProcessError if CLI errored.
     """
-    response = _hmy(f"utility shards -n {node}")
+    response = _hmy(["utility", "shards", "-n", node])
     return len(json.loads(response)['result'])
 
 
@@ -104,13 +108,13 @@ def send_transactions(transactions, batch_size, node, chain_id, timeout=40, fast
         os.chmod(temp_file, 400)
         print(f"{Typgpy.OKBLUE}Sending a batch of {Typgpy.OKGREEN}{len(batch_tx)}{Typgpy.OKBLUE} transaction(s){Typgpy.ENDC}")
         print(f"{Typgpy.OKBLUE}Logs for this batch will be at {Typgpy.OKGREEN}{batch_log_file}{Typgpy.ENDC}")
-        hmy_args = f"transfer --file {temp_file} --node {node} "
+        hmy_args = ["transfer", "--file", temp_file, "--node", node]
         if chain_id:
-            hmy_args += f"--chain-id {chain_id} "
+            hmy_args.extend(["--chain-id", chain_id])
         if fast:
-            hmy_args += "--timeout 0 "
+            hmy_args.extend(["--timeout", "0"])
         else:
-            hmy_args += f"--timeout {timeout} "
+            hmy_args.extend(["--timeout", timeout])
         try:
             output = _hmy(hmy_args, timeout=timeout * len(batch_tx))
         except subprocess.CalledProcessError as e:
@@ -155,8 +159,8 @@ def parse_csv(path, node, use_default_passphrase=True):
             sys.stdout.write(f"\rParsing line {i} of {path}")
             sys.stdout.flush()
             try:
-                _hmy(f"utility bech32-to-addr {row['from']}")
-                _hmy(f"utility bech32-to-addr {row['to']}")
+                _hmy(["utility", "bech32-to-addr", row['from']])
+                _hmy(["utility", "bech32-to-addr", row['to']])
             except subprocess.CalledProcessError as e:
                 print(f"{e.output}")
                 print(f"{Typgpy.FAIL}Address error on line {i}! From: {row['from']}; To: {row['to']}{Typgpy.ENDC}")
@@ -221,7 +225,6 @@ def sanity_check(args):
     """
     assert os.path.isfile(args.path), f"{args.path} is not a file"
     assert os.path.exists(args.path), f"{args.path} does not exist"
-    assert os.path.isfile(hmy_path), f"CLI not in same directory as script. '{hmy_path}' is not a file."
     try:
         return_code = urllib.request.urlopen(args.node).getcode()
     except (urllib.error.HTTPError, urllib.error.URLError) as e:
@@ -229,6 +232,29 @@ def sanity_check(args):
     assert return_code == 200, f"bad response code ({return_code}) from node {args.node}"
     if args.chain_id is not None:
         assert args.chain_id in chain_id_options, f"{args.chain_id} not in {chain_id_options}"
+
+
+def _setup_hmy():
+    """
+    Setup `_hmy_call_and_prefix` depending on if hmy.sh exists.
+    """
+    global _hmy_call_and_prefix
+    _hmy_call_and_prefix = [f"{script_directory}/hmy"]
+    try:
+        _hmy(["version"])
+        return
+    except (subprocess.CalledProcessError, FileNotFoundError):
+        print(f"Unable to execute hmy CLI directly at: '{_hmy_call_and_prefix[0]}'")
+        print(f"Trying to use 'hmy.sh'...")
+    if "hmy.sh" in os.listdir(script_directory):
+        _hmy_call_and_prefix = [f"{script_directory}/hmy.sh", "--"]
+        try:
+            _hmy(["version"])
+            return
+        except subprocess.CalledProcessError as e:
+            raise SystemExit(f"'hmy.sh' is unable to execute the CLI. Try downloading the CLI with `./hmy.sh -d`.") from e
+    else:
+        raise SystemExit(f"'hmy.sh' is not found in script directory {script_directory}. ")
 
 
 def _parse_args():
@@ -260,6 +286,7 @@ def _parse_args():
 
 if __name__ == "__main__":
     args = _parse_args()
+    _setup_hmy()
     sanity_check(args)
     transactions = parse_csv(args.path, args.node, use_default_passphrase=args.use_default_passphrase)
     send_transactions(transactions, args.batch_size, args.node, args.chain_id,
