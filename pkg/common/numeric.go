@@ -12,7 +12,7 @@ import (
 )
 
 var (
-	pattern, _ = regexp.Compile("[0-9]+\\.{0,1}[0-9]*e-{0,1}[0-9]+")
+	pattern, _ = regexp.Compile("[0-9]+\\.{0,1}[0-9]*[eE]-{0,1}[0-9]+")
 )
 
 func Pow(base numeric.Dec, exp int) numeric.Dec {
@@ -38,7 +38,12 @@ func NewDecFromString(i string) (numeric.Dec, error) {
 		return numeric.ZeroDec(), errors.New(fmt.Sprintf("can not be negative: %s", i))
 	}
 	if pattern.FindString(i) != "" {
-		tokens := strings.Split(i, "e")
+		if tokens := strings.Split(i, "e"); len(tokens) > 1 {
+			a, _ := numeric.NewDecFromStr(tokens[0])
+			b, _ := strconv.Atoi(tokens[1])
+			return a.Mul(Pow(numeric.NewDec(10), b)), nil
+		}
+		tokens := strings.Split(i, "E")
 		a, _ := numeric.NewDecFromStr(tokens[0])
 		b, _ := strconv.Atoi(tokens[1])
 		return a.Mul(Pow(numeric.NewDec(10), b)), nil
