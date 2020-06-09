@@ -12,7 +12,7 @@ import (
 )
 
 var (
-	pattern, _ = regexp.Compile("[0-9]+\\.{0,1}[0-9]*[eE]-{0,1}[0-9]+")
+	pattern, _ = regexp.Compile("[0-9]+\\.{0,1}[0-9]*[eE][-+]{0,1}[0-9]+")
 )
 
 func Pow(base numeric.Dec, exp int) numeric.Dec {
