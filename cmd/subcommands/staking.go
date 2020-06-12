@@ -302,17 +302,17 @@ Create a new validator"
 				return err
 			}
 
-			commisionRate, err := numeric.NewDecFromStr(commisionRateStr)
+			commisionRate, err := common.NewDecFromString(commisionRateStr)
 			if err != nil {
 				return err
 			}
 
-			commisionMaxRate, err := numeric.NewDecFromStr(commisionMaxRateStr)
+			commisionMaxRate, err := common.NewDecFromString(commisionMaxRateStr)
 			if err != nil {
 				return err
 			}
 
-			commisionMaxChangeRate, err := numeric.NewDecFromStr(commisionMaxChangeRateStr)
+			commisionMaxChangeRate, err := common.NewDecFromString(commisionMaxChangeRateStr)
 			if err != nil {
 				return err
 			}
@@ -466,7 +466,7 @@ Create a new validator"
 
 			var commisionRate *numeric.Dec
 			if commisionRateStr != "" {
-				cRate, err := numeric.NewDecFromStr(commisionRateStr)
+				cRate, err := common.NewDecFromString(commisionRateStr)
 				if err != nil {
 					return err
 				}
@@ -508,7 +508,7 @@ Create a new validator"
 			var minSelfDel *numeric.Dec
 			var mSelDel *big.Int
 			if minSelfDelegation != "" {
-				amount, err := numeric.NewDecFromStr(minSelfDelegation)
+				amount, err := common.NewDecFromString(minSelfDelegation)
 				if err != nil {
 					return err
 				}
@@ -520,7 +520,7 @@ Create a new validator"
 			var maxTotalDel *numeric.Dec
 			var mTotalDel *big.Int
 			if maxTotalDelegation != "" {
-				amount, err := numeric.NewDecFromStr(maxTotalDelegation)
+				amount, err := common.NewDecFromString(maxTotalDelegation)
 				if err != nil {
 					return err
 				}
