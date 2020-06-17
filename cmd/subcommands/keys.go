@@ -417,8 +417,33 @@ func keysSub() []*cobra.Command {
 		},
 	}
 
-	return []*cobra.Command{cmdList, cmdLocation, cmdAdd, cmdRemove, cmdMnemonic, cmdRecoverMnemonic, cmdImportKS, cmdImportPK,
-		cmdExportKS, cmdExportPK, cmdGenerateBlsKey, cmdGenerateMultiBlsKeys, cmdRecoverBlsKey, cmdSaveBlsKey, GetPublicBlsKey}
+	cmdCheckPassphrase := &cobra.Command{
+		Use:     "check-passphrase <ACCOUNT_ADDRESS>",
+		Short:   "Check if passphrase for given account is valid.",
+		Args:    cobra.ExactArgs(1),
+		PreRunE: validateAddress,
+		RunE: func(cmd *cobra.Command, args []string) error {
+			userProvidesPassphrase = true
+			passphrase, err := getPassphrase()
+			if err != nil {
+				return err
+			}
+			ok, err := account.VerifyPassphrase(args[0], passphrase)
+			if ok {
+				fmt.Println("Valid passphrase")
+				return nil
+			}
+			if err != nil {
+				return err
+			}
+			return fmt.Errorf("invalid passphrase")
+		},
+	}
+	cmdCheckPassphrase.Flags().StringVar(&passphraseFilePath, "passphrase-file", "", "path to a file containing the passphrase")
+
+	return []*cobra.Command{cmdList, cmdLocation, cmdAdd, cmdRemove, cmdMnemonic, cmdRecoverMnemonic,
+		cmdImportKS, cmdImportPK, cmdExportKS, cmdExportPK, cmdCheckPassphrase,
+		cmdGenerateBlsKey, cmdGenerateMultiBlsKeys, cmdRecoverBlsKey, cmdSaveBlsKey, GetPublicBlsKey}
 }
 
 func init() {
