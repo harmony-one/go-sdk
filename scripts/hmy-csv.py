@@ -33,6 +33,7 @@ import subprocess
 import urllib.request
 import urllib.error
 import json
+import ssl
 
 script_directory = os.path.dirname(os.path.realpath(__file__))
 _hmy_call_and_prefix = [f"{script_directory}/hmy"]
@@ -226,7 +227,7 @@ def sanity_check(args):
     assert os.path.isfile(args.path), f"{args.path} is not a file"
     assert os.path.exists(args.path), f"{args.path} does not exist"
     try:
-        return_code = urllib.request.urlopen(args.node).getcode()
+        return_code = urllib.request.urlopen(args.node, context=ssl._create_unverified_context()).getcode()
     except (urllib.error.HTTPError, urllib.error.URLError) as e:
         raise RuntimeError(f"unable to connect to node {args.node}") from e
     assert return_code == 200, f"bad response code ({return_code}) from node {args.node}"
