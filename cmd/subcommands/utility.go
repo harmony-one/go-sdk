@@ -6,10 +6,10 @@ import (
 	"math/big"
 	"strings"
 
-	"github.com/harmony-one/bls/ffi/go/bls"
+	bls_core "github.com/harmony-one/bls/ffi/go/bls"
 	"github.com/harmony-one/go-sdk/pkg/address"
 	"github.com/harmony-one/go-sdk/pkg/rpc"
-	"github.com/harmony-one/harmony/shard"
+	"github.com/harmony-one/harmony/crypto/bls"
 	"github.com/spf13/cobra"
 )
 
@@ -107,7 +107,7 @@ func init() {
 		Short: "which shard this BLS key would be assigned to",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			inputKey := strings.TrimPrefix(args[0], "0x")
-			key := bls.PublicKey{}
+			key := bls_core.PublicKey{}
 			if err := key.DeserializeHexStr(inputKey); err != nil {
 				return err
 			}
@@ -116,7 +116,7 @@ func init() {
 				return err
 			}
 			shardBig := len(reply["result"].([]interface{})) // assume the response is a JSON Array
-			wrapper := shard.FromLibBLSPublicKeyUnsafe(&key)
+			wrapper := bls.FromLibBLSPublicKeyUnsafe(&key)
 			shardID := int(new(big.Int).Mod(wrapper.Big(), big.NewInt(int64(shardBig))).Int64())
 			type t struct {
 				ShardID int `json:"shard-id"`
