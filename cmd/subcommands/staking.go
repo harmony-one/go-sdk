@@ -10,7 +10,7 @@ import (
 
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/ethereum/go-ethereum/rlp"
-	"github.com/harmony-one/bls/ffi/go/bls"
+	bls_core "github.com/harmony-one/bls/ffi/go/bls"
 	"github.com/harmony-one/go-sdk/pkg/address"
 	"github.com/harmony-one/go-sdk/pkg/common"
 	"github.com/harmony-one/go-sdk/pkg/keys"
@@ -22,6 +22,7 @@ import (
 	"github.com/harmony-one/harmony/accounts/keystore"
 	"github.com/harmony-one/harmony/common/denominations"
 	"github.com/harmony-one/harmony/core"
+	"github.com/harmony-one/harmony/crypto/bls"
 	"github.com/harmony-one/harmony/numeric"
 	"github.com/harmony-one/harmony/shard"
 	"github.com/harmony-one/harmony/staking/effective"
@@ -317,9 +318,9 @@ Create a new validator"
 				return err
 			}
 
-			blsPubKeys := make([]shard.BLSPublicKey, len(stakingBlsPubKeys))
+			blsPubKeys := make([]bls.SerializedPublicKey, len(stakingBlsPubKeys))
 			for i := 0; i < len(stakingBlsPubKeys); i++ {
-				blsPubKey := new(bls.PublicKey)
+				blsPubKey := new(bls_core.PublicKey)
 				err = blsPubKey.DeserializeHexStr(strings.TrimPrefix(stakingBlsPubKeys[i], "0x"))
 				if err != nil {
 					return err
@@ -473,28 +474,28 @@ Create a new validator"
 				commisionRate = &cRate
 			}
 
-			var shardPubKeyRemove *shard.BLSPublicKey
+			var shardPubKeyRemove *bls.SerializedPublicKey
 			if slotKeyToRemove != "" {
-				blsKey := new(bls.PublicKey)
+				blsKey := new(bls_core.PublicKey)
 				err = blsKey.DeserializeHexStr(strings.TrimPrefix(slotKeyToRemove, "0x"))
 				if err != nil {
 					return err
 				}
-				shardKey := shard.BLSPublicKey{}
+				shardKey := bls.SerializedPublicKey{}
 				shardKey.FromLibBLSPublicKey(blsKey)
 				shardPubKeyRemove = &shardKey
 			}
 
-			var shardPubKeyAdd *shard.BLSPublicKey
-			var sigBls *shard.BLSSignature
+			var shardPubKeyAdd *bls.SerializedPublicKey
+			var sigBls *bls.SerializedSignature
 			if slotKeyToAdd != "" {
-				blsKey := new(bls.PublicKey)
+				blsKey := new(bls_core.PublicKey)
 				err = blsKey.DeserializeHexStr(strings.TrimPrefix(slotKeyToAdd, "0x"))
 				if err != nil {
 					return err
 				}
 
-				shardKey := shard.BLSPublicKey{}
+				shardKey := bls.SerializedPublicKey{}
 				shardKey.FromLibBLSPublicKey(blsKey)
 				shardPubKeyAdd = &shardKey
 

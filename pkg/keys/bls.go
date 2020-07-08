@@ -16,26 +16,25 @@ import (
 	"path"
 	"strings"
 
-	ffiBls "github.com/harmony-one/bls/ffi/go/bls"
+	bls_core "github.com/harmony-one/bls/ffi/go/bls"
 	"github.com/harmony-one/go-sdk/pkg/common"
 	"github.com/harmony-one/go-sdk/pkg/sharding"
 	"github.com/harmony-one/go-sdk/pkg/validation"
 	"github.com/harmony-one/harmony/crypto/bls"
 	"github.com/harmony-one/harmony/crypto/hash"
-	"github.com/harmony-one/harmony/shard"
 	"github.com/harmony-one/harmony/staking/types"
 	"golang.org/x/crypto/ssh/terminal"
 )
 
 //BlsKey - struct to represent bls key data
 type BlsKey struct {
-	PrivateKey     *ffiBls.SecretKey
-	PublicKey      *ffiBls.PublicKey
+	PrivateKey     *bls_core.SecretKey
+	PublicKey      *bls_core.PublicKey
 	PublicKeyHex   string
 	PrivateKeyHex  string
 	Passphrase     string
 	FilePath       string
-	ShardPublicKey *shard.BLSPublicKey
+	ShardPublicKey *bls.SerializedPublicKey
 }
 
 //Initialize - initialize a bls key and assign a random private bls key if not already done
@@ -153,8 +152,8 @@ func GetPublicBlsKey(privateKeyHex string) error {
 
 }
 
-func VerifyBLSKeys(blsPubKeys []string, blsPubKeyDir string) ([]shard.BLSSignature, error) {
-	blsSigs := make([]shard.BLSSignature, len(blsPubKeys))
+func VerifyBLSKeys(blsPubKeys []string, blsPubKeyDir string) ([]bls.SerializedSignature, error) {
+	blsSigs := make([]bls.SerializedSignature, len(blsPubKeys))
 	for i := 0; i < len(blsPubKeys); i++ {
 		sig, err := VerifyBLS(strings.TrimPrefix(blsPubKeys[i], "0x"), blsPubKeyDir)
 		if err != nil {
@@ -165,8 +164,8 @@ func VerifyBLSKeys(blsPubKeys []string, blsPubKeyDir string) ([]shard.BLSSignatu
 	return blsSigs, nil
 }
 
-func VerifyBLS(blsPubKey string, blsPubKeyDir string) (shard.BLSSignature, error) {
-	var sig shard.BLSSignature
+func VerifyBLS(blsPubKey string, blsPubKeyDir string) (bls.SerializedSignature, error) {
+	var sig bls.SerializedSignature
 	var encryptedPrivateKeyBytes []byte
 	var pass []byte
 	var err error
@@ -229,15 +228,15 @@ func VerifyBLS(blsPubKey string, blsPubKeyDir string) (shard.BLSSignature, error
 	signature := privateKey.SignHash(msgHash[:])
 
 	bytes := signature.Serialize()
-	if len(bytes) != shard.BLSSignatureSizeInBytes {
+	if len(bytes) != bls.BLSSignatureSizeInBytes {
 		return sig, errors.New("bls key length is not 96 bytes")
 	}
 	copy(sig[:], bytes)
 	return sig, nil
 }
 
-func getBlsKey(privateKeyHex string) (*ffiBls.SecretKey, error) {
-	privateKey := &ffiBls.SecretKey{}
+func getBlsKey(privateKeyHex string) (*bls_core.SecretKey, error) {
+	privateKey := &bls_core.SecretKey{}
 	err := privateKey.DeserializeHexStr(string(privateKeyHex))
 	if err != nil {
 		return nil, err
@@ -349,7 +348,7 @@ func genBlsKeyForNode(blsKeys []*BlsKey, node string, shardID uint32) ([]*BlsKey
 	for _, blsKey := range blsKeys {
 		for {
 			blsKey.Initialize()
-			shardPubKey := new(shard.BLSPublicKey)
+			shardPubKey := new(bls.SerializedPublicKey)
 			if err = shardPubKey.FromLibBLSPublicKey(blsKey.PublicKey); err != nil {
 				return blsKeys, shardCount, err
 			}
@@ -366,7 +365,7 @@ func genBlsKeyForNode(blsKeys []*BlsKey, node string, shardID uint32) ([]*BlsKey
 	return blsKeys, shardCount, nil
 }
 
-func blsKeyMatchesShardID(pubKey *shard.BLSPublicKey, shardID uint32, shardCount int) bool {
+func blsKeyMatchesShardID(pubKey *bls.SerializedPublicKey, shardID uint32, shardCount int) bool {
 	bigShardCount := big.NewInt(int64(shardCount))
 	resolvedShardID := int(new(big.Int).Mod(pubKey.Big(), bigShardCount).Int64())
 	return int(shardID) == resolvedShardID
