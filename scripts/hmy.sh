@@ -25,7 +25,7 @@ set_download () {
 	    ;;
 	Linux)
 	    FOLDER=release/linux-x86_64/${rel}/
-	    BIN=( hmy libbls384_256.so libcrypto.so.10 libgmp.so.10 libgmpxx.so.4 libmcl.so )
+	    BIN=( hmy )
 	    ;;
 	*)
 	    echo "${OS} not supported."
@@ -60,7 +60,7 @@ done
 shift $((OPTIND-1))
 
 if [ "$OS" = "Linux" ]; then
-    LD_LIBRARY_PATH="$(pwd)" ./hmy "$@"
+    ./hmy "$@"
 else
     DYLD_FALLBACK_LIBRARY_PATH="$(pwd)" ./hmy "$@"
 fi
