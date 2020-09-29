@@ -99,7 +99,7 @@ func createStakingTransaction(nonce uint64, f staking.StakeMsgFulfiller) (*staki
 	var gLimit uint64
 	if gasLimit == "" {
 		isCreateValidator := directive == staking.DirectiveCreateValidator
-		gLimit, err = core.IntrinsicGas(data, false, true, true, isCreateValidator)
+		gLimit, err = core.IntrinsicGas(data, false, true, isCreateValidator)
 		if err != nil {
 			return nil, err
 		}
