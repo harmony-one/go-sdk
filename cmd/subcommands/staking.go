@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"errors"
 	"fmt"
 	"math/big"
 	"strconv"
@@ -27,6 +26,7 @@ import (
 	"github.com/harmony-one/harmony/shard"
 	"github.com/harmony-one/harmony/staking/effective"
 	staking "github.com/harmony-one/harmony/staking/types"
+	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 )
 
@@ -284,8 +284,29 @@ func ensureLength(d staking.Description) (staking.Description, error) {
 	if len(d.Details) > MaxDetailsLength {
 		return d, errInvalidDescFieldDetails
 	}
-
 	return d, nil
+}
+
+func assertValidOptionStringInputForNonNumbers(input string) error {
+	if input != "" && strings.HasPrefix(input, "-") {
+		return fmt.Errorf("invalid or missing option")
+	}
+	return nil
+}
+
+func validateBlsKeyInput(cmd *cobra.Command, args []string) error {
+	if err := assertValidOptionStringInputForNonNumbers(slotKeyToAdd); err != nil {
+		return errors.WithMessage(err, "BLS key to add error")
+	}
+	if err := assertValidOptionStringInputForNonNumbers(slotKeyToRemove); err != nil {
+		return errors.WithMessage(err, "BLS key to remove error")
+	}
+	for _, str := range stakingBlsPubKeys {
+		if err := assertValidOptionStringInputForNonNumbers(str); err != nil {
+			return errors.WithMessage(err, "BLS key to create validator error")
+		}
+	}
+	return nil
 }
 
 func stakingSubCommands() []*cobra.Command {
@@ -297,6 +318,7 @@ func stakingSubCommands() []*cobra.Command {
 		Long: `
 Create a new validator"
 `,
+		PreRunE: validateBlsKeyInput,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			networkHandler, err := handlerForShard(0, node)
 			if err != nil {
@@ -455,10 +477,11 @@ Create a new validator"
 	}
 
 	subCmdEditValidator := &cobra.Command{
-		Use:   "edit-validator",
-		Short: "edit a validator",
-		Long:  "Edit an existing validator",
-		Args:  cobra.ExactArgs(0),
+		Use:     "edit-validator",
+		Short:   "edit a validator",
+		Long:    "Edit an existing validator",
+		Args:    cobra.ExactArgs(0),
+		PreRunE: validateBlsKeyInput,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			networkHandler, err := handlerForShard(shard.BeaconChainShardID, node)
 			if err != nil {
