@@ -3,147 +3,77 @@ package rpc
 import (
 	"fmt"
 
+	rpcCommon "github.com/harmony-one/go-sdk/pkg/rpc/common"
 	"github.com/pkg/errors"
 )
 
-// Using alias for now
-type method = string
+var (
+	RPCPrefix = "hmy"
+	Method    rpcCommon.RpcEnumList
+)
+
+type RpcEnumList struct {
+	GetShardingStructure                    rpcCommon.RpcMethod
+	GetBlockByHash                          rpcCommon.RpcMethod
+	GetBlockByNumber                        rpcCommon.RpcMethod
+	GetBlockTransactionCountByHash          rpcCommon.RpcMethod
+	GetBlockTransactionCountByNumber        rpcCommon.RpcMethod
+	GetCode                                 rpcCommon.RpcMethod
+	GetTransactionByBlockHashAndIndex       rpcCommon.RpcMethod
+	GetTransactionByBlockNumberAndIndex     rpcCommon.RpcMethod
+	GetTransactionByHash                    rpcCommon.RpcMethod
+	GetStakingTransactionByHash             rpcCommon.RpcMethod
+	GetTransactionReceipt                   rpcCommon.RpcMethod
+	Syncing                                 rpcCommon.RpcMethod
+	PeerCount                               rpcCommon.RpcMethod
+	GetBalance                              rpcCommon.RpcMethod
+	GetStorageAt                            rpcCommon.RpcMethod
+	GetTransactionCount                     rpcCommon.RpcMethod
+	SendTransaction                         rpcCommon.RpcMethod
+	SendRawTransaction                      rpcCommon.RpcMethod
+	Subscribe                               rpcCommon.RpcMethod
+	GetPastLogs                             rpcCommon.RpcMethod
+	GetWork                                 rpcCommon.RpcMethod
+	GetProof                                rpcCommon.RpcMethod
+	GetFilterChanges                        rpcCommon.RpcMethod
+	NewPendingTransactionFilter             rpcCommon.RpcMethod
+	NewBlockFilter                          rpcCommon.RpcMethod
+	NewFilter                               rpcCommon.RpcMethod
+	Call                                    rpcCommon.RpcMethod
+	EstimateGas                             rpcCommon.RpcMethod
+	GasPrice                                rpcCommon.RpcMethod
+	BlockNumber                             rpcCommon.RpcMethod
+	UnSubscribe                             rpcCommon.RpcMethod
+	NetVersion                              rpcCommon.RpcMethod
+	ProtocolVersion                         rpcCommon.RpcMethod
+	GetNodeMetadata                         rpcCommon.RpcMethod
+	GetLatestBlockHeader                    rpcCommon.RpcMethod
+	SendRawStakingTransaction               rpcCommon.RpcMethod
+	GetElectedValidatorAddresses            rpcCommon.RpcMethod
+	GetAllValidatorAddresses                rpcCommon.RpcMethod
+	GetValidatorInformation                 rpcCommon.RpcMethod
+	GetAllValidatorInformation              rpcCommon.RpcMethod
+	GetValidatorInformationByBlockNumber    rpcCommon.RpcMethod
+	GetAllValidatorInformationByBlockNumber rpcCommon.RpcMethod
+	GetDelegationsByDelegator               rpcCommon.RpcMethod
+	GetDelegationsByValidator               rpcCommon.RpcMethod
+	GetCurrentTransactionErrorSink          rpcCommon.RpcMethod
+	GetMedianRawStakeSnapshot               rpcCommon.RpcMethod
+	GetCurrentStakingErrorSink              rpcCommon.RpcMethod
+	GetTransactionsHistory                  rpcCommon.RpcMethod
+	GetPendingTxnsInPool                    rpcCommon.RpcMethod
+	GetPendingCrosslinks                    rpcCommon.RpcMethod
+	GetPendingCXReceipts                    rpcCommon.RpcMethod
+	GetCurrentUtilityMetrics                rpcCommon.RpcMethod
+	ResendCX                                rpcCommon.RpcMethod
+	GetSuperCommmittees                     rpcCommon.RpcMethod
+	GetCurrentBadBlocks                     rpcCommon.RpcMethod
+	GetShardID                              rpcCommon.RpcMethod
+	GetLastCrossLinks                       rpcCommon.RpcMethod
+	GetLatestChainHeaders                   rpcCommon.RpcMethod
+}
 
 type errorCode int
-
-type rpcEnumList struct {
-	GetShardingStructure                    method
-	GetBlockByHash                          method
-	GetBlockByNumber                        method
-	GetBlockTransactionCountByHash          method
-	GetBlockTransactionCountByNumber        method
-	GetCode                                 method
-	GetTransactionByBlockHashAndIndex       method
-	GetTransactionByBlockNumberAndIndex     method
-	GetTransactionByHash                    method
-	GetStakingTransactionByHash             method
-	GetTransactionReceipt                   method
-	Syncing                                 method
-	PeerCount                               method
-	GetBalance                              method
-	GetStorageAt                            method
-	GetTransactionCount                     method
-	SendTransaction                         method
-	SendRawTransaction                      method
-	Subscribe                               method
-	GetPastLogs                             method
-	GetWork                                 method
-	GetProof                                method
-	GetFilterChanges                        method
-	NewPendingTransactionFilter             method
-	NewBlockFilter                          method
-	NewFilter                               method
-	Call                                    method
-	EstimateGas                             method
-	GasPrice                                method
-	BlockNumber                             method
-	UnSubscribe                             method
-	NetVersion                              method
-	ProtocolVersion                         method
-	GetNodeMetadata                         method
-	GetLatestBlockHeader                    method
-	SendRawStakingTransaction               method
-	GetElectedValidatorAddresses            method
-	GetAllValidatorAddresses                method
-	GetValidatorInformation                 method
-	GetAllValidatorInformation              method
-	GetValidatorInformationByBlockNumber    method
-	GetAllValidatorInformationByBlockNumber method
-	GetDelegationsByDelegator               method
-	GetDelegationsByValidator               method
-	GetCurrentTransactionErrorSink          method
-	GetMedianRawStakeSnapshot               method
-	GetCurrentStakingErrorSink              method
-	GetTransactionsHistory                  method
-	GetPendingTxnsInPool                    method
-	GetPendingCrosslinks                    method
-	GetPendingCXReceipts                    method
-	GetCurrentUtilityMetrics                method
-	ResendCX                                method
-	GetSuperCommmittees                     method
-	GetCurrentBadBlocks                     method
-	GetShardID                              method
-	GetLastCrossLinks                       method
-	GetLatestChainHeaders                   method
-}
-
-// Method is a list of known RPC methods
-var Method = rpcEnumList{
-	GetShardingStructure:                    "hmy_getShardingStructure",
-	GetNodeMetadata:                         "hmy_getNodeMetadata",
-	GetLatestBlockHeader:                    "hmy_latestHeader",
-	GetBlockByHash:                          "hmy_getBlockByHash",
-	GetBlockByNumber:                        "hmy_getBlockByNumber",
-	GetBlockTransactionCountByHash:          "hmy_getBlockTransactionCountByHash",
-	GetBlockTransactionCountByNumber:        "hmy_getBlockTransactionCountByNumber",
-	GetCode:                                 "hmy_getCode",
-	GetTransactionByBlockHashAndIndex:       "hmy_getTransactionByBlockHashAndIndex",
-	GetTransactionByBlockNumberAndIndex:     "hmy_getTransactionByBlockNumberAndIndex",
-	GetTransactionByHash:                    "hmy_getTransactionByHash",
-	GetStakingTransactionByHash:             "hmy_getStakingTransactionByHash",
-	GetTransactionReceipt:                   "hmy_getTransactionReceipt",
-	Syncing:                                 "hmy_syncing",
-	PeerCount:                               "net_peerCount",
-	GetBalance:                              "hmy_getBalance",
-	GetStorageAt:                            "hmy_getStorageAt",
-	GetTransactionCount:                     "hmy_getTransactionCount",
-	SendTransaction:                         "hmy_sendTransaction",
-	SendRawTransaction:                      "hmy_sendRawTransaction",
-	Subscribe:                               "hmy_subscribe",
-	GetPastLogs:                             "hmy_getLogs",
-	GetWork:                                 "hmy_getWork",
-	GetProof:                                "hmy_getProof",
-	GetFilterChanges:                        "hmy_getFilterChanges",
-	NewPendingTransactionFilter:             "hmy_newPendingTransactionFilter",
-	NewBlockFilter:                          "hmy_newBlockFilter",
-	NewFilter:                               "hmy_newFilter",
-	Call:                                    "hmy_call",
-	EstimateGas:                             "hmy_estimateGas",
-	GasPrice:                                "hmy_gasPrice",
-	BlockNumber:                             "hmy_blockNumber",
-	UnSubscribe:                             "hmy_unsubscribe",
-	NetVersion:                              "net_version",
-	ProtocolVersion:                         "hmy_protocolVersion",
-	SendRawStakingTransaction:               "hmy_sendRawStakingTransaction",
-	GetElectedValidatorAddresses:            "hmy_getElectedValidatorAddresses",
-	GetAllValidatorAddresses:                "hmy_getAllValidatorAddresses",
-	GetValidatorInformation:                 "hmy_getValidatorInformation",
-	GetAllValidatorInformation:              "hmy_getAllValidatorInformation",
-	GetValidatorInformationByBlockNumber:    "hmy_getValidatorInformationByBlockNumber",
-	GetAllValidatorInformationByBlockNumber: "hmy_getAllValidatorInformationByBlockNumber",
-	GetDelegationsByDelegator:               "hmy_getDelegationsByDelegator",
-	GetDelegationsByValidator:               "hmy_getDelegationsByValidator",
-	GetCurrentTransactionErrorSink:          "hmy_getCurrentTransactionErrorSink",
-	GetMedianRawStakeSnapshot:               "hmy_getMedianRawStakeSnapshot",
-	GetCurrentStakingErrorSink:              "hmy_getCurrentStakingErrorSink",
-	GetTransactionsHistory:                  "hmy_getTransactionsHistory",
-	GetPendingTxnsInPool:                    "hmy_pendingTransactions",
-	GetPendingCrosslinks:                    "hmy_getPendingCrossLinks",
-	GetPendingCXReceipts:                    "hmy_getPendingCXReceipts",
-	GetCurrentUtilityMetrics:                "hmy_getCurrentUtilityMetrics",
-	ResendCX:                                "hmy_resendCx",
-	GetSuperCommmittees:                     "hmy_getSuperCommittees",
-	GetCurrentBadBlocks:                     "hmy_getCurrentBadBlocks",
-	GetShardID:                              "hmy_getShardID",
-	GetLastCrossLinks:                       "hmy_getLastCrossLinks",
-	GetLatestChainHeaders:                   "hmy_getLatestChainHeaders",
-}
-
-// TODO Use Reflection here to avoid typing out the cases
-
-// ValidatedMethod checks if given method is known
-func ValidatedMethod(m method) string {
-	switch m := method(m); m {
-	default:
-		return string(m)
-	}
-}
-
 type rpcErrorCodeList struct {
 	rpcInvalidRequest       errorCode
 	rpcMethodNotFound       errorCode

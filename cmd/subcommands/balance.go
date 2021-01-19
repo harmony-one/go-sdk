@@ -1,8 +1,8 @@
 package cmd
 
 import (
-	"fmt"
 	"bytes"
+	"fmt"
 	"net"
 	"strings"
 
@@ -19,7 +19,7 @@ func init() {
 		Long:    "Query for the latest account balance given a Harmony Address",
 		Args:    cobra.ExactArgs(1),
 		PreRunE: validateAddress,
-		RunE:    func(cmd *cobra.Command, args []string) error {
+		RunE: func(cmd *cobra.Command, args []string) error {
 			if checkNodeInput(node) {
 				balanceRPCReply, err := rpc.Request(rpc.Method.GetBalance, node, []interface{}{addr.address, "latest"})
 				if err != nil {
@@ -55,7 +55,7 @@ func init() {
 }
 
 // Check if input for --node is an IP address
-func checkNodeInput(node string) bool{
+func checkNodeInput(node string) bool {
 	removePrefix := strings.TrimPrefix(node, "http://")
 	removePrefix = strings.TrimPrefix(removePrefix, "https://")
 	possibleIP := strings.Split(removePrefix, ":")[0]
