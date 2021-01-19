@@ -18,11 +18,11 @@ import (
 )
 
 var (
-	nanos    *NanoS        //singleton
-	once     sync.Once
+	nanos *NanoS //singleton
+	once  sync.Once
 )
 
-func getLedger() (*NanoS) {
+func getLedger() *NanoS {
 	once.Do(func() {
 		var err error
 		nanos, err = OpenNanoS()
@@ -49,7 +49,7 @@ func GetAddress() string {
 
 //ProcessAddressCommand list the address associated with Ledger Nano S
 func ProcessAddressCommand() {
- 	n := getLedger()
+	n := getLedger()
 	oneAddr, err := n.GetAddress()
 	if err != nil {
 		log.Fatalln("Couldn't get one address:", err)
@@ -57,7 +57,7 @@ func ProcessAddressCommand() {
 	}
 
 	fmt.Printf("%-24s\t\t%23s\n", "NAME", "ADDRESS")
-	fmt.Printf("%-48s\t%s\n", "Ledger Nano S",  oneAddr)
+	fmt.Printf("%-48s\t%s\n", "Ledger Nano S", oneAddr)
 }
 
 // SignTx signs the given transaction with the requested account.
@@ -77,7 +77,7 @@ func SignTx(tx *types.Transaction, chainID *big.Int) ([]byte, string, error) {
 				tx.Value(),
 				tx.Data(),
 				chainID, uint(0), uint(0),
-			} )
+			})
 	} else {
 		rlpEncodedTx, _ = rlp.EncodeToBytes(
 			[]interface{}{
@@ -89,7 +89,7 @@ func SignTx(tx *types.Transaction, chainID *big.Int) ([]byte, string, error) {
 				tx.To(),
 				tx.Value(),
 				tx.Data(),
-			} )
+			})
 	}
 
 	n := getLedger()
@@ -131,7 +131,7 @@ func SignTx(tx *types.Transaction, chainID *big.Int) ([]byte, string, error) {
 	}
 
 	// Depending on the presence of the chain ID, sign with EIP155 or frontier
-	rawTx, err :=  rlp.EncodeToBytes(
+	rawTx, err := rlp.EncodeToBytes(
 		[]interface{}{
 			tx.Nonce(),
 			tx.GasPrice(),
@@ -144,7 +144,7 @@ func SignTx(tx *types.Transaction, chainID *big.Int) ([]byte, string, error) {
 			v,
 			r,
 			s,
-		} )
+		})
 
 	return rawTx, signerAddr, err
 }
@@ -178,7 +178,7 @@ func SignStakingTx(tx *staking.StakingTransaction, chainID *big.Int) (*staking.S
 	//get the RLP encoding of raw staking with R,S,V = 0
 	w := &bytes.Buffer{}
 	err := tx.EncodeRLP(w)
-	if err != nil  {
+	if err != nil {
 		return nil, "", err
 	}
 	rlpEncodedTx := w.Bytes()
