@@ -4,12 +4,13 @@ import (
 	"fmt"
 
 	rpcCommon "github.com/harmony-one/go-sdk/pkg/rpc/common"
+	rpcV1 "github.com/harmony-one/go-sdk/pkg/rpc/v1"
 	"github.com/pkg/errors"
 )
 
 var (
-	RPCPrefix = "hmy"
-	Method    rpcCommon.RpcEnumList
+	RPCPrefix                       = "hmy"
+	Method    rpcCommon.RpcEnumList = rpcV1.Method
 )
 
 type RpcEnumList struct {
