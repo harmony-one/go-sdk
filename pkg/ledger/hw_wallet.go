@@ -3,12 +3,13 @@ package ledger
 import (
 	"bytes"
 	"fmt"
-	"github.com/pkg/errors"
-	"golang.org/x/crypto/sha3"
 	"log"
 	"math/big"
 	"os"
 	"sync"
+
+	"github.com/pkg/errors"
+	"golang.org/x/crypto/sha3"
 
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/rlp"
@@ -70,7 +71,7 @@ func SignTx(tx *types.Transaction, chainID *big.Int) ([]byte, string, error) {
 			[]interface{}{
 				tx.Nonce(),
 				tx.GasPrice(),
-				tx.Gas(),
+				tx.GasLimit(),
 				tx.ShardID(),
 				tx.ToShardID(),
 				tx.To(),
@@ -83,7 +84,7 @@ func SignTx(tx *types.Transaction, chainID *big.Int) ([]byte, string, error) {
 			[]interface{}{
 				tx.Nonce(),
 				tx.GasPrice(),
-				tx.Gas(),
+				tx.GasLimit(),
 				tx.ShardID(),
 				tx.ToShardID(),
 				tx.To(),
@@ -135,7 +136,7 @@ func SignTx(tx *types.Transaction, chainID *big.Int) ([]byte, string, error) {
 		[]interface{}{
 			tx.Nonce(),
 			tx.GasPrice(),
-			tx.Gas(),
+			tx.GasLimit(),
 			tx.ShardID(),
 			tx.ToShardID(),
 			tx.To(),

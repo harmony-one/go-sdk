@@ -9,11 +9,12 @@ require (
 	github.com/cosmos/cosmos-sdk v0.37.0
 	github.com/davidlazar/go-crypto v0.0.0-20190912175916-7055855a373f // indirect
 	github.com/deckarep/golang-set v1.7.1
-	github.com/ethereum/go-ethereum v1.9.21
+	github.com/ethereum/go-ethereum v1.9.23
 	github.com/fatih/color v1.9.0
+	github.com/golang/snappy v0.0.2-0.20200707131729-196ae77b8a26 // indirect
 	github.com/gorilla/handlers v1.4.0 // indirect
 	github.com/harmony-one/bls v0.0.7-0.20191214005344-88c23f91a8a9
-	github.com/harmony-one/harmony v1.10.1-0.20210118195726-e5252cf15909
+	github.com/harmony-one/harmony v1.10.2-0.20210122034820-6112100ef5a1
 	github.com/iancoleman/strcase v0.0.0-20190422225806-e506e3ef7365 // indirect
 	github.com/ipfs/go-todocounter v0.0.2 // indirect
 	github.com/jackpal/gateway v1.0.6 // indirect
