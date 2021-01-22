@@ -13,6 +13,8 @@ import (
 	color "github.com/fatih/color"
 	"github.com/harmony-one/go-sdk/pkg/common"
 	"github.com/harmony-one/go-sdk/pkg/rpc"
+	rpcEth "github.com/harmony-one/go-sdk/pkg/rpc/eth"
+	rpcV1 "github.com/harmony-one/go-sdk/pkg/rpc/v1"
 	"github.com/harmony-one/go-sdk/pkg/sharding"
 	"github.com/harmony-one/go-sdk/pkg/store"
 	"github.com/pkg/errors"
@@ -26,6 +28,7 @@ var (
 	noLatest        bool
 	noPrettyOutput  bool
 	node            string
+	rpcPrefix       string
 	keyStoreDir     string
 	givenFilePath   string
 	endpoint        = regexp.MustCompile(`https://api\.s[0-9]\..*\.hmny\.io`)
@@ -53,6 +56,14 @@ var (
 		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
 			if verbose {
 				common.EnableAllVerbose()
+			}
+			switch rpcPrefix {
+			case "hmy":
+				rpc.Method = rpcV1.Method
+			case "eth":
+				rpc.Method = rpcEth.Method
+			default:
+				rpc.Method = rpcV1.Method
 			}
 			if strings.HasPrefix(node, "https://") || strings.HasPrefix(node, "http://") ||
 				strings.HasPrefix(node, "ws://") {
@@ -111,6 +122,7 @@ func init() {
 	vS := "dump out debug information, same as env var HMY_ALL_DEBUG=true"
 	RootCmd.PersistentFlags().BoolVarP(&verbose, "verbose", "v", false, vS)
 	RootCmd.PersistentFlags().StringVarP(&node, "node", "n", defaultNodeAddr, "<host>")
+	RootCmd.PersistentFlags().StringVarP(&rpcPrefix, "rpc-prefix", "r", defaultRpcPrefix, "<rpc>")
 	RootCmd.PersistentFlags().BoolVar(
 		&noLatest, "no-latest", false, "Do not add 'latest' to RPC params",
 	)

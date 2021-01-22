@@ -9,6 +9,7 @@ import (
 const (
 	hmyDocsDir             = "hmy-docs"
 	defaultNodeAddr        = "http://localhost:9500"
+	defaultRpcPrefix       = "hmy"
 	defaultMainnetEndpoint = "https://api.s0.t.hmny.io/"
 )
 

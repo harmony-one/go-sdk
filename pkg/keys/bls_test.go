@@ -48,8 +48,8 @@ func TestMultiBlsKeyGeneration(t *testing.T) {
 		filePath string
 		expected bool
 	}{
-		{node: "https://api.s0.t.hmny.io", count: 3, shardID: 0, expected: true},
-		{node: "https://api.s0.t.hmny.io", count: 3, shardID: 4, expected: false},
+		{node: "https://api.s0.b.hmny.io", count: 3, shardID: 0, expected: true},
+		{node: "https://api.s0.b.hmny.io", count: 3, shardID: 4, expected: false},
 	}
 
 	for _, test := range tests {

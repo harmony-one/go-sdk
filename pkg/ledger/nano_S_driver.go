@@ -6,8 +6,8 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
-	"io"
 	"github.com/karalabe/hid"
+	"io"
 )
 
 const (
@@ -45,7 +45,6 @@ type ErrCode uint16
 func (hf *hidFramer) Reset() {
 	hf.seq = 0
 }
-
 
 func (hf *hidFramer) Write(p []byte) (int, error) {
 	if DEBUG {
@@ -100,7 +99,6 @@ func (hf *hidFramer) Read(p []byte) (int, error) {
 	hf.pos = 5 + n
 	return n, nil
 }
-
 
 func (af *apduFramer) Exchange(apdu APDU) ([]byte, error) {
 	if len(apdu.Payload) > packetSize {
@@ -176,8 +174,8 @@ const (
 	cmdSignStaking  = 0x04
 	cmdSignTx       = 0x08
 
-	p1First         = 0x0
-	p1More          = 0x80
+	p1First = 0x0
+	p1More  = 0x80
 
 	p2DisplayAddress = 0x00
 	p2DisplayHash    = 0x00
@@ -196,7 +194,7 @@ func (n *NanoS) GetVersion() (version string, err error) {
 }
 
 func (n *NanoS) GetAddress() (oneAddr string, err error) {
-	resp, err := n.Exchange(cmdGetPublicKey, 0, p2DisplayAddress,  []byte{})
+	resp, err := n.Exchange(cmdGetPublicKey, 0, p2DisplayAddress, []byte{})
 	if err != nil {
 		return "", err
 	}
@@ -237,7 +235,7 @@ func (n *NanoS) SignStaking(stake []byte) (sig [signatureSize]byte, err error) {
 		}
 
 		if buf.Len() < packetSize {
-			p2  = p2Finish
+			p2 = p2Finish
 		}
 
 		resp, err = n.Exchange(cmdSignStaking, p1, p2, buf.Next(packetSize))
@@ -256,7 +254,7 @@ func (n *NanoS) SignStaking(stake []byte) (sig [signatureSize]byte, err error) {
 
 func OpenNanoS() (*NanoS, error) {
 	const (
-		ledgerVendorID       = 0x2c97
+		ledgerVendorID = 0x2c97
 		// new device ID for firmware 1.6.0
 		ledgerNanoSProductID = 0x1011
 		// ledgerNanoSProductID = 0x0001
@@ -286,4 +284,3 @@ func OpenNanoS() (*NanoS, error) {
 		},
 	}, nil
 }
-
