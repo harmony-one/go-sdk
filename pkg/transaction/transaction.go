@@ -9,15 +9,23 @@ import (
 	"github.com/harmony-one/harmony/numeric"
 )
 
-type Transaction = types.Transaction
-
+// NewTransaction - create a new Transaction based on supplied params
 func NewTransaction(
 	nonce, gasLimit uint64,
 	to address.T,
 	shardID, toShardID uint32,
 	amount, gasPrice numeric.Dec,
-	data []byte) *Transaction {
+	data []byte) *types.Transaction {
 	return types.NewCrossShardTransaction(nonce, &to, shardID, toShardID, amount.TruncateInt(), gasLimit, gasPrice.TruncateInt(), data[:])
+}
+
+// NewEthTransaction - create a new Transaction based on supplied params
+func NewEthTransaction(
+	nonce, gasLimit uint64,
+	to address.T,
+	amount, gasPrice numeric.Dec,
+	data []byte) *types.EthTransaction {
+	return types.NewEthTransaction(nonce, to, amount.TruncateInt(), gasLimit, gasPrice.TruncateInt(), data[:])
 }
 
 // GetNextNonce returns the nonce on-chain (finalized transactions)
@@ -48,6 +56,7 @@ func GetNextPendingNonce(addr string, messenger rpc.T) uint64 {
 	return n.Uint64()
 }
 
-func IsValid(tx *Transaction) bool {
+// IsValid - whether or not a tx is valid
+func IsValid(tx *types.Transaction) bool {
 	return true
 }

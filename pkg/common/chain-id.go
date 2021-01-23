@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"math/big"
+	"strconv"
 )
 
 // ChainID is a wrapper around the human name for a chain and the actual Big.Int used
@@ -52,6 +53,9 @@ func StringToChainID(name string) (*ChainID, error) {
 	case "dryrun":
 		return &Chain.MainNet, nil
 	default:
+		if chainID, err := strconv.Atoi(name); err == nil && chainID >= 0 {
+			return &ChainID{Name: fmt.Sprintf("%d", chainID), Value: big.NewInt(int64(chainID))}, nil
+		}
 		return nil, fmt.Errorf("unknown chain-id: %s", name)
 	}
 }

@@ -1,82 +1,56 @@
 package transaction
 
 import (
-	"errors"
 	"fmt"
 	"math/big"
-	"strings"
 	"time"
 
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/ethereum/go-ethereum/rlp"
 	"github.com/harmony-one/go-sdk/pkg/address"
 	"github.com/harmony-one/go-sdk/pkg/common"
-	"github.com/harmony-one/go-sdk/pkg/ledger"
 	"github.com/harmony-one/go-sdk/pkg/rpc"
 	"github.com/harmony-one/harmony/accounts"
 	"github.com/harmony-one/harmony/accounts/keystore"
-	"github.com/harmony-one/harmony/common/denominations"
 	"github.com/harmony-one/harmony/core/types"
 	"github.com/harmony-one/harmony/numeric"
 )
 
-var (
-	nanoAsDec = numeric.NewDec(denominations.Nano)
-	oneAsDec  = numeric.NewDec(denominations.One)
-
-	// ErrBadTransactionParam is returned when invalid params are given to the
-	// controller upon execution of a transaction.
-	ErrBadTransactionParam = errors.New("transaction has bad parameters")
-)
-
-type p []interface{}
-
-type transactionForRPC struct {
+type ethTransactionForRPC struct {
 	params      map[string]interface{}
-	transaction *types.Transaction
+	transaction *types.EthTransaction
 	// Hex encoded
 	signature       *string
 	transactionHash *string
 	receipt         rpc.Reply
 }
 
-type sender struct {
-	ks      *keystore.KeyStore
-	account *accounts.Account
-}
-
-// Controller drives the transaction signing process
-type Controller struct {
+// EthController drives the eth transaction signing process
+type EthController struct {
 	executionError    error
 	transactionErrors Errors
 	messenger         rpc.T
 	sender            sender
-	transactionForRPC transactionForRPC
+	transactionForRPC ethTransactionForRPC
 	chain             common.ChainID
 	Behavior          behavior
 }
 
-type behavior struct {
-	DryRun               bool
-	SigningImpl          SignerImpl
-	ConfirmationWaitTime uint32
-}
-
-// NewController initializes a Controller, caller can control behavior via options
-func NewController(
+// NewEthController initializes a EthController, caller can control behavior via options
+func NewEthController(
 	handler rpc.T, senderKs *keystore.KeyStore,
 	senderAcct *accounts.Account, chain common.ChainID,
-	options ...func(*Controller),
-) *Controller {
+	options ...func(*EthController),
+) *EthController {
 	txParams := make(map[string]interface{})
-	ctrlr := &Controller{
+	ctrlr := &EthController{
 		executionError: nil,
 		messenger:      handler,
 		sender: sender{
 			ks:      senderKs,
 			account: senderAcct,
 		},
-		transactionForRPC: transactionForRPC{
+		transactionForRPC: ethTransactionForRPC{
 			params:          txParams,
 			signature:       nil,
 			transactionHash: nil,
@@ -91,8 +65,8 @@ func NewController(
 	return ctrlr
 }
 
-// TransactionToJSON dumps JSON representation
-func (C *Controller) TransactionToJSON(pretty bool) string {
+// EthTransactionToJSON dumps JSON representation
+func (C *EthController) EthTransactionToJSON(pretty bool) string {
 	r, _ := C.transactionForRPC.transaction.MarshalJSON()
 	if pretty {
 		return common.JSONPrettyFormat(string(r))
@@ -101,41 +75,33 @@ func (C *Controller) TransactionToJSON(pretty bool) string {
 }
 
 // RawTransaction dumps the signature as string
-func (C *Controller) RawTransaction() string {
+func (C *EthController) RawTransaction() string {
 	return *C.transactionForRPC.signature
 }
 
 // TransactionHash - the tx hash
-func (C *Controller) TransactionHash() *string {
+func (C *EthController) TransactionHash() *string {
 	return C.transactionForRPC.transactionHash
 }
 
 // Receipt - the tx receipt
-func (C *Controller) Receipt() rpc.Reply {
+func (C *EthController) Receipt() rpc.Reply {
 	return C.transactionForRPC.receipt
 }
 
 // TransactionErrors - tx errors
-func (C *Controller) TransactionErrors() Errors {
+func (C *EthController) TransactionErrors() Errors {
 	return C.transactionErrors
 }
 
-func (C *Controller) setShardIDs(fromShard, toShard uint32) {
-	if C.executionError != nil {
-		return
-	}
-	C.transactionForRPC.params["from-shard"] = fromShard
-	C.transactionForRPC.params["to-shard"] = toShard
-}
-
-func (C *Controller) setIntrinsicGas(gasLimit uint64) {
+func (C *EthController) setIntrinsicGas(gasLimit uint64) {
 	if C.executionError != nil {
 		return
 	}
 	C.transactionForRPC.params["gas-limit"] = gasLimit
 }
 
-func (C *Controller) setGasPrice(gasPrice numeric.Dec) {
+func (C *EthController) setGasPrice(gasPrice numeric.Dec) {
 	if C.executionError != nil {
 		return
 	}
@@ -153,7 +119,7 @@ func (C *Controller) setGasPrice(gasPrice numeric.Dec) {
 	C.transactionForRPC.params["gas-price"] = gasPrice.Mul(nanoAsDec)
 }
 
-func (C *Controller) setAmount(amount numeric.Dec) {
+func (C *EthController) setAmount(amount numeric.Dec) {
 	if C.executionError != nil {
 		return
 	}
@@ -200,32 +166,30 @@ func (C *Controller) setAmount(amount numeric.Dec) {
 	C.transactionForRPC.params["transfer-amount"] = amountInAtto
 }
 
-func (C *Controller) setReceiver(receiver string) {
+func (C *EthController) setReceiver(receiver string) {
 	C.transactionForRPC.params["receiver"] = address.Parse(receiver)
 }
 
-func (C *Controller) setNewTransactionWithDataAndGas(data []byte) {
+func (C *EthController) setNewTransactionWithDataAndGas(data []byte) {
 	if C.executionError != nil {
 		return
 	}
-	C.transactionForRPC.transaction = NewTransaction(
+	C.transactionForRPC.transaction = NewEthTransaction(
 		C.transactionForRPC.params["nonce"].(uint64),
 		C.transactionForRPC.params["gas-limit"].(uint64),
 		C.transactionForRPC.params["receiver"].(address.T),
-		C.transactionForRPC.params["from-shard"].(uint32),
-		C.transactionForRPC.params["to-shard"].(uint32),
 		C.transactionForRPC.params["transfer-amount"].(numeric.Dec),
 		C.transactionForRPC.params["gas-price"].(numeric.Dec),
 		data,
 	)
 }
 
-func (C *Controller) signAndPrepareTxEncodedForSending() {
+func (C *EthController) signAndPrepareTxEncodedForSending() {
 	if C.executionError != nil {
 		return
 	}
 	signedTransaction, err :=
-		C.sender.ks.SignTx(*C.sender.account, C.transactionForRPC.transaction, C.chain.Value)
+		C.sender.ks.SignEthTx(*C.sender.account, C.transactionForRPC.transaction, C.chain.Value)
 	if err != nil {
 		C.executionError = err
 		return
@@ -241,11 +205,11 @@ func (C *Controller) signAndPrepareTxEncodedForSending() {
 	}
 }
 
-func (C *Controller) hardwareSignAndPrepareTxEncodedForSending() {
+/*func (C *EthController) hardwareSignAndPrepareTxEncodedForSending() {
 	if C.executionError != nil {
 		return
 	}
-	enc, signerAddr, err := ledger.SignTx(C.transactionForRPC.transaction, C.chain.Value)
+	enc, signerAddr, err := ledger.SignEthTx(C.transactionForRPC.transaction, C.chain.Value)
 	if err != nil {
 		C.executionError = err
 		return
@@ -261,9 +225,9 @@ func (C *Controller) hardwareSignAndPrepareTxEncodedForSending() {
 	}
 	hexSignature := hexutil.Encode(enc)
 	C.transactionForRPC.signature = &hexSignature
-}
+}*/
 
-func (C *Controller) sendSignedTx() {
+func (C *EthController) sendSignedTx() {
 	if C.executionError != nil || C.Behavior.DryRun {
 		return
 	}
@@ -276,7 +240,7 @@ func (C *Controller) sendSignedTx() {
 	C.transactionForRPC.transactionHash = &r
 }
 
-func (C *Controller) txConfirmation() {
+func (C *EthController) txConfirmation() {
 	if C.executionError != nil || C.Behavior.DryRun {
 		return
 	}
@@ -313,18 +277,16 @@ func (C *Controller) txConfirmation() {
 	}
 }
 
-// ExecuteTransaction is the single entrypoint to execute a plain transaction.
+// ExecuteEthTransaction is the single entrypoint to execute an eth transaction.
 // Each step in transaction creation, execution probably includes a mutation
 // Each becomes a no-op if executionError occurred in any previous step
-func (C *Controller) ExecuteTransaction(
+func (C *EthController) ExecuteEthTransaction(
 	nonce, gasLimit uint64,
 	to string,
-	shardID, toShardID uint32,
 	amount, gasPrice numeric.Dec,
 	inputData []byte,
 ) error {
 	// WARNING Order of execution matters
-	C.setShardIDs(shardID, toShardID)
 	C.setIntrinsicGas(gasLimit)
 	C.setGasPrice(gasPrice)
 	C.setAmount(amount)
@@ -334,8 +296,8 @@ func (C *Controller) ExecuteTransaction(
 	switch C.Behavior.SigningImpl {
 	case Software:
 		C.signAndPrepareTxEncodedForSending()
-	case Ledger:
-		C.hardwareSignAndPrepareTxEncodedForSending()
+		/*case Ledger:
+		C.hardwareSignAndPrepareTxEncodedForSending()*/
 	}
 	C.sendSignedTx()
 	C.txConfirmation()
