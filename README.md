@@ -3,7 +3,7 @@
 This is a go layer on top of the Harmony RPC, included is a CLI tool that you can build with a
 simple invocation of `make`
 
-See https://docs.harmony.one/sdk-wiki/command-line-interface/using-the-harmony-cli-tool for detailed
+See https://docs.harmony.one/home/network/wallets/harmony-cli/download-setup for detailed
 documentation on how to use the `hmy` CLI tools
 
 # Build
