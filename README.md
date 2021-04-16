@@ -125,6 +125,53 @@ Check README for details on json file format.
 
 20. Check which shard your BLS public key would be assigned to as a validator
 ./hmy --node=https://api.s0.t.hmny.io utility shard-for-bls <BLS_PUBLIC_KEY>
+
+21. List Space In Governance
+./hmy governance list-space
+
+22. List Proposal In Space Of Governance
+./hmy governance list-proposal --space=[space key, example: staking-testnet]
+
+23. View Proposal In Governance
+./hmy governance view-proposal --proposal=[proposal hash]
+
+24. New Proposal In Space Of Governance
+./hmy governance new-proposal --proposal-json=[file path] --key=[key name]
+PS: key must first use (hmy keys import-private-key) to import
+Json example:
+{
+  "version": "0.1.3",
+  "timestamp": "1618537589",
+  "space": "staking-testnet",
+  "type": "proposal",
+  "payload": {
+    "name": "test abc",
+    "body": "test abc",
+    "choices": [
+      "aaa",
+      "bbb"
+    ],
+    "start": 1619142373.763,
+    "end": 1620351973.763,
+    "snapshot": 8429816,
+    "metadata": {
+      "strategies": [
+        {
+          "name": "erc20-balance-of",
+          "params": {
+            "address": "0x00eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+            "symbol": "ONE",
+            "decimals": 18
+          }
+        }
+      ]
+    }
+  }
+}
+
+25. Vote Proposal In Space Of Governance
+./hmy governance vote-proposal --proposal=[proposal hash] --choice=[your choise text, eg: yes] --key=[key name]
+PS: key must first use (hmy keys import-private-key) to import
 ```
 
 # Sending batched transactions

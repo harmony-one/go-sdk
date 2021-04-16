@@ -104,6 +104,52 @@ Check README for details on json file format.
 %s
 ./hmy --node=[NODE] utility shard-for-bls <BLS_PUBLIC_KEY>
 
+%s
+./hmy governance list-space
+
+%s
+./hmy governance list-proposal --space=[space key, example: staking-testnet]
+
+%s
+./hmy governance view-proposal --proposal=[proposal hash]
+
+%s
+./hmy governance new-proposal --proposal-json=[file path] --key=[key name]
+PS: key must first use (hmy keys import-private-key) to import
+Json example:
+{
+  "version": "0.1.3",
+  "timestamp": "1618537589",
+  "space": "staking-testnet",
+  "type": "proposal",
+  "payload": {
+    "name": "test abc",
+    "body": "test abc",
+    "choices": [
+      "aaa",
+      "bbb"
+    ],
+    "start": 1619142373.763,
+    "end": 1620351973.763,
+    "snapshot": 8429816,
+    "metadata": {
+      "strategies": [
+        {
+          "name": "erc20-balance-of",
+          "params": {
+            "address": "0x00eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+            "symbol": "ONE",
+            "decimals": 18
+          }
+        }
+      ]
+    }
+  }
+}
+
+%s
+./hmy governance vote-proposal --proposal=[proposal hash] --choice=[your choise text, eg: yes] --key=[key name]
+PS: key must first use (hmy keys import-private-key) to import
 `,
 		g("1.  Check account balance on given chain"),
 		g("2.  Check sent transaction"),
@@ -125,5 +171,10 @@ Check README for details on json file format.
 		g("18. Get current staking utility metrics"),
 		g("19. Check in-memory record of failed staking transactions"),
 		g("20. Check which shard your BLS public key would be assigned to as a validator"),
+		g("21. List Space In Governance"),
+		g("22. List Proposal In Space Of Governance"),
+		g("23. View Proposal In Governance"),
+		g("24. New Proposal In Space Of Governance"),
+		g("25. Vote Proposal In Space Of Governance"),
 	)
 )

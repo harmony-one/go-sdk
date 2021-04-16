@@ -24,6 +24,7 @@ require (
 	github.com/libp2p/go-libp2p-routing v0.1.0 // indirect
 	github.com/libp2p/go-sockaddr v0.1.0 // indirect
 	github.com/mitchellh/go-homedir v1.1.0
+	github.com/olekukonko/tablewriter v0.0.5 // indirect
 	github.com/pkg/errors v0.9.1
 	github.com/spf13/cobra v0.0.5
 	github.com/tyler-smith/go-bip39 v1.0.2
