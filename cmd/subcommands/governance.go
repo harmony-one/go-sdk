@@ -10,9 +10,9 @@ import (
 func init() {
 	cmdGovernance := &cobra.Command{
 		Use:   "governance",
-		Short: "Support interaction with the governance app",
+		Short: "Support interaction with the Harmony governance app.",
 		Long: `
-Support interaction with the governance app, especially for validators that do not want to import their account private key into either metamask or onewallet.
+Support interaction with the Harmony governance app, especially for validators that do not want to import their account private key into either metamask or onewallet.
 `,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cmd.Help()
@@ -23,7 +23,7 @@ Support interaction with the governance app, especially for validators that do n
 	cmdGovernance.AddCommand([]*cobra.Command{
 		{
 			Use:   "list-space",
-			Short: "list space of governance app",
+			Short: "list all spaces of the governance app",
 			RunE: func(cmd *cobra.Command, args []string) error {
 				return governance.PrintListSpace()
 			},
@@ -42,7 +42,7 @@ func commandListProposal() (cmd *cobra.Command) {
 
 	cmd = &cobra.Command{
 		Use:   "list-proposal",
-		Short: "list proposal",
+		Short: "list all proposals in one space",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return governance.PrintListProposals(space)
 		},
@@ -59,7 +59,7 @@ func commandViewProposal() (cmd *cobra.Command) {
 
 	cmd = &cobra.Command{
 		Use:   "view-proposal",
-		Short: "view proposal",
+		Short: "view one proposal",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return governance.PrintViewProposal(proposal)
 		},
@@ -77,7 +77,7 @@ func commandNewProposal() (cmd *cobra.Command) {
 
 	cmd = &cobra.Command{
 		Use:   "new-proposal",
-		Short: "new proposal",
+		Short: "start a new proposal",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			keyStore := store.FromAccountName(key)
 			passphrase, err := getPassphrase()
@@ -95,9 +95,9 @@ func commandNewProposal() (cmd *cobra.Command) {
 		},
 	}
 
-	cmd.Flags().StringVar(&proposal, "proposal-json", "", "proposal json path")
+	cmd.Flags().StringVar(&proposal, "proposal-yaml", "", "proposal yaml path")
 	cmd.Flags().StringVar(&key, "key", "", "private key name")
-	cmd.MarkFlagRequired("proposal-json")
+	cmd.MarkFlagRequired("proposal-yaml")
 	cmd.MarkFlagRequired("key")
 
 	return
@@ -110,7 +110,7 @@ func commandVote() (cmd *cobra.Command) {
 
 	cmd = &cobra.Command{
 		Use:   "vote-proposal",
-		Short: "vote-proposal",
+		Short: "vote one proposal",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			keyStore := store.FromAccountName(key)
 			passphrase, err := getPassphrase()

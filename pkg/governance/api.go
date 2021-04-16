@@ -121,6 +121,31 @@ func viewProposalsByProposalHash(proposalHash string) (proposal *ProposalIPFS, e
 	return result, nil
 }
 
+type NewProposalJson struct {
+	Version   string `json:"version"`
+	Timestamp string `json:"timestamp"`
+	Space     string `json:"space"`
+	Type      string `json:"type"`
+	Payload   struct {
+		Name     string   `json:"name"`
+		Body     string   `json:"body"`
+		Choices  []string `json:"choices"`
+		Start    float64  `json:"start"`
+		End      float64  `json:"end"`
+		Snapshot int      `json:"snapshot"`
+		Metadata struct {
+			Strategies []struct {
+				Name   string `json:"name"`
+				Params struct {
+					Address  string `json:"address"`
+					Symbol   string `json:"symbol"`
+					Decimals int    `json:"decimals"`
+				} `json:"params"`
+			} `json:"strategies"`
+		} `json:"metadata"`
+	} `json:"payload"`
+}
+
 type NewProposalResponse struct {
 	IpfsHash string `json:"ipfsHash"`
 }

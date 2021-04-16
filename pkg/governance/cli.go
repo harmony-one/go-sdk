@@ -8,6 +8,8 @@ import (
 	"github.com/harmony-one/harmony/accounts"
 	"github.com/harmony-one/harmony/accounts/keystore"
 	"github.com/olekukonko/tablewriter"
+	"gopkg.in/yaml.v3"
+	"math/rand"
 	"os"
 	"strconv"
 	"strings"
@@ -109,43 +111,62 @@ func PrintViewProposal(proposalHash string) error {
 	return nil
 }
 
-type NewProposalJson struct {
-	Version   string `json:"version"`
-	Timestamp string `json:"timestamp"`
-	Space     string `json:"space"`
-	Type      string `json:"type"`
-	Payload   struct {
-		Name     string   `json:"name"`
-		Body     string   `json:"body"`
-		Choices  []string `json:"choices"`
-		Start    float64  `json:"start"`
-		End      float64  `json:"end"`
-		Snapshot int      `json:"snapshot"`
-		Metadata struct {
-			Strategies []struct {
-				Name   string `json:"name"`
-				Params struct {
-					Address  string `json:"address"`
-					Symbol   string `json:"symbol"`
-					Decimals int    `json:"decimals"`
-				} `json:"params"`
-			} `json:"strategies"`
-		} `json:"metadata"`
-	} `json:"payload"`
+type NewProposalYaml struct {
+	Space   string    `yaml:"space"`
+	Start   time.Time `yaml:"start"`
+	End     time.Time `yaml:"end"`
+	Choices []string  `yaml:"choices"`
+	Title   string    `yaml:"title"`
+	Body    string    `yaml:"body"`
 }
 
-func NewProposal(keyStore *keystore.KeyStore, account accounts.Account, proposalJsonPath string) error {
-	proposalJsonFile, err := os.Open(proposalJsonPath)
-	if err != nil {
-		return err
-	}
-	defer proposalJsonFile.Close()
+var proposalTemplate = []byte(`{
+  "version": "0.1.3",
+  "type": "proposal",
+  "payload": {
+    "metadata": {
+      "strategies": [
+        {
+          "name": "erc20-balance-of",
+          "params": {
+            "address": "0x00eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+            "symbol": "ONE",
+            "decimals": 18
+          }
+        }
+      ]
+    }
+  }
+}`)
 
-	proposalJson := &NewProposalJson{}
-	err = json.NewDecoder(proposalJsonFile).Decode(proposalJson)
+func NewProposal(keyStore *keystore.KeyStore, account accounts.Account, proposalYamlPath string) error {
+	proposalYamlFile, err := os.Open(proposalYamlPath)
 	if err != nil {
 		return err
 	}
+	defer proposalYamlFile.Close()
+
+	proposalYaml := &NewProposalYaml{}
+	err = yaml.NewDecoder(proposalYamlFile).Decode(proposalYaml)
+	if err != nil {
+		return err
+	}
+
+	rand.Seed(time.Now().Unix())
+	proposalJson := &NewProposalJson{}
+	err = json.Unmarshal(proposalTemplate, proposalJson)
+	if err != nil {
+		return err
+	}
+
+	proposalJson.Space = proposalYaml.Space
+	proposalJson.Timestamp = fmt.Sprintf("%d", time.Now().Unix())
+	proposalJson.Payload.Name = proposalYaml.Title
+	proposalJson.Payload.Body = proposalYaml.Body
+	proposalJson.Payload.Choices = proposalYaml.Choices
+	proposalJson.Payload.Start = float64(proposalYaml.Start.Unix())
+	proposalJson.Payload.End = float64(proposalYaml.End.Unix())
+	proposalJson.Payload.Snapshot = rand.Intn(9999999) + 1
 
 	if !checkPermission(proposalJson.Space, account) {
 		return fmt.Errorf("no permission!")

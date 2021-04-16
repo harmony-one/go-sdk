@@ -33,6 +33,7 @@ require (
 	github.com/valyala/fasthttp v1.2.0
 	github.com/wangjia184/sortedset v0.0.0-20160527075905-f5d03557ba30 // indirect
 	golang.org/x/crypto v0.0.0-20200820211705-5c72a883971a
+	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b // indirect
 )
 
 replace github.com/ethereum/go-ethereum => github.com/ethereum/go-ethereum v1.9.9

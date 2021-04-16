@@ -114,38 +114,19 @@ Check README for details on json file format.
 ./hmy governance view-proposal --proposal=[proposal hash]
 
 %s
-./hmy governance new-proposal --proposal-json=[file path] --key=[key name]
+./hmy governance new-proposal --proposal-yaml=[file path] --key=[key name]
 PS: key must first use (hmy keys import-private-key) to import
-Json example:
-{
-  "version": "0.1.3",
-  "timestamp": "1618537589",
-  "space": "staking-testnet",
-  "type": "proposal",
-  "payload": {
-    "name": "test abc",
-    "body": "test abc",
-    "choices": [
-      "aaa",
-      "bbb"
-    ],
-    "start": 1619142373.763,
-    "end": 1620351973.763,
-    "snapshot": 8429816,
-    "metadata": {
-      "strategies": [
-        {
-          "name": "erc20-balance-of",
-          "params": {
-            "address": "0x00eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
-            "symbol": "ONE",
-            "decimals": 18
-          }
-        }
-      ]
-    }
-  }
-}
+Yaml example:
+space: staking-testnet
+start: 2020-04-16 21:45:12
+end: 2020-04-21 21:45:12
+choices:
+  - yes
+  - no
+title: this is title
+body: |
+  this is body,
+  you can write mutli line
 
 %s
 ./hmy governance vote-proposal --proposal=[proposal hash] --choice=[your choise text, eg: yes] --key=[key name]
