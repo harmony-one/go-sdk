@@ -24,6 +24,7 @@ require (
 	github.com/libp2p/go-libp2p-routing v0.1.0 // indirect
 	github.com/libp2p/go-sockaddr v0.1.0 // indirect
 	github.com/mitchellh/go-homedir v1.1.0
+	github.com/olekukonko/tablewriter v0.0.5 // indirect
 	github.com/pkg/errors v0.9.1
 	github.com/spf13/cobra v0.0.5
 	github.com/tyler-smith/go-bip39 v1.0.2
@@ -32,6 +33,7 @@ require (
 	github.com/valyala/fasthttp v1.2.0
 	github.com/wangjia184/sortedset v0.0.0-20160527075905-f5d03557ba30 // indirect
 	golang.org/x/crypto v0.0.0-20200820211705-5c72a883971a
+	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b // indirect
 )
 
 replace github.com/ethereum/go-ethereum => github.com/ethereum/go-ethereum v1.9.9
