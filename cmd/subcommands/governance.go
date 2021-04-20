@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"fmt"
 	"github.com/harmony-one/go-sdk/pkg/governance"
 	"github.com/harmony-one/go-sdk/pkg/store"
 	"github.com/harmony-one/harmony/accounts"
@@ -116,6 +117,10 @@ func commandVote() (cmd *cobra.Command) {
 			passphrase, err := getPassphrase()
 			if err != nil {
 				return err
+			}
+
+			if len(keyStore.Accounts()) <= 0 {
+				return fmt.Errorf("can not found address from key")
 			}
 
 			account := accounts.Account{Address: keyStore.Accounts()[0].Address}
