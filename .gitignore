@@ -3,3 +3,4 @@ hmy-docs
 dist
 .idea/
 *.key
+hmy_version
