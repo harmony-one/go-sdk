@@ -86,6 +86,10 @@ func commandNewProposal() (cmd *cobra.Command) {
 				return err
 			}
 
+			if len(keyStore.Accounts()) <= 0 {
+				return fmt.Errorf("couldn't find address from the key")
+			}
+
 			account := accounts.Account{Address: keyStore.Accounts()[0].Address}
 			err = keyStore.Unlock(accounts.Account{Address: keyStore.Accounts()[0].Address}, passphrase)
 			if err != nil {
@@ -120,7 +124,7 @@ func commandVote() (cmd *cobra.Command) {
 			}
 
 			if len(keyStore.Accounts()) <= 0 {
-				return fmt.Errorf("can not found address from key")
+				return fmt.Errorf("couldn't find address from the key")
 			}
 
 			account := accounts.Account{Address: keyStore.Accounts()[0].Address}
