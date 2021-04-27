@@ -3,6 +3,9 @@ package governance
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
+	"github.com/valyala/fastjson"
+	"io"
 	"net/http"
 )
 
@@ -13,7 +16,7 @@ func getAndParse(url governanceApi, data interface{}) error {
 	}
 	defer resp.Body.Close()
 
-	return json.NewDecoder(resp.Body).Decode(data)
+	return parseAndUnmarshal(resp, data)
 }
 
 func postAndParse(url governanceApi, postData []byte, data interface{}) error {
@@ -23,5 +26,18 @@ func postAndParse(url governanceApi, postData []byte, data interface{}) error {
 	}
 	defer resp.Body.Close()
 
-	return json.NewDecoder(resp.Body).Decode(data)
+	return parseAndUnmarshal(resp, data)
+}
+
+func parseAndUnmarshal(resp *http.Response, data interface{}) error {
+	bodyData, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return err
+	}
+
+	if fastjson.GetString(bodyData, "error") != "" {
+		return fmt.Errorf("error: %s, %s", fastjson.GetString(bodyData, "error"), fastjson.GetString(bodyData, "error_description"))
+	}
+
+	return json.Unmarshal(bodyData, data)
 }

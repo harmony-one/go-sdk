@@ -138,7 +138,7 @@ Check README for details on json file format.
 24. New Proposal In Space Of Governance
 ./hmy governance new-proposal --proposal-yaml=[file path] --key=[key name]
 PS: key must first use (hmy keys import-private-key) to import
-Yaml example:
+Yaml example(time is in UTC timezone):
 space: staking-testnet
 start: 2020-04-16 21:45:12
 end: 2020-04-21 21:45:12
