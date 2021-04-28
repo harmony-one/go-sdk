@@ -4,9 +4,10 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"github.com/valyala/fastjson"
-	"io"
+	"io/ioutil"
 	"net/http"
+
+	"github.com/valyala/fastjson"
 )
 
 func getAndParse(url governanceApi, data interface{}) error {
@@ -30,7 +31,7 @@ func postAndParse(url governanceApi, postData []byte, data interface{}) error {
 }
 
 func parseAndUnmarshal(resp *http.Response, data interface{}) error {
-	bodyData, err := io.ReadAll(resp.Body)
+	bodyData, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		return err
 	}

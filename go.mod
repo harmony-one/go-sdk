@@ -31,7 +31,7 @@ require (
 	github.com/uber/jaeger-client-go v2.20.1+incompatible // indirect
 	github.com/uber/jaeger-lib v2.2.0+incompatible // indirect
 	github.com/valyala/fasthttp v1.2.0
-	github.com/valyala/fastjson v1.6.3 // indirect
+	github.com/valyala/fastjson v1.6.3
 	github.com/wangjia184/sortedset v0.0.0-20160527075905-f5d03557ba30 // indirect
 	golang.org/x/crypto v0.0.0-20200820211705-5c72a883971a
 	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b
