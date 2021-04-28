@@ -24,7 +24,7 @@ Support interaction with the Harmony governance app, especially for validators t
 	cmdGovernance.AddCommand([]*cobra.Command{
 		{
 			Use:   "list-space",
-			Short: "list all spaces of the governance app",
+			Short: "List all spaces of the governance app",
 			RunE: func(cmd *cobra.Command, args []string) error {
 				return governance.PrintListSpace()
 			},
@@ -43,13 +43,13 @@ func commandListProposal() (cmd *cobra.Command) {
 
 	cmd = &cobra.Command{
 		Use:   "list-proposal",
-		Short: "list all proposals in one space",
+		Short: "List all proposals for the given space",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return governance.PrintListProposals(space)
 		},
 	}
 
-	cmd.Flags().StringVar(&space, "space", "", "list space")
+	cmd.Flags().StringVar(&space, "space", "", "Space the proposal belongs to e.g. 'staking-mainnet'")
 	cmd.MarkFlagRequired("space")
 
 	return
@@ -60,13 +60,13 @@ func commandViewProposal() (cmd *cobra.Command) {
 
 	cmd = &cobra.Command{
 		Use:   "view-proposal",
-		Short: "view one proposal",
+		Short: "View a proposal",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return governance.PrintViewProposal(proposal)
 		},
 	}
 
-	cmd.Flags().StringVar(&proposal, "proposal", "", "proposal hash")
+	cmd.Flags().StringVar(&proposal, "proposal", "", "Proposal hash")
 	cmd.MarkFlagRequired("proposal")
 
 	return
@@ -78,7 +78,7 @@ func commandNewProposal() (cmd *cobra.Command) {
 
 	cmd = &cobra.Command{
 		Use:   "new-proposal",
-		Short: "start a new proposal",
+		Short: "Start a new proposal",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			keyStore := store.FromAccountName(key)
 			passphrase, err := getPassphrase()
@@ -87,7 +87,7 @@ func commandNewProposal() (cmd *cobra.Command) {
 			}
 
 			if len(keyStore.Accounts()) <= 0 {
-				return fmt.Errorf("couldn't find address from the key")
+				return fmt.Errorf("Couldn't find address from the key")
 			}
 
 			account := accounts.Account{Address: keyStore.Accounts()[0].Address}
@@ -100,8 +100,8 @@ func commandNewProposal() (cmd *cobra.Command) {
 		},
 	}
 
-	cmd.Flags().StringVar(&proposal, "proposal-yaml", "", "proposal yaml path")
-	cmd.Flags().StringVar(&key, "key", "", "private key name")
+	cmd.Flags().StringVar(&proposal, "proposal-yaml", "", "Proposal yaml path")
+	cmd.Flags().StringVar(&key, "key", "", "Account address. Must first use (hmy keys import-private-key) to import.")
 	cmd.MarkFlagRequired("proposal-yaml")
 	cmd.MarkFlagRequired("key")
 
@@ -115,7 +115,7 @@ func commandVote() (cmd *cobra.Command) {
 
 	cmd = &cobra.Command{
 		Use:   "vote-proposal",
-		Short: "vote one proposal",
+		Short: "Vote on a proposal",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			keyStore := store.FromAccountName(key)
 			passphrase, err := getPassphrase()
@@ -124,7 +124,7 @@ func commandVote() (cmd *cobra.Command) {
 			}
 
 			if len(keyStore.Accounts()) <= 0 {
-				return fmt.Errorf("couldn't find address from the key")
+				return fmt.Errorf("Couldn't find address from the key")
 			}
 
 			account := accounts.Account{Address: keyStore.Accounts()[0].Address}
@@ -137,9 +137,9 @@ func commandVote() (cmd *cobra.Command) {
 		},
 	}
 
-	cmd.Flags().StringVar(&proposal, "proposal", "", "proposal hash")
-	cmd.Flags().StringVar(&choice, "choice", "", "choice")
-	cmd.Flags().StringVar(&key, "key", "", "private key name")
+	cmd.Flags().StringVar(&proposal, "proposal", "", "Proposal hash")
+	cmd.Flags().StringVar(&choice, "choice", "", "Vote choice e.g. 'agree' or 'disagree'")
+	cmd.Flags().StringVar(&key, "key", "", "Account address. Must first use (hmy keys import-private-key) to import.")
 	cmd.MarkFlagRequired("proposal")
 	cmd.MarkFlagRequired("choose")
 	cmd.MarkFlagRequired("key")

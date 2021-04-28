@@ -114,7 +114,7 @@ Check README for details on json file format.
 ./hmy governance view-proposal --proposal=[proposal hash]
 
 %s
-./hmy governance new-proposal --proposal-yaml=[file path] --key=[key name]
+./hmy governance new-proposal --proposal-yaml=[file path] --key=[account address]
 PS: key must first use (hmy keys import-private-key) to import
 Yaml example(time is in UTC timezone):
 space: staking-testnet
@@ -129,7 +129,7 @@ body: |
   you can write mutli line
 
 %s
-./hmy governance vote-proposal --proposal=[proposal hash] --choice=[your choise text, eg: yes] --key=[key name]
+./hmy governance vote-proposal --proposal=[proposal hash] --choice=[your choise text, eg: yes] --key=[account address]
 PS: key must first use (hmy keys import-private-key) to import
 `,
 		g("1.  Check account balance on given chain"),

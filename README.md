@@ -151,7 +151,7 @@ body: |
   you can write mutli line
 
 25. Vote Proposal In Space Of Governance
-./hmy governance vote-proposal --proposal=[proposal hash] --choice=[your choise text, eg: yes] --key=[key name]
+./hmy governance vote-proposal --proposal=[proposal hash] --choice=[your choice text, eg: yes] --key=[key name]
 PS: key must first use (hmy keys import-private-key) to import
 ```
 
