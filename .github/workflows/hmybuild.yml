@@ -176,8 +176,8 @@ jobs:
       - name: Import GPG key
         uses: crazy-max/ghaction-import-gpg@v3
         with:
-          gpg-private-key: ${{ secrets.GPG_PRIVATE_KEY }}
-          passphrase: ${{ secrets.GPG_PRIVATE_KEY_PASS }}
+          gpg-private-key: ${{ secrets.HMY_GPG_PRIVATE_KEY }}
+          passphrase: ${{ secrets.HMY_GPG_PRIVATE_KEY_PASS }}
 
       - name: Checkout hmy core code
         uses: actions/checkout@v2
