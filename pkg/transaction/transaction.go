@@ -12,11 +12,11 @@ import (
 // NewTransaction - create a new Transaction based on supplied params
 func NewTransaction(
 	nonce, gasLimit uint64,
-	to address.T,
+	to *address.T,
 	shardID, toShardID uint32,
 	amount, gasPrice numeric.Dec,
 	data []byte) *types.Transaction {
-	return types.NewCrossShardTransaction(nonce, &to, shardID, toShardID, amount.TruncateInt(), gasLimit, gasPrice.TruncateInt(), data[:])
+	return types.NewCrossShardTransaction(nonce, to, shardID, toShardID, amount.TruncateInt(), gasLimit, gasPrice.TruncateInt(), data[:])
 }
 
 // NewEthTransaction - create a new Transaction based on supplied params

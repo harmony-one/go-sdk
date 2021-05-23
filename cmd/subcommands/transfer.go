@@ -162,10 +162,12 @@ func handlerForTransaction(txLog *transactionLog) error {
 		gLimit = uint64(tempLimit)
 	}
 
+	addr := toAddress.String()
+
 	txLog.TimeSigned = time.Now().UTC().Format(timeFormat) // Approximate time of signature
 	err = ctrlr.ExecuteTransaction(
 		nonce, gLimit,
-		toAddress.String(),
+		&addr,
 		fromShardID, toShardID,
 		amt, gPrice,
 		[]byte{},

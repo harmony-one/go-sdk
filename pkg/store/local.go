@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path"
+	"time"
 
 	"github.com/harmony-one/go-sdk/pkg/address"
 	"github.com/harmony-one/go-sdk/pkg/common"
@@ -105,8 +106,12 @@ func DefaultLocation() string {
 }
 
 func UnlockedKeystore(from, passphrase string) (*keystore.KeyStore, *accounts.Account, error) {
+	return UnlockedKeystoreTimeLimit(from, passphrase, 0)
+}
+
+func LockKeystore(from string) (*keystore.KeyStore, *accounts.Account, error) {
 	sender := address.Parse(from)
-	ks := FromAddress(from)
+	ks := FromAddress(address.ToBech32(sender))
 	if ks == nil {
 		return nil, nil, fmt.Errorf("could not open local keystore for %s", from)
 	}
@@ -114,7 +119,23 @@ func UnlockedKeystore(from, passphrase string) (*keystore.KeyStore, *accounts.Ac
 	if lookupErr != nil {
 		return nil, nil, fmt.Errorf("could not find %s in keystore", from)
 	}
-	if unlockError := ks.Unlock(account, passphrase); unlockError != nil {
+	if lockError := ks.Lock(account.Address); lockError != nil {
+		return nil, nil, lockError
+	}
+	return ks, &account, nil
+}
+
+func UnlockedKeystoreTimeLimit(from, passphrase string, time time.Duration) (*keystore.KeyStore, *accounts.Account, error) {
+	sender := address.Parse(from)
+	ks := FromAddress(address.ToBech32(sender))
+	if ks == nil {
+		return nil, nil, fmt.Errorf("could not open local keystore for %s", from)
+	}
+	account, lookupErr := ks.Find(accounts.Account{Address: sender})
+	if lookupErr != nil {
+		return nil, nil, fmt.Errorf("could not find %s in keystore", from)
+	}
+	if unlockError := ks.TimedUnlock(account, passphrase, time); unlockError != nil {
 		return nil, nil, errors.Wrap(NoUnlockBadPassphrase, unlockError.Error())
 	}
 	return ks, &account, nil

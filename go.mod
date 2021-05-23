@@ -9,6 +9,7 @@ require (
 	github.com/cosmos/cosmos-sdk v0.37.0
 	github.com/davidlazar/go-crypto v0.0.0-20190912175916-7055855a373f // indirect
 	github.com/deckarep/golang-set v1.7.1
+	github.com/dop251/goja v0.0.0-20210427212725-462d53687b0d
 	github.com/ethereum/go-ethereum v1.9.23
 	github.com/fatih/color v1.9.0
 	github.com/golang/snappy v0.0.2-0.20200707131729-196ae77b8a26 // indirect
@@ -18,13 +19,16 @@ require (
 	github.com/iancoleman/strcase v0.0.0-20190422225806-e506e3ef7365 // indirect
 	github.com/ipfs/go-todocounter v0.0.2 // indirect
 	github.com/jackpal/gateway v1.0.6 // indirect
+	github.com/jteeuwen/go-bindata v3.0.7+incompatible // indirect
 	github.com/karalabe/hid v1.0.0
 	github.com/libp2p/go-libp2p-host v0.1.0 // indirect
 	github.com/libp2p/go-libp2p-net v0.1.0 // indirect
 	github.com/libp2p/go-libp2p-routing v0.1.0 // indirect
 	github.com/libp2p/go-sockaddr v0.1.0 // indirect
+	github.com/mattn/go-colorable v0.1.7
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/olekukonko/tablewriter v0.0.5
+	github.com/peterh/liner v1.1.1-0.20190123174540-a2c9a5303de7
 	github.com/pkg/errors v0.9.1
 	github.com/spf13/cobra v0.0.5
 	github.com/tyler-smith/go-bip39 v1.0.2
