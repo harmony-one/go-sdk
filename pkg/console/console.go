@@ -231,13 +231,13 @@ func (c *Console) initPersonal(vm *goja.Runtime, bridge *bridge) {
 		return
 	}
 	personal.Set("getListAccounts", jsre.MakeCallback(vm, bridge.HmyGetListAccounts))
-	personal.Set("signTransaction", jsre.MakeCallback(vm, bridge.HmySignTransaction))
-	personal.Set("sendTransaction", jsre.MakeCallback(vm, bridge.HmySendTransaction))
-	personal.Set("lockAccount", jsre.MakeCallback(vm, bridge.HmyLockAccount))
+	personal.Set("signTransaction", jsre.MakeCallback(vm, bridge.callbackProtected(bridge.HmySignTransaction)))
+	personal.Set("sendTransaction", jsre.MakeCallback(vm, bridge.callbackProtected(bridge.HmySendTransaction)))
+	personal.Set("lockAccount", jsre.MakeCallback(vm, bridge.callbackProtected(bridge.HmyLockAccount)))
 	personal.Set("importRawKey", jsre.MakeCallback(vm, bridge.HmyImportRawKey))
-	personal.Set("unlockAccount", jsre.MakeCallback(vm, bridge.HmyUnlockAccount))
-	personal.Set("newAccount", jsre.MakeCallback(vm, bridge.HmyNewAccount))
-	personal.Set("sign", jsre.MakeCallback(vm, bridge.HmySign))
+	personal.Set("unlockAccount", jsre.MakeCallback(vm, bridge.callbackProtected(bridge.HmyUnlockAccount)))
+	personal.Set("newAccount", jsre.MakeCallback(vm, bridge.callbackProtected(bridge.HmyNewAccount)))
+	personal.Set("sign", jsre.MakeCallback(vm, bridge.callbackProtected(bridge.HmySign)))
 
 	_, err := vm.RunString(`Object.defineProperty(personal, "listAccounts", {get: personal.getListAccounts});`)
 	if err != nil {
@@ -251,8 +251,8 @@ func (c *Console) initEth(vm *goja.Runtime, bridge *bridge) {
 		return
 	}
 
-	eth.Set("sendTransaction", jsre.MakeCallback(vm, bridge.HmySendTransaction))
-	eth.Set("signTransaction", jsre.MakeCallback(vm, bridge.HmySignTransaction))
+	eth.Set("sendTransaction", jsre.MakeCallback(vm, bridge.callbackProtected(bridge.HmySendTransaction)))
+	eth.Set("signTransaction", jsre.MakeCallback(vm, bridge.callbackProtected(bridge.HmySignTransaction)))
 }
 
 func (c *Console) clearHistory() {

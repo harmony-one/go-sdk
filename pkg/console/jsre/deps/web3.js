@@ -3005,10 +3005,8 @@ require = (function e(t, n, r) {
                                     filter.stopWatching(function () {
                                     });
                                     callbackFired = true;
-
-                                    if (code.length > 3) {
-
-                                        // console.log('Contract code deployed!');
+                                    if (code) {
+                                        console.log('Contract code deployed to ' + receipt.contractAddress);
 
                                         contract.address = receipt.contractAddress;
 
@@ -3106,6 +3104,8 @@ require = (function e(t, n, r) {
                     var hash = this.eth.sendTransaction(options);
                     // add the transaction hash
                     contract.transactionHash = hash;
+
+                    console.log('check for contract address, please wait...');
                     checkForContractAddress(contract);
                 }
 

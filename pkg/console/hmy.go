@@ -20,6 +20,39 @@ import (
 	"time"
 )
 
+func getStringFromJsObjWithDefault(o *goja.Object, key string, def string) string {
+	get := o.Get(key)
+	if get == nil {
+		return def
+	} else {
+		return get.String()
+	}
+}
+
+func (b *bridge) callbackProtected(protectedFunc func(call jsre.Call) (goja.Value, error)) func(call jsre.Call) (goja.Value, error) {
+	return func(call jsre.Call) (goja.Value, error) {
+		var availableCB goja.Callable = nil
+		for i, args := range call.Arguments {
+			if cb, ok := goja.AssertFunction(args); ok {
+				availableCB = cb
+				call.Arguments = call.Arguments[:i] // callback must be last
+				break
+			}
+		}
+
+		value, err := protectedFunc(call)
+		jsErr := goja.Undefined()
+		if err != nil {
+			jsErr = call.VM.NewGoError(err)
+		}
+		if availableCB != nil {
+			_, _ = availableCB(nil, jsErr, value)
+		}
+
+		return value, err
+	}
+}
+
 func (b *bridge) HmyGetListAccounts(call jsre.Call) (goja.Value, error) {
 	var accounts = []string{}
 
@@ -38,11 +71,11 @@ func (b *bridge) HmySignTransaction(call jsre.Call) (goja.Value, error) {
 	txObj := call.Arguments[0].ToObject(call.VM)
 	password := call.Arguments[1].String()
 
-	from := txObj.Get("from").String()
-	to := txObj.Get("to").String()
-	gasLimit := txObj.Get("gas").String()
-	amount := txObj.Get("value").String()
-	gasPrice := txObj.Get("gasPrice").String()
+	from := getStringFromJsObjWithDefault(txObj, "from", "")
+	to := getStringFromJsObjWithDefault(txObj, "to", "")
+	gasLimit := getStringFromJsObjWithDefault(txObj, "gas", "1000000")
+	amount := getStringFromJsObjWithDefault(txObj, "value", "0")
+	gasPrice := getStringFromJsObjWithDefault(txObj, "gasPrice", "1")
 
 	networkHandler := rpc.NewHTTPHandler(b.console.nodeUrl)
 	chanId, err := common.StringToChainID(b.console.net)
@@ -120,11 +153,11 @@ func (b *bridge) HmySendTransaction(call jsre.Call) (goja.Value, error) {
 		password = call.Arguments[1].String()
 	}
 
-	from := txObj.Get("from").String()
-	to := txObj.Get("to").String()
-	gasLimit := txObj.Get("gas").String()
-	amount := txObj.Get("value").String()
-	gasPrice := txObj.Get("gasPrice").String()
+	from := getStringFromJsObjWithDefault(txObj, "from", "")
+	to := getStringFromJsObjWithDefault(txObj, "to", "")
+	gasLimit := getStringFromJsObjWithDefault(txObj, "gas", "1000000")
+	amount := getStringFromJsObjWithDefault(txObj, "value", "0")
+	gasPrice := getStringFromJsObjWithDefault(txObj, "gasPrice", "1")
 
 	networkHandler := rpc.NewHTTPHandler(b.console.nodeUrl)
 	chanId, err := common.StringToChainID(b.console.net)
