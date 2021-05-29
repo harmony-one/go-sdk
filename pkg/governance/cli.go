@@ -24,10 +24,10 @@ func PrintListSpace() error {
 
 	table := tablewriter.NewWriter(os.Stdout)
 	table.SetBorder(false)
-	table.SetHeader([]string{"Key", "Network", "Name"})
+	table.SetHeader([]string{"Key", "Name"})
 
 	for key, space := range spaces {
-		table.Append([]string{key, space.Network, space.Name})
+		table.Append([]string{key, space.Name})
 	}
 
 	table.Render()
@@ -135,7 +135,8 @@ var proposalTemplate = []byte(`{
           }
         }
       ]
-    }
+    },
+    "maxCanSelect": 1
   }
 }`)
 
