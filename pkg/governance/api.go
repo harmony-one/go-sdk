@@ -6,10 +6,9 @@ import (
 )
 
 type Space struct {
-	Name    string `json:"name"`
-	Key     string `json:"key"`
-	Network string `json:"network"`
-	Symbol  string `json:"symbol"`
+	Name   string `json:"name"`
+	Key    string `json:"key,omitempty"`
+	Symbol string `json:"symbol"`
 }
 
 func listSpaces() (spaces map[string]*Space, err error) {
@@ -18,6 +17,10 @@ func listSpaces() (spaces map[string]*Space, err error) {
 	err = getAndParse(urlListSpace, &result)
 	if err != nil {
 		return nil, err
+	}
+
+	for k, space := range result {
+		space.Key = k
 	}
 
 	return result, nil
@@ -68,7 +71,7 @@ type ProposalIPFSMsg struct {
 }
 
 type ProposalVoteMsgPayload struct {
-	Choice   int    `json:"choice"`
+	Choice   int    `json:"choice,string"`
 	Proposal string `json:"proposal"`
 }
 
@@ -143,6 +146,7 @@ type NewProposalJson struct {
 				} `json:"params"`
 			} `json:"strategies"`
 		} `json:"metadata"`
+		MaxCanSelect int `json:"maxCanSelect"`
 	} `json:"payload"`
 }
 
