@@ -58,6 +58,7 @@ type Controller struct {
 
 type behavior struct {
 	DryRun               bool
+	OfflineSign          bool
 	SigningImpl          SignerImpl
 	ConfirmationWaitTime uint32
 }
@@ -83,7 +84,7 @@ func NewController(
 			receipt:         nil,
 		},
 		chain:    chain,
-		Behavior: behavior{false, Software, 0},
+		Behavior: behavior{false, false, Software, 0},
 	}
 	for _, option := range options {
 		option(ctrlr)
@@ -276,7 +277,7 @@ func (C *Controller) hardwareSignAndPrepareTxEncodedForSending() {
 }
 
 func (C *Controller) sendSignedTx() {
-	if C.executionError != nil || C.Behavior.DryRun {
+	if C.executionError != nil || C.Behavior.DryRun || C.Behavior.OfflineSign {
 		return
 	}
 	reply, err := C.messenger.SendRPC(rpc.Method.SendRawTransaction, p{C.transactionForRPC.signature})

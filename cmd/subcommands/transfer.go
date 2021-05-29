@@ -33,6 +33,7 @@ var (
 	targetChain       string
 	chainName         chainIDWrapper
 	dryRun            bool
+	offlineSign       bool
 	trueNonce         bool
 	inputNonce        string
 	gasPrice          string
@@ -327,6 +328,10 @@ func init() {
 Create a transaction, sign it, and send off to the Harmony blockchain
 `,
 		PreRunE: func(cmd *cobra.Command, args []string) error {
+			if offlineSign {
+				dryRun = true
+			}
+
 			if givenFilePath == "" {
 				for _, flagName := range [...]string{"from", "to", "amount", "from-shard", "to-shard"} {
 					_ = cmd.MarkFlagRequired(flagName)
@@ -390,6 +395,7 @@ Create a transaction, sign it, and send off to the Harmony blockchain
 	cmdTransfer.Flags().Var(&fromAddress, "from", "sender's one address, keystore must exist locally")
 	cmdTransfer.Flags().Var(&toAddress, "to", "the destination one address")
 	cmdTransfer.Flags().BoolVar(&dryRun, "dry-run", false, "do not send signed transaction")
+	cmdTransfer.Flags().BoolVar(&offlineSign, "offline-sign", false, "output offline signing")
 	cmdTransfer.Flags().BoolVar(&trueNonce, "true-nonce", false, "send transaction with on-chain nonce")
 	cmdTransfer.Flags().StringVar(&amount, "amount", "0", "amount to send (ONE)")
 	cmdTransfer.Flags().StringVar(&gasPrice, "gas-price", "1", "gas price to pay (NANO)")
