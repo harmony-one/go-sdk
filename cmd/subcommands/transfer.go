@@ -101,17 +101,22 @@ func handlerForError(txLog *transactionLog, err error) error {
 // Note that the vars need to be set before calling this handler.
 func handlerForTransaction(txLog *transactionLog) error {
 	from := fromAddress.String()
-	s, err := sharding.Structure(node)
-	if handlerForError(txLog, err) != nil {
-		return err
-	}
-	err = validation.ValidShardIDs(fromShardID, toShardID, uint32(len(s)))
-	if handlerForError(txLog, err) != nil {
-		return err
-	}
-	networkHandler, err := handlerForShard(fromShardID, node)
-	if handlerForError(txLog, err) != nil {
-		return err
+
+	var networkHandler *rpc.HTTPMessenger
+	if !offlineSign {
+		s, err := sharding.Structure(node)
+		if handlerForError(txLog, err) != nil {
+			return err
+		}
+		err = validation.ValidShardIDs(fromShardID, toShardID, uint32(len(s)))
+		if handlerForError(txLog, err) != nil {
+			return err
+		}
+
+		networkHandler, err = handlerForShard(fromShardID, node)
+		if handlerForError(txLog, err) != nil {
+			return err
+		}
 	}
 
 	var ctrlr *transaction.Controller
@@ -127,7 +132,7 @@ func handlerForTransaction(txLog *transactionLog) error {
 	}
 
 	nonce, err := getNonce(fromAddress.String(), networkHandler)
-	if err != nil {
+	if handlerForError(txLog, err) != nil {
 		return err
 	}
 
@@ -266,6 +271,9 @@ func opts(ctlr *transaction.Controller) {
 	if dryRun {
 		ctlr.Behavior.DryRun = true
 	}
+	if offlineSign {
+		ctlr.Behavior.OfflineSign = true
+	}
 	if useLedgerWallet {
 		ctlr.Behavior.SigningImpl = transaction.Ledger
 	}
@@ -293,6 +301,8 @@ func getNonceFromInput(addr, inputNonce string, messenger rpc.T) (uint64, error)
 		} else {
 			return nonce, nil
 		}
+	} else if offlineSign {
+		return 0, errors.New("nonce value must be specified when offline sign")
 	} else {
 		return transaction.GetNextPendingNonce(addr, messenger), nil
 	}
@@ -366,7 +376,7 @@ Create a transaction, sign it, and send off to the Harmony blockchain
 				passphrase = pp // needed for passphrase assignment used in handler
 				txLog := transactionLog{}
 				err = handlerForTransaction(&txLog)
-				fmt.Println(common.ToJSONUnsafe(txLog, !noPrettyOutput))
+				fmt.Println(common.ToJSONUnsafe([]transactionLog{txLog}, !noPrettyOutput))
 				return err
 			} else {
 				hasError := false
@@ -382,7 +392,7 @@ Create a transaction, sign it, and send off to the Harmony blockchain
 						}
 					}
 				}
-				fmt.Println(common.ToJSONUnsafe(txLogs, true))
+				fmt.Println(common.ToJSONUnsafe(txLogs, !noPrettyOutput))
 				if hasError {
 					return fmt.Errorf("one or more of your transactions returned an error " +
 						"-- check the log for more information")
@@ -395,8 +405,8 @@ Create a transaction, sign it, and send off to the Harmony blockchain
 
 	cmdTransfer.Flags().Var(&fromAddress, "from", "sender's one address, keystore must exist locally")
 	cmdTransfer.Flags().Var(&toAddress, "to", "the destination one address")
-	cmdTransfer.Flags().BoolVar(&dryRun, "dry-run", false, "do not send signed transaction, can also be used for offline sign")
-	cmdTransfer.Flags().BoolVar(&offlineSign, "offline-sign", false, "output offline signing, same too dry-run")
+	cmdTransfer.Flags().BoolVar(&dryRun, "dry-run", false, "do not send signed transaction")
+	cmdTransfer.Flags().BoolVar(&offlineSign, "offline-sign", false, "output offline signing")
 	cmdTransfer.Flags().BoolVar(&trueNonce, "true-nonce", false, "send transaction with on-chain nonce")
 	cmdTransfer.Flags().StringVar(&amount, "amount", "0", "amount to send (ONE)")
 	cmdTransfer.Flags().StringVar(&gasPrice, "gas-price", "1", "gas price to pay (NANO)")
@@ -410,6 +420,29 @@ Create a transaction, sign it, and send off to the Harmony blockchain
 	cmdTransfer.Flags().StringVar(&passphraseFilePath, "passphrase-file", "", "path to a file containing the passphrase")
 
 	RootCmd.AddCommand(cmdTransfer)
+
+	cmdGetNonce := &cobra.Command{
+		Use:   "get-nonce",
+		Short: "Get Nonce From a Account",
+		Args:  cobra.ExactArgs(0),
+		Long: `
+Get Nonce From a Account
+`,
+		RunE: func(cmd *cobra.Command, args []string) error {
+			networkHandler, err := handlerForShard(fromShardID, node)
+			if err != nil {
+				return err
+			}
+
+			nonce := transaction.GetNextPendingNonce(fromAddress.address, networkHandler)
+			fmt.Printf("nonce is \"%d\"", nonce)
+			return err
+		},
+	}
+
+	cmdGetNonce.Flags().Var(&fromAddress, "from", "sender's one address, keystore must exist locally")
+	cmdGetNonce.Flags().Uint32Var(&fromShardID, "from-shard", 0, "source shard id")
+	RootCmd.AddCommand(cmdGetNonce)
 
 	cmdOfflineSignTransfer := &cobra.Command{
 		Use:   "offline-sign-transfer",
@@ -448,13 +481,18 @@ Send a offline signed to the Harmony blockchain
 					continue
 				}
 
-				reply, err := networkHandler.SendRPC(rpc.Method.SendRawTransaction, []interface{}{txLog.RawTxn})
+				ctrlr := transaction.NewController(networkHandler, nil, nil, *chainName.chainID, opts)
+				err := ctrlr.ExecuteRawTransaction(txLog.RawTxn)
 				if handlerForError(txLog, err) != nil {
 					txLog.Errors = append(txLog.Errors, err.Error())
+					continue
 				}
 
-				r, _ := reply["result"].(string)
-				txLog.TxHash = r
+				if txHash := ctrlr.TransactionHash(); txHash != nil {
+					txLog.TxHash = *txHash
+				}
+
+				txLog.Receipt = ctrlr.Receipt()["result"]
 			}
 
 			fmt.Println(common.ToJSONUnsafe(txLogs, true))

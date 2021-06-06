@@ -58,6 +58,7 @@ type Controller struct {
 
 type behavior struct {
 	DryRun               bool
+	OfflineSign          bool
 	SigningImpl          SignerImpl
 	ConfirmationWaitTime uint32
 }
@@ -83,7 +84,7 @@ func NewController(
 			receipt:         nil,
 		},
 		chain:    chain,
-		Behavior: behavior{false, Software, 0},
+		Behavior: behavior{false, false, Software, 0},
 	}
 	for _, option := range options {
 		option(ctrlr)
@@ -172,35 +173,39 @@ func (C *Controller) setAmount(amount numeric.Dec) {
 		})
 		return
 	}
-	balanceRPCReply, err := C.messenger.SendRPC(
-		rpc.Method.GetBalance,
-		p{address.ToBech32(C.sender.account.Address), "latest"},
-	)
-	if err != nil {
-		C.executionError = err
-		return
-	}
-	currentBalance, _ := balanceRPCReply["result"].(string)
-	bal, _ := new(big.Int).SetString(currentBalance[2:], 16)
-	balance := numeric.NewDecFromBigInt(bal)
+
 	gasAsDec := C.transactionForRPC.params["gas-price"].(numeric.Dec)
 	gasAsDec = gasAsDec.Mul(numeric.NewDec(int64(C.transactionForRPC.params["gas-limit"].(uint64))))
 	amountInAtto := amount.Mul(oneAsDec)
 	total := amountInAtto.Add(gasAsDec)
 
-	if total.GT(balance) {
-		balanceInOne := balance.Quo(oneAsDec)
-		C.executionError = ErrBadTransactionParam
-		errorMsg := fmt.Sprintf(
-			"insufficient balance of %s in shard %d for the requested transfer of %s",
-			balanceInOne.String(), C.transactionForRPC.params["from-shard"].(uint32), amount.String(),
+	if !C.Behavior.OfflineSign {
+		balanceRPCReply, err := C.messenger.SendRPC(
+			rpc.Method.GetBalance,
+			p{address.ToBech32(C.sender.account.Address), "latest"},
 		)
-		C.transactionErrors = append(C.transactionErrors, &Error{
-			ErrMessage:           &errorMsg,
-			TimestampOfRejection: time.Now().Unix(),
-		})
-		return
+		if err != nil {
+			C.executionError = err
+			return
+		}
+		currentBalance, _ := balanceRPCReply["result"].(string)
+		bal, _ := new(big.Int).SetString(currentBalance[2:], 16)
+		balance := numeric.NewDecFromBigInt(bal)
+		if total.GT(balance) {
+			balanceInOne := balance.Quo(oneAsDec)
+			C.executionError = ErrBadTransactionParam
+			errorMsg := fmt.Sprintf(
+				"insufficient balance of %s in shard %d for the requested transfer of %s",
+				balanceInOne.String(), C.transactionForRPC.params["from-shard"].(uint32), amount.String(),
+			)
+			C.transactionErrors = append(C.transactionErrors, &Error{
+				ErrMessage:           &errorMsg,
+				TimestampOfRejection: time.Now().Unix(),
+			})
+			return
+		}
 	}
+
 	C.transactionForRPC.params["transfer-amount"] = amountInAtto
 }
 
@@ -376,6 +381,14 @@ func (C *Controller) SignTransaction(
 		C.hardwareSignAndPrepareTxEncodedForSending()
 	}
 
+	return C.executionError
+}
+
+func (C *Controller) ExecuteRawTransaction(txn string) error {
+	C.transactionForRPC.signature = &txn
+
+	C.sendSignedTx()
+	C.txConfirmation()
 	return C.executionError
 }
 
