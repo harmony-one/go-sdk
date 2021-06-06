@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"io/ioutil"
+	"os"
 	"strconv"
 	"strings"
 	"time"
@@ -394,8 +395,8 @@ Create a transaction, sign it, and send off to the Harmony blockchain
 
 	cmdTransfer.Flags().Var(&fromAddress, "from", "sender's one address, keystore must exist locally")
 	cmdTransfer.Flags().Var(&toAddress, "to", "the destination one address")
-	cmdTransfer.Flags().BoolVar(&dryRun, "dry-run", false, "do not send signed transaction")
-	cmdTransfer.Flags().BoolVar(&offlineSign, "offline-sign", false, "output offline signing")
+	cmdTransfer.Flags().BoolVar(&dryRun, "dry-run", false, "do not send signed transaction, can also be used for offline sign")
+	cmdTransfer.Flags().BoolVar(&offlineSign, "offline-sign", false, "output offline signing, same too dry-run")
 	cmdTransfer.Flags().BoolVar(&trueNonce, "true-nonce", false, "send transaction with on-chain nonce")
 	cmdTransfer.Flags().StringVar(&amount, "amount", "0", "amount to send (ONE)")
 	cmdTransfer.Flags().StringVar(&gasPrice, "gas-price", "1", "gas price to pay (NANO)")
@@ -409,4 +410,58 @@ Create a transaction, sign it, and send off to the Harmony blockchain
 	cmdTransfer.Flags().StringVar(&passphraseFilePath, "passphrase-file", "", "path to a file containing the passphrase")
 
 	RootCmd.AddCommand(cmdTransfer)
+
+	cmdOfflineSignTransfer := &cobra.Command{
+		Use:   "offline-sign-transfer",
+		Short: "Send a Offline Signed transaction",
+		Args:  cobra.ExactArgs(0),
+		Long: `
+Send a offline signed to the Harmony blockchain
+`,
+		PreRunE: func(cmd *cobra.Command, args []string) error {
+			if givenFilePath == "" {
+				return fmt.Errorf("must give a offline-signed file")
+			}
+			return nil
+		},
+		RunE: func(cmd *cobra.Command, args []string) error {
+			var txLogs []*transactionLog
+
+			networkHandler, err := handlerForShard(fromShardID, node)
+			if err != nil {
+				return err
+			}
+
+			openFile, err := os.Open(givenFilePath)
+			if err != nil {
+				return err
+			}
+			defer openFile.Close()
+
+			err = json.NewDecoder(openFile).Decode(&txLogs)
+			if err != nil {
+				return err
+			}
+
+			for _, txLog := range txLogs {
+				if len(txLog.Errors) > 0 {
+					continue
+				}
+
+				reply, err := networkHandler.SendRPC(rpc.Method.SendRawTransaction, []interface{}{txLog.RawTxn})
+				if handlerForError(txLog, err) != nil {
+					txLog.Errors = append(txLog.Errors, err.Error())
+				}
+
+				r, _ := reply["result"].(string)
+				txLog.TxHash = r
+			}
+
+			fmt.Println(common.ToJSONUnsafe(txLogs, true))
+			return nil
+		},
+	}
+
+	cmdOfflineSignTransfer.Flags().Uint32Var(&fromShardID, "from-shard", 0, "source shard id")
+	RootCmd.AddCommand(cmdOfflineSignTransfer)
 }
