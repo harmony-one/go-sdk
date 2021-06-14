@@ -275,7 +275,7 @@ HMY_RPC_DEBUG=true HMY_TX_DEBUG=true ./hmy blockchain protocol-version
 You can deploy the contract use the command;
 
 ```bash
-./hmy command --net=testnet --shard=0
+./hmy command --node="https://api.s0.b.hmny.io" --net=testnet
 ```
 
 Then you can test this code to deploy a smart contract
@@ -283,9 +283,9 @@ Then you can test this code to deploy a smart contract
 ```js
 var abi = [{"constant":false,"inputs":[],"name":"changeIt","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":true,"inputs":[],"name":"number","outputs":[{"name":"","type":"uint256"}],"payable":false,"stateMutability":"view","type":"function"}]
 var code = '0x60806040526212345660005534801561001757600080fd5b5060c8806100266000396000f3006080604052600436106049576000357c0100000000000000000000000000000000000000000000000000000000900463ffffffff16806327b5c17514604e5780638381f58a146062575b600080fd5b348015605957600080fd5b506060608a565b005b348015606d57600080fd5b5060746096565b6040518082815260200191505060405180910390f35b62654321600081905550565b600054815600a165627a7a72305820294db9eed647c48762212fd43bf9ed7733c9d9f43b1ce5583bb4c2bae97fae770029'
-var publicKey = '0x34BB31FBE8E7F0F480983B7690Ea4977259534b5' // change this to your public key
+var account = 'one1xjanr7lgulc0fqyc8dmfp6jfwuje2d94xfnzyd' // change this to your account address, support eth or one address
 var myContract=eth.contract(abi)
-contract = myContract.new({from:publicKey,data:code})
+contract = myContract.new({from:account,data:code})
 ```
 
 Wait for a few seconds and it's ready to use
