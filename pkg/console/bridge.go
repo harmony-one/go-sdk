@@ -15,7 +15,7 @@ import (
 	"github.com/ethereum/go-ethereum/rpc"
 )
 
-// bridge is a collection of JavaScript utility methods to bride the .js runtime
+// bridge is a collection of JavaScript utility methods to bridge the .js runtime
 // environment and the Go RPC connection backing the remote method calls.
 type bridge struct {
 	client   *rpc.Client         // RPC client to execute Ethereum requests through
