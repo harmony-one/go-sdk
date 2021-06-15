@@ -105,6 +105,10 @@ func (C *Controller) RawTransaction() string {
 	return *C.transactionForRPC.signature
 }
 
+func (C *Controller) TransactionInfo() *types.Transaction {
+	return C.transactionForRPC.transaction.Copy()
+}
+
 // TransactionHash - the tx hash
 func (C *Controller) TransactionHash() *string {
 	return C.transactionForRPC.transactionHash
@@ -200,18 +204,26 @@ func (C *Controller) setAmount(amount numeric.Dec) {
 	C.transactionForRPC.params["transfer-amount"] = amountInAtto
 }
 
-func (C *Controller) setReceiver(receiver string) {
-	C.transactionForRPC.params["receiver"] = address.Parse(receiver)
+func (C *Controller) setReceiver(receiver *string) {
+	if receiver != nil {
+		addr := address.Parse(*receiver)
+		C.transactionForRPC.params["receiver"] = &addr
+	}
 }
 
 func (C *Controller) setNewTransactionWithDataAndGas(data []byte) {
+	var addP *address.T
+	if C.transactionForRPC.params["receiver"] != nil {
+		addP = C.transactionForRPC.params["receiver"].(*address.T)
+	}
+
 	if C.executionError != nil {
 		return
 	}
 	C.transactionForRPC.transaction = NewTransaction(
 		C.transactionForRPC.params["nonce"].(uint64),
 		C.transactionForRPC.params["gas-limit"].(uint64),
-		C.transactionForRPC.params["receiver"].(address.T),
+		addP,
 		C.transactionForRPC.params["from-shard"].(uint32),
 		C.transactionForRPC.params["to-shard"].(uint32),
 		C.transactionForRPC.params["transfer-amount"].(numeric.Dec),
@@ -318,7 +330,7 @@ func (C *Controller) txConfirmation() {
 // Each becomes a no-op if executionError occurred in any previous step
 func (C *Controller) ExecuteTransaction(
 	nonce, gasLimit uint64,
-	to string,
+	to *string,
 	shardID, toShardID uint32,
 	amount, gasPrice numeric.Dec,
 	inputData []byte,
@@ -339,6 +351,31 @@ func (C *Controller) ExecuteTransaction(
 	}
 	C.sendSignedTx()
 	C.txConfirmation()
+	return C.executionError
+}
+
+func (C *Controller) SignTransaction(
+	nonce, gasLimit uint64,
+	to *string,
+	shardID, toShardID uint32,
+	amount, gasPrice numeric.Dec,
+	inputData []byte,
+) error {
+	// WARNING Order of execution matters
+	C.setShardIDs(shardID, toShardID)
+	C.setIntrinsicGas(gasLimit)
+	C.setGasPrice(gasPrice)
+	C.setAmount(amount)
+	C.setReceiver(to)
+	C.transactionForRPC.params["nonce"] = nonce
+	C.setNewTransactionWithDataAndGas(inputData)
+	switch C.Behavior.SigningImpl {
+	case Software:
+		C.signAndPrepareTxEncodedForSending()
+	case Ledger:
+		C.hardwareSignAndPrepareTxEncodedForSending()
+	}
+
 	return C.executionError
 }
 
