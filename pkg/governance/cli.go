@@ -99,9 +99,14 @@ func PrintViewProposal(proposalHash string) error {
 			}
 		}
 
+		choices := make([]string, 0)
+		for _, choice := range vote.Msg.Payload.choices() {
+			choices = append(choices, proposals.parsedMsg.Payload.Choices[choice-1])
+		}
+
 		table.Append([]string{
 			addr,
-			proposals.parsedMsg.Payload.Choices[vote.Msg.Payload.Choice-1],
+			strings.Join(choices, ", "),
 			stack,
 		})
 	}
