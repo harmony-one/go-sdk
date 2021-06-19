@@ -3,6 +3,8 @@ package governance
 import (
 	"encoding/json"
 	"fmt"
+	"strconv"
+	"strings"
 )
 
 type Space struct {
@@ -71,8 +73,36 @@ type ProposalIPFSMsg struct {
 }
 
 type ProposalVoteMsgPayload struct {
-	Choice   int    `json:"choice,string"`
-	Proposal string `json:"proposal"`
+	Choice   json.RawMessage `json:"choice"`
+	Proposal string          `json:"proposal"`
+}
+
+func (p *ProposalVoteMsgPayload) choices() []int {
+	var one int
+
+	err := json.Unmarshal(p.Choice, &one)
+	if err == nil {
+		return []int{one}
+	}
+
+	var many string
+	err = json.Unmarshal(p.Choice, &many)
+	if err != nil {
+		return []int{}
+	}
+
+	splits := strings.Split(many, "-")
+	ret := make([]int, 0, len(splits))
+	for _, split := range splits {
+		number, err := strconv.Atoi(split)
+		if err != nil {
+			return []int{}
+		}
+
+		ret = append(ret, number)
+	}
+
+	return ret
 }
 
 type ProposalVoteMsg struct {
