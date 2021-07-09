@@ -57,7 +57,7 @@ func NewEthController(
 			receipt:         nil,
 		},
 		chain:    chain,
-		Behavior: behavior{false, Software, 0},
+		Behavior: behavior{false, false, Software, 0},
 	}
 	for _, option := range options {
 		option(ctrlr)

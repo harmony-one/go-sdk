@@ -181,7 +181,10 @@ var (
 func Execute() {
 	RootCmd.SilenceErrors = true
 	if err := RootCmd.Execute(); err != nil {
-		resp, _ := http.Get(versionLink)
+		resp, httpErr := http.Get(versionLink)
+		if httpErr != nil {
+			return
+		}
 		defer resp.Body.Close()
 		// If error, no op
 		if resp != nil && resp.StatusCode == 200 {

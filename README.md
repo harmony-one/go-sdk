@@ -261,6 +261,22 @@ Example of returned JSON Array:
 ]
 ```
 
+## Offline sign transfer
+1. Get Nonce From a Account. (Need to be online, but no passphrase required)
+```bash
+./hmy get-nonce --node=https://api.s0.t.hmny.io --from=[ONE address]
+```
+
+2. Sign transfer and write to file. (Passphrase required, But no need to be online)
+```bash
+./hmy transfer --offline-sign --nonce=[nonce value from previous] --from=[ONE address] --to=[ONE address] --amount=1000 --from-shard=0 --to-shard=0 > signed.json
+```
+
+3. send `signed.json` to Harmony blockchain! (Need to be online, but no passphrase required)
+```bash
+./hmy offline-sign-transfer --node=https://api.s0.b.hmny.io --file ./signed.json
+```
+
 # Debugging
 
 The go-sdk code respects `HMY_RPC_DEBUG HMY_TX_DEBUG` as debugging
