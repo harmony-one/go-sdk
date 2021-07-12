@@ -151,6 +151,7 @@ jobs:
 
       - name: Build hmy binary for Arm
         run: |
+          echo 111
           make static
           mv dist/hmy dist/hmy-arm64
           chmod +x dist/hmy-arm64
