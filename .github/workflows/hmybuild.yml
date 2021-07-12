@@ -151,11 +151,10 @@ jobs:
 
       - name: Build hmy binary for Arm
         run: |
-          echo 111
           make static
           mv dist/hmy dist/hmy-arm64
           chmod +x dist/hmy-arm64
-        working-directory: /home/ec2-user/actions-runner/_work/go-sdk/go-sdk/go/src/github.com/harmony-one/go-sdk
+        working-directory: /home/ubuntu/actions-runner/_work/go-sdk/go-sdk/go/src/github.com/harmony-one/go-sdk
         env:
           GOPATH: /home/ec2-user/actions-runner/_work/go-sdk/go-sdk/go
 
