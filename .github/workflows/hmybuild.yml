@@ -121,7 +121,7 @@ jobs:
           echo ${GOPATH}
           echo ${GOROOT}
         env:
-          GOPATH: /home/ec2-user/actions-runner/_work/go-sdk/go-sdk/go
+          GOPATH: /home/ubuntu/actions-runner/_work/go-sdk/go-sdk/go
 
       - name: Checkout dependence repo
         uses: actions/checkout@v2
@@ -129,7 +129,7 @@ jobs:
           repository: harmony-one/mcl
           path: go/src/github.com/harmony-one/mcl
         env:
-          GOPATH: /home/ec2-user/actions-runner/_work/go-sdk/go-sdk/go
+          GOPATH: /home/ubuntu/actions-runner/_work/go-sdk/go-sdk/go
 
       - name: Checkout dependence repo
         uses: actions/checkout@v2
@@ -137,7 +137,7 @@ jobs:
           repository: harmony-one/bls
           path: go/src/github.com/harmony-one/bls
         env:
-          GOPATH: /home/ec2-user/actions-runner/_work/go-sdk/go-sdk/go
+          GOPATH: /home/ubuntu/actions-runner/_work/go-sdk/go-sdk/go
 
       - name: Checkout dependence code
         uses: actions/checkout@v2
@@ -147,7 +147,7 @@ jobs:
           ref: main
           fetch-depth: 0
         env:
-          GOPATH: /home/ec2-user/actions-runner/_work/go-sdk/go-sdk/go
+          GOPATH: /home/ubuntu/actions-runner/_work/go-sdk/go-sdk/go
 
       - name: Build hmy binary for Arm
         run: |
@@ -156,16 +156,16 @@ jobs:
           chmod +x dist/hmy-arm64
         working-directory: /home/ubuntu/actions-runner/_work/go-sdk/go-sdk/go/src/github.com/harmony-one/go-sdk
         env:
-          GOPATH: /home/ec2-user/actions-runner/_work/go-sdk/go-sdk/go
+          GOPATH: /home/ubuntu/actions-runner/_work/go-sdk/go-sdk/go
 
       - name: Upload artifact
         uses: actions/upload-artifact@v2
         with:
           name: hmy-arm64
-          path: /home/ec2-user/actions-runner/_work/go-sdk/go-sdk/go/src/github.com/harmony-one/go-sdk/dist/*
+          path: /home/ubuntu/actions-runner/_work/go-sdk/go-sdk/go/src/github.com/harmony-one/go-sdk/dist/*
           retention-days: 1
         env:
-          GOPATH: /home/ec2-user/actions-runner/_work/go-sdk/go-sdk/go
+          GOPATH: /home/ubuntu/actions-runner/_work/go-sdk/go-sdk/go
 
   release-page:
     name: Sign binary and create and publish release page
