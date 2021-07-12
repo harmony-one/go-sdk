@@ -3,6 +3,7 @@ package account
 import (
 	"encoding/hex"
 	"fmt"
+	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/mitchellh/go-homedir"
 	"io"
 	"io/ioutil"
@@ -42,6 +43,12 @@ func ImportFromPrivateKey(privateKey, name, passphrase string) (string, error) {
 
 	// btcec.PrivKeyFromBytes only returns a secret key and public key
 	sk, _ := btcec.PrivKeyFromBytes(btcec.S256(), privateKeyBytes)
+	oneAddress := address.ToBech32(crypto.PubkeyToAddress(sk.PublicKey))
+
+	if store.FromAddress(oneAddress) != nil {
+		return "", fmt.Errorf("address %s already exists", oneAddress)
+	}
+
 	ks := store.FromAccountName(name)
 	_, err = ks.ImportECDSA(sk.ToECDSA(), passphrase)
 	return name, err
