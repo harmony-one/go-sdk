@@ -102,6 +102,7 @@ func commandNewProposal() (cmd *cobra.Command) {
 
 	cmd.Flags().StringVar(&proposal, "proposal-yaml", "", "Proposal yaml path")
 	cmd.Flags().StringVar(&key, "key", "", "Account address. Must first use (hmy keys import-private-key) to import.")
+	cmd.Flags().BoolVar(&userProvidesPassphrase, "passphrase", false, ppPrompt)
 	cmd.MarkFlagRequired("proposal-yaml")
 	cmd.MarkFlagRequired("key")
 
@@ -140,6 +141,7 @@ func commandVote() (cmd *cobra.Command) {
 	cmd.Flags().StringVar(&proposal, "proposal", "", "Proposal hash")
 	cmd.Flags().StringVar(&choice, "choice", "", "Vote choice e.g. 'agree' or 'disagree'")
 	cmd.Flags().StringVar(&key, "key", "", "Account address. Must first use (hmy keys import-private-key) to import.")
+	cmd.Flags().BoolVar(&userProvidesPassphrase, "passphrase", false, ppPrompt)
 	cmd.MarkFlagRequired("proposal")
 	cmd.MarkFlagRequired("choose")
 	cmd.MarkFlagRequired("key")
