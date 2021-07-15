@@ -12,14 +12,14 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-18.04]
+        os: [ ubuntu-18.04 ]
 
     steps:
 
-      - name: Set up Go 1.13.6
+      - name: Set up Go 1.16.5
         uses: actions/setup-go@v2
         with:
-          go-version: 1.13.6
+          go-version: 1.16.5
 
 
       - name: Checkout hmy code
@@ -63,7 +63,7 @@ jobs:
         env:
           GOPATH: /home/runner/work/go-sdk/go-sdk/go
 
-      
+
 
 
       - name: Get latest version and release
@@ -98,14 +98,14 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [[self-hosted,linux,ARM64]]
+        os: [ [ self-hosted,linux,ARM64 ] ]
 
     steps:
 
-      - name: Set up Go 1.13.6
+      - name: Set up Go 1.16.5
         uses: actions/setup-go@v2
         with:
-          go-version: 1.13.6
+          go-version: 1.16.5
 
 
       - name: Checkout hmy code
@@ -121,7 +121,7 @@ jobs:
           echo ${GOPATH}
           echo ${GOROOT}
         env:
-          GOPATH: /home/ec2-user/actions-runner/_work/go-sdk/go-sdk/go
+          GOPATH: /home/ubuntu/actions-runner/_work/go-sdk/go-sdk/go
 
       - name: Checkout dependence repo
         uses: actions/checkout@v2
@@ -129,7 +129,7 @@ jobs:
           repository: harmony-one/mcl
           path: go/src/github.com/harmony-one/mcl
         env:
-          GOPATH: /home/ec2-user/actions-runner/_work/go-sdk/go-sdk/go
+          GOPATH: /home/ubuntu/actions-runner/_work/go-sdk/go-sdk/go
 
       - name: Checkout dependence repo
         uses: actions/checkout@v2
@@ -137,7 +137,7 @@ jobs:
           repository: harmony-one/bls
           path: go/src/github.com/harmony-one/bls
         env:
-          GOPATH: /home/ec2-user/actions-runner/_work/go-sdk/go-sdk/go
+          GOPATH: /home/ubuntu/actions-runner/_work/go-sdk/go-sdk/go
 
       - name: Checkout dependence code
         uses: actions/checkout@v2
@@ -147,29 +147,29 @@ jobs:
           ref: main
           fetch-depth: 0
         env:
-          GOPATH: /home/ec2-user/actions-runner/_work/go-sdk/go-sdk/go
+          GOPATH: /home/ubuntu/actions-runner/_work/go-sdk/go-sdk/go
 
       - name: Build hmy binary for Arm
         run: |
           make static
           mv dist/hmy dist/hmy-arm64
           chmod +x dist/hmy-arm64
-        working-directory: /home/ec2-user/actions-runner/_work/go-sdk/go-sdk/go/src/github.com/harmony-one/go-sdk
+        working-directory: /home/ubuntu/actions-runner/_work/go-sdk/go-sdk/go/src/github.com/harmony-one/go-sdk
         env:
-          GOPATH: /home/ec2-user/actions-runner/_work/go-sdk/go-sdk/go
+          GOPATH: /home/ubuntu/actions-runner/_work/go-sdk/go-sdk/go
 
       - name: Upload artifact
         uses: actions/upload-artifact@v2
         with:
           name: hmy-arm64
-          path: /home/ec2-user/actions-runner/_work/go-sdk/go-sdk/go/src/github.com/harmony-one/go-sdk/dist/*
+          path: /home/ubuntu/actions-runner/_work/go-sdk/go-sdk/go/src/github.com/harmony-one/go-sdk/dist/*
           retention-days: 1
         env:
-          GOPATH: /home/ec2-user/actions-runner/_work/go-sdk/go-sdk/go
+          GOPATH: /home/ubuntu/actions-runner/_work/go-sdk/go-sdk/go
 
   release-page:
     name: Sign binary and create and publish release page
-    needs: [build-x8664,build-arm64]
+    needs: [ build-x8664,build-arm64 ]
     runs-on: ubuntu-18.04
 
     steps:
@@ -220,7 +220,7 @@ jobs:
           sha256sum hmy-arm64 >> hmy-arm64.sha256
 
 
-  
+
       - name: Get tag message
         env:
           TAG_SHA: ${{ github.event.after }}
@@ -230,7 +230,7 @@ jobs:
           echo -e "$TAG_SHA\n\nThe released version: $build_version_long" >> ./tag_message.md
         working-directory: /home/runner/work/go-sdk/go-sdk/go/src/github.com/harmony-one/go-sdk
 
-          
+
 
       - name: Create Release
         id: create_release
@@ -245,7 +245,7 @@ jobs:
           prerelease: false
           body_path: /home/runner/work/go-sdk/go-sdk/go/src/github.com/harmony-one/go-sdk/tag_message.md
 
-          
+
 
       - name: Upload hmy binary for Linux (amd64)
         uses: actions/upload-release-asset@v1
@@ -258,7 +258,7 @@ jobs:
           asset_name: hmy
           asset_content_type: application/octet-stream
 
-      - name: Upload sha256 signature of hmy amd64 binary 
+      - name: Upload sha256 signature of hmy amd64 binary
         uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -290,7 +290,7 @@ jobs:
           asset_name: hmy-arm64
           asset_content_type: application/octet-stream
 
-      - name: Upload sha256 signature of hmy arm64 binary 
+      - name: Upload sha256 signature of hmy arm64 binary
         uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
