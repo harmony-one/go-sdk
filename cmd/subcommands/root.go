@@ -237,7 +237,7 @@ func validateAddress(cmd *cobra.Command, args []string) error {
 			return fmt.Errorf("Invalid one address/Invalid account name: %s", args[0])
 		}
 
-		addr = oneAddress{bech32Addr}
+		tmpAddr = oneAddress{bech32Addr}
 	}
 	addr = tmpAddr
 	return nil
