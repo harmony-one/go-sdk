@@ -24,6 +24,7 @@ import (
 )
 
 const defaultTimeout = 40
+const defaultIntraTimeout = 10
 
 var (
 	fromAddress       oneAddress
@@ -263,6 +264,11 @@ func handlerForBulkTransactions(txLog *transactionLog, index int) error {
 		gasLimit = "" // Reset to default for subsequent transactions
 	}
 	trueNonce = txnFlags.TrueNonce
+
+	// Wait for 10 sec for intra-shard transfer
+	if fromShardID == toShardID && timeout != defaultTimeout {
+		timeout = defaultIntraTimeout
+	}
 
 	return handlerForTransaction(txLog)
 }
