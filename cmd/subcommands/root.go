@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"github.com/harmony-one/go-sdk/pkg/address"
 	"net/http"
 	"os"
 	"path"
@@ -223,15 +224,21 @@ func endpointToChainID(nodeAddr string) chainIDWrapper {
 
 func validateAddress(cmd *cobra.Command, args []string) error {
 	// Check if input valid one address
-	address := oneAddress{}
-	if err := address.Set(args[0]); err != nil {
+	tmpAddr := oneAddress{}
+	if err := tmpAddr.Set(args[0]); err != nil {
 		// Check if input is valid account name
 		if acc, err := store.AddressFromAccountName(args[0]); err == nil {
 			addr = oneAddress{acc}
 			return nil
 		}
-		return fmt.Errorf("Invalid one address/Invalid account name: %s", args[0])
+
+		bech32Addr := address.ToBech32(address.Parse(args[0]))
+		if bech32Addr == "" {
+			return fmt.Errorf("Invalid one address/Invalid account name: %s", args[0])
+		}
+
+		tmpAddr = oneAddress{bech32Addr}
 	}
-	addr = address
+	addr = tmpAddr
 	return nil
 }
