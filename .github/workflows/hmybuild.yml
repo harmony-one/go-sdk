@@ -93,83 +93,83 @@ jobs:
         env:
           GOPATH: /home/runner/work/go-sdk/go-sdk/go
 
-  build-arm64:
-    name: Build hmy binary
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        os: [ [ self-hosted,linux,ARM64 ] ]
+  # build-arm64:
+  #   name: Build hmy binary
+  #   runs-on: ${{ matrix.os }}
+  #   strategy:
+  #     matrix:
+  #       os: [ [ self-hosted,linux,ARM64 ] ]
 
-    steps:
+  #   steps:
 
-      - name: Set up Go 1.16.5
-        uses: actions/setup-go@v2
-        with:
-          go-version: 1.16.5
+  #     - name: Set up Go 1.16.5
+  #       uses: actions/setup-go@v2
+  #       with:
+  #         go-version: 1.16.5
 
 
-      - name: Checkout hmy code
-        uses: actions/checkout@v2
-        with:
-          path: go/src/github.com/harmony-one/go-sdk
+  #     - name: Checkout hmy code
+  #       uses: actions/checkout@v2
+  #       with:
+  #         path: go/src/github.com/harmony-one/go-sdk
 
-      - name: Debug
-        run: |
-          pwd
-          echo ${HOME}
-          echo ${GITHUB_WORKSPACE}
-          echo ${GOPATH}
-          echo ${GOROOT}
-        env:
-          GOPATH: /home/ubuntu/actions-runner/_work/go-sdk/go-sdk/go
+  #     - name: Debug
+  #       run: |
+  #         pwd
+  #         echo ${HOME}
+  #         echo ${GITHUB_WORKSPACE}
+  #         echo ${GOPATH}
+  #         echo ${GOROOT}
+  #       env:
+  #         GOPATH: /home/ubuntu/actions-runner/_work/go-sdk/go-sdk/go
 
-      - name: Checkout dependence repo
-        uses: actions/checkout@v2
-        with:
-          repository: harmony-one/mcl
-          path: go/src/github.com/harmony-one/mcl
-        env:
-          GOPATH: /home/ubuntu/actions-runner/_work/go-sdk/go-sdk/go
+  #     - name: Checkout dependence repo
+  #       uses: actions/checkout@v2
+  #       with:
+  #         repository: harmony-one/mcl
+  #         path: go/src/github.com/harmony-one/mcl
+  #       env:
+  #         GOPATH: /home/ubuntu/actions-runner/_work/go-sdk/go-sdk/go
 
-      - name: Checkout dependence repo
-        uses: actions/checkout@v2
-        with:
-          repository: harmony-one/bls
-          path: go/src/github.com/harmony-one/bls
-        env:
-          GOPATH: /home/ubuntu/actions-runner/_work/go-sdk/go-sdk/go
+  #     - name: Checkout dependence repo
+  #       uses: actions/checkout@v2
+  #       with:
+  #         repository: harmony-one/bls
+  #         path: go/src/github.com/harmony-one/bls
+  #       env:
+  #         GOPATH: /home/ubuntu/actions-runner/_work/go-sdk/go-sdk/go
 
-      - name: Checkout dependence code
-        uses: actions/checkout@v2
-        with:
-          repository: harmony-one/harmony
-          path: go/src/github.com/harmony-one/harmony
-          ref: main
-          fetch-depth: 0
-        env:
-          GOPATH: /home/ubuntu/actions-runner/_work/go-sdk/go-sdk/go
+  #     - name: Checkout dependence code
+  #       uses: actions/checkout@v2
+  #       with:
+  #         repository: harmony-one/harmony
+  #         path: go/src/github.com/harmony-one/harmony
+  #         ref: main
+  #         fetch-depth: 0
+  #       env:
+  #         GOPATH: /home/ubuntu/actions-runner/_work/go-sdk/go-sdk/go
 
-      - name: Build hmy binary for Arm
-        run: |
-          make static
-          mv dist/hmy dist/hmy-arm64
-          chmod +x dist/hmy-arm64
-        working-directory: /home/ubuntu/actions-runner/_work/go-sdk/go-sdk/go/src/github.com/harmony-one/go-sdk
-        env:
-          GOPATH: /home/ubuntu/actions-runner/_work/go-sdk/go-sdk/go
+  #     - name: Build hmy binary for Arm
+  #       run: |
+  #         make static
+  #         mv dist/hmy dist/hmy-arm64
+  #         chmod +x dist/hmy-arm64
+  #       working-directory: /home/ubuntu/actions-runner/_work/go-sdk/go-sdk/go/src/github.com/harmony-one/go-sdk
+  #       env:
+  #         GOPATH: /home/ubuntu/actions-runner/_work/go-sdk/go-sdk/go
 
-      - name: Upload artifact
-        uses: actions/upload-artifact@v2
-        with:
-          name: hmy-arm64
-          path: /home/ubuntu/actions-runner/_work/go-sdk/go-sdk/go/src/github.com/harmony-one/go-sdk/dist/*
-          retention-days: 1
-        env:
-          GOPATH: /home/ubuntu/actions-runner/_work/go-sdk/go-sdk/go
+  #     - name: Upload artifact
+  #       uses: actions/upload-artifact@v2
+  #       with:
+  #         name: hmy-arm64
+  #         path: /home/ubuntu/actions-runner/_work/go-sdk/go-sdk/go/src/github.com/harmony-one/go-sdk/dist/*
+  #         retention-days: 1
+  #       env:
+  #         GOPATH: /home/ubuntu/actions-runner/_work/go-sdk/go-sdk/go
 
   release-page:
     name: Sign binary and create and publish release page
-    needs: [ build-x8664,build-arm64 ]
+    needs: [ build-x8664 ]
     runs-on: ubuntu-18.04
 
     steps:
@@ -209,15 +209,15 @@ jobs:
           gpg --detach-sign hmy
           sha256sum hmy >> hmy.sha256
 
-      - name: Download artifact
-        uses: actions/download-artifact@v2
-        with:
-          name: hmy-arm64
+      # - name: Download artifact
+      #   uses: actions/download-artifact@v2
+      #   with:
+      #     name: hmy-arm64
 
-      - name: Signed arm64 hmy binary
-        run: |
-          gpg --detach-sign hmy-arm64
-          sha256sum hmy-arm64 >> hmy-arm64.sha256
+      # - name: Signed arm64 hmy binary
+      #   run: |
+      #     gpg --detach-sign hmy-arm64
+      #     sha256sum hmy-arm64 >> hmy-arm64.sha256
 
 
 
@@ -279,36 +279,36 @@ jobs:
           asset_content_type: application/octet-stream
 
 
-      - name: Upload hmy binary for ARM64
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          GOPATH: /home/runner/work/go-sdk/go-sdk/go
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./hmy-arm64
-          asset_name: hmy-arm64
-          asset_content_type: application/octet-stream
+      # - name: Upload hmy binary for ARM64
+      #   uses: actions/upload-release-asset@v1
+      #   env:
+      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      #     GOPATH: /home/runner/work/go-sdk/go-sdk/go
+      #   with:
+      #     upload_url: ${{ steps.create_release.outputs.upload_url }}
+      #     asset_path: ./hmy-arm64
+      #     asset_name: hmy-arm64
+      #     asset_content_type: application/octet-stream
 
-      - name: Upload sha256 signature of hmy arm64 binary
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./hmy-arm64.sha256
-          asset_name: hmy-arm64.sha256
-          asset_content_type: text/plain
+      # - name: Upload sha256 signature of hmy arm64 binary
+      #   uses: actions/upload-release-asset@v1
+      #   env:
+      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      #   with:
+      #     upload_url: ${{ steps.create_release.outputs.upload_url }}
+      #     asset_path: ./hmy-arm64.sha256
+      #     asset_name: hmy-arm64.sha256
+      #     asset_content_type: text/plain
 
-      - name: Upload gpg signature of hmy arm64 binary
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./hmy-arm64.sig
-          asset_name: hmy-arm64.sig
-          asset_content_type: application/octet-stream
+      # - name: Upload gpg signature of hmy arm64 binary
+      #   uses: actions/upload-release-asset@v1
+      #   env:
+      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      #   with:
+      #     upload_url: ${{ steps.create_release.outputs.upload_url }}
+      #     asset_path: ./hmy-arm64.sig
+      #     asset_name: hmy-arm64.sig
+      #     asset_content_type: application/octet-stream
 
           
         
