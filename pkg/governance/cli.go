@@ -126,7 +126,7 @@ type NewProposalYaml struct {
 }
 
 var proposalTemplate = []byte(`{
-  "version": "0.1.3",
+  "version": "0.2.0",
   "type": "proposal",
   "payload": {
     "metadata": {
@@ -252,7 +252,7 @@ func Vote(keyStore *keystore.KeyStore, account accounts.Account, proposalHash st
 	}
 
 	voteJson := &VoteMessage{
-		Version:   "0.1.3",
+		Version:   "0.2.0",
 		Timestamp: fmt.Sprintf("%d", time.Now().Unix()),
 		Space:     proposals.parsedMsg.Space,
 		Type:      "vote",
