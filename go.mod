@@ -25,7 +25,7 @@ require (
 	github.com/libp2p/go-libp2p-net v0.1.0 // indirect
 	github.com/libp2p/go-libp2p-routing v0.1.0 // indirect
 	github.com/libp2p/go-sockaddr v0.1.0 // indirect
-	github.com/mattn/go-colorable v0.1.7
+	github.com/mattn/go-colorable v0.1.9
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/olekukonko/tablewriter v0.0.5
 	github.com/peterh/liner v1.1.1-0.20190123174540-a2c9a5303de7
@@ -42,3 +42,5 @@ require (
 )
 
 replace github.com/ethereum/go-ethereum => github.com/ethereum/go-ethereum v1.9.9
+
+replace github.com/fatih/color => github.com/fatih/color v1.13.0
