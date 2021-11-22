@@ -51,7 +51,7 @@ Check README for details on json file format.
 ./hmy --node=[NODE] blockchain transaction-receipt <SOME_TX_HASH>
 
 %s
-./hmy keys recover-from-mnemonic <ACCOUNT_NAME>
+./hmy keys recover-from-mnemonic <ACCOUNT_NAME> --passphrase
 
 %s
 ./hmy keys import-ks <PATH_TO_KEYSTORE_JSON>
