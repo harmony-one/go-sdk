@@ -117,12 +117,13 @@ func PrintViewProposal(proposalHash string) error {
 }
 
 type NewProposalYaml struct {
-	Space   string    `yaml:"space"`
-	Start   time.Time `yaml:"start"`
-	End     time.Time `yaml:"end"`
-	Choices []string  `yaml:"choices"`
-	Title   string    `yaml:"title"`
-	Body    string    `yaml:"body"`
+	Space    string    `yaml:"space"`
+	Start    time.Time `yaml:"start"`
+	End      time.Time `yaml:"end"`
+	Choices  []string  `yaml:"choices"`
+	Title    string    `yaml:"title"`
+	Body     string    `yaml:"body"`
+	Snapshot int       `yaml:"snapshot"`
 }
 
 var proposalTemplate = []byte(`{
@@ -172,7 +173,7 @@ func NewProposal(keyStore *keystore.KeyStore, account accounts.Account, proposal
 	proposalJson.Payload.Choices = proposalYaml.Choices
 	proposalJson.Payload.Start = float64(proposalYaml.Start.Unix())
 	proposalJson.Payload.End = float64(proposalYaml.End.Unix())
-	proposalJson.Payload.Snapshot = rand.Intn(9999999) + 1
+	proposalJson.Payload.Snapshot = proposalYaml.Snapshot
 
 	if !checkPermission(proposalJson.Space, account) {
 		return fmt.Errorf("no permission!")
