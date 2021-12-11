@@ -107,7 +107,8 @@ def send_transactions(transactions, batch_size, node, chain_id, timeout=40, fast
         with open(temp_file, "w") as f:
             json.dump(batch_tx, f)  # Assume to work since `transactions` should be built by `parse_csv`
         os.chmod(temp_file, 400)
-        print(f"{Typgpy.OKBLUE}Sending a batch of {Typgpy.OKGREEN}{len(batch_tx)}{Typgpy.OKBLUE} transaction(s){Typgpy.ENDC}")
+        print(
+            f"{Typgpy.OKBLUE}Sending a batch of {Typgpy.OKGREEN}{len(batch_tx)}{Typgpy.OKBLUE} transaction(s){Typgpy.ENDC}")
         print(f"{Typgpy.OKBLUE}Logs for this batch will be at {Typgpy.OKGREEN}{batch_log_file}{Typgpy.ENDC}")
         hmy_args = ["transfer", "--file", temp_file, "--node", node]
         if chain_id:
@@ -141,7 +142,8 @@ def parse_csv(path, node, use_default_passphrase=True):
     Assumes that the given path is a CSV file and that the file exists.
     Assumes that all given CSV fields are strings.
     """
-    columns = {"from", "to", "amount", "from-shard", "to-shard", "passphrase-file", "passphrase-string", "gas-price"}
+    columns = {"from", "to", "amount", "from-shard", "to-shard", "passphrase-file", "passphrase-string", "gas-price",
+               "gas-limit"}
 
     def row_filter(row):
         valid_row = False
@@ -215,6 +217,14 @@ def parse_csv(path, node, use_default_passphrase=True):
                     print(f"{Typgpy.FAIL}Error on line {i}: {e}{Typgpy.ENDC}")
                     print(f"{Typgpy.WARNING}Skipping!{Typgpy.ENDC}")
                     continue
+            if row["gas-limit"]:
+                try:
+                    int(row["gas-limit"])
+                    txn["gas-limit"] = row["gas-limit"]
+                except ValueError as e:
+                    print(f"{Typgpy.FAIL}Error on line {i}: {e}{Typgpy.ENDC}")
+                    print(f"{Typgpy.WARNING}Skipping!{Typgpy.ENDC}")
+                    continue
             data.append(txn)
     print("\nFinished parsing CSV!")
     return data
@@ -253,7 +263,8 @@ def _setup_hmy():
             _hmy(["version"])
             return
         except subprocess.CalledProcessError as e:
-            raise SystemExit(f"'hmy.sh' is unable to execute the CLI. Try downloading the CLI with `./hmy.sh -d`.") from e
+            raise SystemExit(
+                f"'hmy.sh' is unable to execute the CLI. Try downloading the CLI with `./hmy.sh -d`.") from e
     else:
         raise SystemExit(f"'hmy.sh' is not found in script directory {script_directory}. ")
 
