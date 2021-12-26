@@ -210,6 +210,11 @@ func checkPermission(space string, account accounts.Account) bool {
 		return true
 	}
 
+	if validators == nil {
+		fmt.Printf("can not check permission, maybe rpc error")
+		return false
+	}
+
 	if _, ok := validators[address.ToBech32(account.Address)]; ok {
 		return true
 	} else {
