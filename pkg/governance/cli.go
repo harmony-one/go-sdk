@@ -211,7 +211,7 @@ func checkPermission(space string, account accounts.Account) bool {
 	}
 
 	if validators == nil {
-		fmt.Printf("Unable check permission, maybe an rpc error")
+		fmt.Printf("Unable check permission, maybe the RPC not stable, please try later again")
 		return false
 	}
 
