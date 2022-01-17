@@ -95,6 +95,8 @@ var (
 					}
 				} else if endpoint.Match([]byte(node)) {
 					chainName = endpointToChainID(node)
+				} else if strings.Contains(node, "api.harmony.one") {
+					chainName = chainIDWrapper{chainID: &common.Chain.MainNet}
 				} else {
 					chainName = chainIDWrapper{chainID: &common.Chain.TestNet}
 				}

@@ -171,7 +171,7 @@ func ethHandlerForBulkTransactions(txLog *transactionLog, index int) error {
 	if txnFlags.GasPrice != nil {
 		gasPrice = *txnFlags.GasPrice
 	} else {
-		gasPrice = "1" // Reset to default for subsequent transactions
+		gasPrice = "30000" // Reset to default for subsequent transactions
 	}
 	if txnFlags.GasLimit != nil {
 		gasLimit = *txnFlags.GasLimit
@@ -271,7 +271,7 @@ Create an Ethereum compatible transaction, sign it, and send off to the Harmony 
 	cmdEthTransfer.Flags().BoolVar(&dryRun, "dry-run", false, "do not send signed transaction")
 	cmdEthTransfer.Flags().BoolVar(&trueNonce, "true-nonce", false, "send transaction with on-chain nonce")
 	cmdEthTransfer.Flags().StringVar(&amount, "amount", "0", "amount to send (ONE)")
-	cmdEthTransfer.Flags().StringVar(&gasPrice, "gas-price", "1", "gas price to pay (NANO)")
+	cmdEthTransfer.Flags().StringVar(&gasPrice, "gas-price", "30000", "gas price to pay (NANO)")
 	cmdEthTransfer.Flags().StringVar(&gasLimit, "gas-limit", "", "gas limit")
 	cmdEthTransfer.Flags().StringVar(&inputNonce, "nonce", "", "set nonce for tx")
 	cmdEthTransfer.Flags().StringVar(&targetChain, "chain-id", "", "what chain ID to target")
