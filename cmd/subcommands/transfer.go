@@ -255,7 +255,7 @@ func handlerForBulkTransactions(txLog *transactionLog, index int) error {
 	if txnFlags.GasPrice != nil {
 		gasPrice = *txnFlags.GasPrice
 	} else {
-		gasPrice = "30000" // Reset to default for subsequent transactions
+		gasPrice = "30" // Reset to default for subsequent transactions
 	}
 	if txnFlags.GasLimit != nil {
 		gasLimit = *txnFlags.GasLimit
@@ -409,7 +409,7 @@ Create a transaction, sign it, and send off to the Harmony blockchain
 	cmdTransfer.Flags().BoolVar(&offlineSign, "offline-sign", false, "output offline signing")
 	cmdTransfer.Flags().BoolVar(&trueNonce, "true-nonce", false, "send transaction with on-chain nonce")
 	cmdTransfer.Flags().StringVar(&amount, "amount", "0", "amount to send (ONE)")
-	cmdTransfer.Flags().StringVar(&gasPrice, "gas-price", "30000", "gas price to pay (NANO)")
+	cmdTransfer.Flags().StringVar(&gasPrice, "gas-price", "30", "gas price to pay (NANO)")
 	cmdTransfer.Flags().StringVar(&gasLimit, "gas-limit", "", "gas limit")
 	cmdTransfer.Flags().StringVar(&inputNonce, "nonce", "", "set nonce for tx")
 	cmdTransfer.Flags().Uint32Var(&fromShardID, "from-shard", 0, "source shard id")
