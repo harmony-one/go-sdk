@@ -544,6 +544,18 @@ func (b *bridge) HmyGetListAccounts(call jsre.Call) (goja.Value, error) {
 	return call.VM.ToValue(accounts), nil
 }
 
+func getTxData(txObj *goja.Object) ([]byte, error) {
+	dataObj := txObj.Get("data")
+	if dataObj != nil {
+		dataStr := dataObj.Export().(string)
+		if !strings.HasPrefix(dataStr, "0x") {
+			return nil, fmt.Errorf("Invalid data literal: %q", dataStr)
+		}
+		return hex.DecodeString(dataStr[2:])
+	}
+	return nil, nil
+}
+
 func (b *bridge) HmySignTransaction(call jsre.Call) (goja.Value, error) {
 	txObj := call.Arguments[0].ToObject(call.VM)
 	password := call.Arguments[1].String()
@@ -553,6 +565,10 @@ func (b *bridge) HmySignTransaction(call jsre.Call) (goja.Value, error) {
 	gasLimit := getStringFromJsObjWithDefault(txObj, "gas", "1000000")
 	amount := getStringFromJsObjWithDefault(txObj, "value", "0")
 	gasPrice := getStringFromJsObjWithDefault(txObj, "gasPrice", "1")
+	input, err := getTxData(txObj)
+	if err != nil {
+		return nil, err
+	}
 
 	networkHandler := rpc.NewHTTPHandler(b.console.nodeUrl)
 	chanId, err := common.StringToChainID(b.console.net)
@@ -598,7 +614,7 @@ func (b *bridge) HmySignTransaction(call jsre.Call) (goja.Value, error) {
 		toP,
 		uint32(b.console.shardId), uint32(b.console.shardId),
 		amt, gPrice,
-		[]byte{},
+		input,
 	)
 	if err != nil {
 		return nil, err
@@ -635,6 +651,10 @@ func (b *bridge) HmySendTransaction(call jsre.Call) (goja.Value, error) {
 	gasLimit := getStringFromJsObjWithDefault(txObj, "gas", "1000000")
 	amount := getStringFromJsObjWithDefault(txObj, "value", "0")
 	gasPrice := getStringFromJsObjWithDefault(txObj, "gasPrice", "1")
+	input, err := getTxData(txObj)
+	if err != nil {
+		return nil, err
+	}
 
 	networkHandler := rpc.NewHTTPHandler(b.console.nodeUrl)
 	chanId, err := common.StringToChainID(b.console.net)
@@ -680,7 +700,7 @@ func (b *bridge) HmySendTransaction(call jsre.Call) (goja.Value, error) {
 		toP,
 		uint32(b.console.shardId), uint32(b.console.shardId),
 		amt, gPrice,
-		[]byte{},
+		input,
 	)
 	if err != nil {
 		return nil, err
