@@ -10,35 +10,29 @@ import (
 	"github.com/valyala/fastjson"
 )
 
-func getAndParse(url governanceApi, data interface{}) error {
-	resp, err := http.Get(string(url))
-	if err != nil {
-		return err
-	}
-	defer resp.Body.Close()
-
-	return parseAndUnmarshal(resp, data)
-}
-
-func postAndParse(url governanceApi, postData []byte, data interface{}) error {
+func postAndParse(url string, postData []byte) (map[string]interface{}, error) {
 	resp, err := http.Post(string(url), "application/json", bytes.NewReader(postData))
 	if err != nil {
-		return err
+		return nil, err
 	}
 	defer resp.Body.Close()
-
-	return parseAndUnmarshal(resp, data)
+	return parseAndUnmarshal(resp)
 }
 
-func parseAndUnmarshal(resp *http.Response, data interface{}) error {
+func parseAndUnmarshal(resp *http.Response) (map[string]interface{}, error) {
 	bodyData, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	if fastjson.GetString(bodyData, "error") != "" {
-		return fmt.Errorf("error: %s, %s", fastjson.GetString(bodyData, "error"), fastjson.GetString(bodyData, "error_description"))
+		return nil, fmt.Errorf("error: %s, %s", fastjson.GetString(bodyData, "error"), fastjson.GetString(bodyData, "error_description"))
 	}
 
-	return json.Unmarshal(bodyData, data)
+	var result map[string]interface{}
+	if err := json.Unmarshal(bodyData, &result); err != nil {
+		return nil, err
+	} else {
+		return result, nil
+	}
 }
