@@ -126,36 +126,15 @@ Check README for details on json file format.
 20. Check which shard your BLS public key would be assigned to as a validator
 ./hmy --node=https://api.s0.t.hmny.io utility shard-for-bls <BLS_PUBLIC_KEY>
 
-21. List Space In Governance
-./hmy governance list-space
-
-22. List Proposal In Space Of Governance
-./hmy governance list-proposal --space=[space key, example: staking-testnet]
-
-23. View Proposal In Governance
-./hmy governance view-proposal --proposal=[proposal hash]
-
-24. New Proposal In Space Of Governance
-./hmy governance new-proposal --proposal-yaml=[file path] --key=[key name]
-PS: key must first use (hmy keys import-private-key) to import
-Yaml example(time is in UTC timezone):
-space: staking-testnet
-start: 2020-04-16 21:45:12
-end: 2020-04-21 21:45:12
-choices:
-  - yes
-  - no
-title: this is title
-body: |
-  this is body,
-  you can write mutli line
-
-25. Vote Proposal In Space Of Governance
-./hmy governance vote-proposal --proposal=[proposal hash] --choice=[your choice text, eg: yes] --key=[key name]
+21. Vote on a governance proposal on https://snapshot.org
+./hmy governance vote-proposal --space=[harmony-mainnet.eth] \
+	--proposal=<PROPOSAL_IPFS_HASH> --proposal-type=[single-choice] \
+	--choice=<VOTING_CHOICE(S)> --app=[APP] --key=<ACCOUNT_ADDRESS_OR_NAME> \
+	--privacy=[PRIVACY TYPE]
 PS: key must first use (hmy keys import-private-key) to import
 
-26. Enter Console
-./hmy command --net=testnet --shard=0
+22. Enter Console
+./hmy command --net=testnet
 ```
 
 # Sending batched transactions

@@ -110,6 +110,9 @@ Check README for details on json file format.
 	--choice=<VOTING_CHOICE(S)> --app=[APP] --key=<ACCOUNT_ADDRESS_OR_NAME> \
 	--privacy=[PRIVACY TYPE]
 PS: key must first use (hmy keys import-private-key) to import
+
+%s
+./hmy command --net=testnet
 `,
 		g("1.  Check account balance on given chain"),
 		g("2.  Check sent transaction"),
@@ -131,6 +134,7 @@ PS: key must first use (hmy keys import-private-key) to import
 		g("18. Get current staking utility metrics"),
 		g("19. Check in-memory record of failed staking transactions"),
 		g("20. Check which shard your BLS public key would be assigned to as a validator"),
-		g("21. Vote on a governance proposal"),
+		g("21. Vote on a governance proposal on https://snapshot.org"),
+		g("22. Enter console"),
 	)
 )
