@@ -105,31 +105,10 @@ Check README for details on json file format.
 ./hmy --node=[NODE] utility shard-for-bls <BLS_PUBLIC_KEY>
 
 %s
-./hmy governance list-space
-
-%s
-./hmy governance list-proposal --space=[space key, example: staking-testnet]
-
-%s
-./hmy governance view-proposal --proposal=[proposal hash]
-
-%s
-./hmy governance new-proposal --proposal-yaml=[file path] --key=[account address]
-PS: key must first use (hmy keys import-private-key) to import
-Yaml example(time is in UTC timezone):
-space: staking-testnet
-start: 2020-04-16 21:45:12
-end: 2020-04-21 21:45:12
-choices:
-  - yes
-  - no
-title: this is title
-body: |
-  this is body,
-  you can write mutli line
-
-%s
-./hmy governance vote-proposal --proposal=[proposal hash] --choice=[your choise text, eg: yes] --key=[account address]
+./hmy governance vote-proposal --space=[harmony-mainnet.eth] \
+	--proposal=<PROPOSAL_IPFS_HASH> --proposal-type=[single-choice] \
+	--choice=<VOTING_CHOICE(S)> --app=[APP] --key=<ACCOUNT_ADDRESS_OR_NAME> \
+	--privacy=[PRIVACY TYPE]
 PS: key must first use (hmy keys import-private-key) to import
 `,
 		g("1.  Check account balance on given chain"),
@@ -152,10 +131,6 @@ PS: key must first use (hmy keys import-private-key) to import
 		g("18. Get current staking utility metrics"),
 		g("19. Check in-memory record of failed staking transactions"),
 		g("20. Check which shard your BLS public key would be assigned to as a validator"),
-		g("21. List Space In Governance"),
-		g("22. List Proposal In Space Of Governance"),
-		g("23. View Proposal In Governance"),
-		g("24. New Proposal In Space Of Governance"),
-		g("25. Vote Proposal In Space Of Governance"),
+		g("21. Vote on a governance proposal"),
 	)
 )
