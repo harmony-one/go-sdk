@@ -20,12 +20,15 @@ set_download () {
     local rel='mainnet'
     case "$OS" in
 	Darwin)
-	    FOLDER=release/darwin-x86_64/${rel}/
+	    FOLDER=release/darwin-x86_64/${rel}
+	    URL=http://${BUCKET}.s3.amazonaws.com/${FOLDER}
 	    BIN=( hmy libbls384_256.dylib libcrypto.1.0.0.dylib libgmp.10.dylib libgmpxx.4.dylib libmcl.dylib )
+	    NAMES=("${BIN[@]}")
 	    ;;
 	Linux)
-	    FOLDER=release/linux-x86_64/${rel}/
-	    BIN=( hmy )
+	    URL=https://harmony.one
+	    BIN=( hmycli )
+	    NAMES=( hmy )
 	    ;;
 	*)
 	    echo "${OS} not supported."
@@ -36,9 +39,9 @@ set_download () {
 
 do_download () {
     # download all the binaries
-    for bin in "${BIN[@]}"; do
-	rm -f ${bin}
-	curl http://${BUCKET}.s3.amazonaws.com/${FOLDER}${bin} -o ${bin}
+    for i in "${!BIN[@]}"; do
+	rm -f ${NAMES[i]}
+	curl -L ${URL}/${BIN[i]} -o ${NAMES[i]}
     done
     chmod +x hmy
 }
