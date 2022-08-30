@@ -19,7 +19,7 @@ DIR := ${CURDIR}
 export CGO_LDFLAGS=-L$(DIR)/dist/lib -Wl,-rpath -Wl,\$ORIGIN/lib
 
 all:
-	source $(shell go env GOPATH)/src/github.com/harmony-one/harmony/scripts/setup_bls_build_flags.sh && $(env) go build -o $(cli) -ldflags="$(ldflags)" cmd/main.go
+	source $(shell go env GOPATH)/src/github.com/harmony-one/harmony/scripts/setup_bls_build_flags.sh && $(env) go build -o $(cli) -ldflags="$(ldflags) -extldflags \"-z muldefs\"" cmd/main.go
 	cp $(cli) hmy
 
 static:
@@ -29,7 +29,7 @@ static:
 	cp $(cli) hmy
 
 debug:
-	source $(shell go env GOPATH)/src/github.com/harmony-one/harmony/scripts/setup_bls_build_flags.sh && $(env) go build $(flags) -o $(cli) -ldflags="$(ldflags)" cmd/main.go
+	source $(shell go env GOPATH)/src/github.com/harmony-one/harmony/scripts/setup_bls_build_flags.sh && $(env) go build $(flags) -o $(cli) -ldflags="$(ldflags) -extldflags \"-z muldefs\"" cmd/main.go
 	cp $(cli) hmy
 
 install:all
