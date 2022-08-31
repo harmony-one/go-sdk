@@ -6,8 +6,9 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
-	"github.com/karalabe/hid"
 	"io"
+
+	hid "github.com/karalabe/usb"
 )
 
 const (
@@ -262,7 +263,10 @@ func OpenNanoS() (*NanoS, error) {
 	)
 
 	// search for Nano S
-	devices := hid.Enumerate(ledgerVendorID, ledgerNanoSProductID)
+	devices, err := hid.Enumerate(ledgerVendorID, ledgerNanoSProductID)
+	if err != nil {
+		return nil, err
+	}
 	if len(devices) == 0 {
 		return nil, errors.New("Nano S not detected")
 	} else if len(devices) > 1 {

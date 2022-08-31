@@ -14,7 +14,7 @@ require (
 	github.com/golang/snappy v0.0.2-0.20200707131729-196ae77b8a26 // indirect
 	github.com/harmony-one/bls v0.0.7-0.20191214005344-88c23f91a8a9
 	github.com/harmony-one/harmony v1.10.2-0.20210123081216-6993b9ad0ca1
-	github.com/karalabe/hid v1.0.0
+	github.com/karalabe/usb v0.0.0-20190919080040-51dc0efba356
 	github.com/mattn/go-colorable v0.1.9
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/olekukonko/tablewriter v0.0.5 // indirect
