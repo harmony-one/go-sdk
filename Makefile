@@ -25,7 +25,7 @@ all:
 static:
 	make -C $(shell go env GOPATH)/src/github.com/harmony-one/mcl
 	make -C $(shell go env GOPATH)/src/github.com/harmony-one/bls minimised_static BLS_SWAP_G=1
-	source $(shell go env GOPATH)/src/github.com/harmony-one/harmony/scripts/setup_bls_build_flags.sh && $(env) go build -o $(cli) -ldflags="$(ldflags) -w -extldflags \"-static -z muldefs\"" cmd/main.go
+	source $(shell go env GOPATH)/src/github.com/harmony-one/harmony/scripts/setup_bls_build_flags.sh && $(env) go build -o $(cli) -ldflags="$(ldflags) -w -extldflags \"-static\"" cmd/main.go
 	cp $(cli) hmy
 
 debug:
