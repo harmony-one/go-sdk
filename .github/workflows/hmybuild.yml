@@ -80,7 +80,7 @@ jobs:
           make libs
         working-directory: ${{ github.workspace }}/src/github.com/harmony-one/harmony
 
-      - name: Build hmy binary for macos-latest x68_64
+      - name: Build hmy binary for macos-latest x86_64
         if: matrix.os == 'macos-latest'
         run: |
           make all
