@@ -1,10 +1,13 @@
 SHELL := /bin/bash
+TOP:=$(realpath ..)
+export LD_LIBRARY_PATH:=$(TOP)/bls/lib:$(TOP)/mcl/lib:/usr/local/opt/openssl/lib:/opt/homebrew/opt/gmp/lib/:/opt/homebrew/opt/openssl/lib
+export LIBRARY_PATH:=$(LD_LIBRARY_PATH)
 version := $(shell git rev-list --count HEAD)
 commit := $(shell git describe --always --long --dirty)
 built_at := $(shell date +%FT%T%z)
 built_by := ${USER}@harmony.one
 
-flags := -gcflags="all=-N -l -c 2"
+flags := -gcflags="all=-N -l"
 ldflags := -X main.version=v${version} -X main.commit=${commit}
 ldflags += -X main.builtAt=${built_at} -X main.builtBy=${built_by}
 cli := ./dist/hmy
