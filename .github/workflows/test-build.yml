@@ -1,0 +1,86 @@
+name: test build
+
+on:
+  push:
+
+env:
+  GOPATH: ${{ github.workspace }}
+  GOBIN: ${{ github.workspace }}/bin
+
+jobs:
+  build-x86_64:
+    name: Build hmy binary for x86_64
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ ubuntu-18.04, macos-latest ]
+
+    steps:
+      - name: Checkout hmy code
+        uses: actions/checkout@v3
+        with:
+          path: go-sdk
+
+      - name: Set up Go
+        uses: actions/setup-go@v3
+        with:
+          go-version-file: go-sdk/go.mod
+
+      - name: Checkout dependence repo
+        uses: actions/checkout@v3
+        with:
+          repository: harmony-one/mcl
+          path: ${{ github.workspace }}/src/github.com/harmony-one/mcl
+
+      - name: Checkout dependence repo
+        uses: actions/checkout@v3
+        with:
+          repository: harmony-one/bls
+          path: ${{ github.workspace }}/src/github.com/harmony-one/bls
+
+      - name: Checkout dependence code
+        uses: actions/checkout@v2
+        with:
+          repository: harmony-one/harmony
+          path: ${{ github.workspace }}/src/github.com/harmony-one/harmony
+          ref: main
+          fetch-depth: 0
+
+      - name: Get latest version and release
+        run: |
+          VERSION=$(git tag -l --sort=-v:refname | head -n 1 | tr -d v)
+          RELEASE=$(git describe --long | cut -f2 -d-)
+          echo "build_version=$VERSION" >> $GITHUB_ENV
+          echo "build_release=$RELEASE" >> $GITHUB_ENV
+        working-directory: go-sdk
+
+      - name: Debug
+        run: |
+          pwd
+          echo ${HOME}
+          echo ${GITHUB_WORKSPACE}
+          echo ${GOPATH}
+          echo ${GOROOT}
+          ls ${{ github.workspace }}/src/github.com/harmony-one/
+
+      - name: Build hmy binary for linux ubuntu
+        if: matrix.os == 'ubuntu-18.04'
+        run: |
+          make static
+        working-directory: go-sdk
+
+      - name: Build libs for macos-latest
+        if: matrix.os == 'macos-latest'
+        run: |
+          brew install gmp
+          brew install openssl
+          sudo ln -sf /opt/homebrew/opt/openssl@3 /usr/local/opt/openssl
+          echo "ls -l /usr/local/opt/"; ls -l /usr/local/opt/
+          make libs
+        working-directory: ${{ github.workspace }}/src/github.com/harmony-one/harmony
+
+      - name: Build hmy binary for macos-latest x86_64
+        if: matrix.os == 'macos-latest'
+        run: |
+          make all
+        working-directory: go-sdk
