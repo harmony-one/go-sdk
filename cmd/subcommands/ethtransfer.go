@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"io/ioutil"
+	"os"
 	"strconv"
 	"strings"
 	"time"
@@ -43,9 +44,13 @@ func ethHandlerForShard(node string) (*rpc.HTTPMessenger, error) {
 // Note that the vars need to be set before calling this handler.
 func ethHandlerForTransaction(txLog *transactionLog) error {
 	from := fromAddress.String()
-	networkHandler, err := ethHandlerForShard(node)
-	if handlerForError(txLog, err) != nil {
-		return err
+	var networkHandler *rpc.HTTPMessenger
+	if !offlineSign {
+		var err error
+		networkHandler, err = ethHandlerForShard(node)
+		if handlerForError(txLog, err) != nil {
+			return err
+		}
 	}
 
 	var ctrlr *transaction.EthController
@@ -98,12 +103,17 @@ func ethHandlerForTransaction(txLog *transactionLog) error {
 		gLimit = uint64(tempLimit)
 	}
 
+	dataByte, err := transaction.StringToByte(data)
+	if err != nil {
+		return handlerForError(txLog, err)
+	}
+
 	txLog.TimeSigned = time.Now().UTC().Format(timeFormat) // Approximate time of signature
 	err = ctrlr.ExecuteEthTransaction(
 		nonce, gLimit,
 		toAddress.String(),
 		amt, gPrice,
-		[]byte{},
+		dataByte,
 	)
 
 	if dryRun {
@@ -187,6 +197,9 @@ func ethOpts(ctlr *transaction.EthController) {
 	if dryRun {
 		ctlr.Behavior.DryRun = true
 	}
+	if offlineSign {
+		ctlr.Behavior.OfflineSign = true
+	}
 	if useLedgerWallet {
 		ctlr.Behavior.SigningImpl = transaction.Ledger
 	}
@@ -204,6 +217,9 @@ func init() {
 Create an Ethereum compatible transaction, sign it, and send off to the Harmony blockchain
 `,
 		PreRunE: func(cmd *cobra.Command, args []string) error {
+			if offlineSign {
+				dryRun = true
+			}
 			if givenFilePath == "" {
 				for _, flagName := range [...]string{"from", "to", "amount", "chain-id"} {
 					_ = cmd.MarkFlagRequired(flagName)
@@ -269,15 +285,72 @@ Create an Ethereum compatible transaction, sign it, and send off to the Harmony 
 	cmdEthTransfer.Flags().Var(&fromAddress, "from", "sender's one address, keystore must exist locally")
 	cmdEthTransfer.Flags().Var(&toAddress, "to", "the destination one address")
 	cmdEthTransfer.Flags().BoolVar(&dryRun, "dry-run", false, "do not send signed transaction")
+	cmdEthTransfer.Flags().BoolVar(&offlineSign, "offline-sign", false, "output offline signing")
 	cmdEthTransfer.Flags().BoolVar(&trueNonce, "true-nonce", false, "send transaction with on-chain nonce")
 	cmdEthTransfer.Flags().StringVar(&amount, "amount", "0", "amount to send (ONE)")
 	cmdEthTransfer.Flags().StringVar(&gasPrice, "gas-price", "100", "gas price to pay (NANO)")
 	cmdEthTransfer.Flags().StringVar(&gasLimit, "gas-limit", "", "gas limit")
 	cmdEthTransfer.Flags().StringVar(&inputNonce, "nonce", "", "set nonce for tx")
+	cmdEthTransfer.Flags().StringVar(&data, "data", "", "transaction data")
 	cmdEthTransfer.Flags().StringVar(&targetChain, "chain-id", "", "what chain ID to target")
 	cmdEthTransfer.Flags().Uint32Var(&timeout, "timeout", defaultTimeout, "set timeout in seconds. Set to 0 to not wait for confirm")
 	cmdEthTransfer.Flags().BoolVar(&userProvidesPassphrase, "passphrase", false, ppPrompt)
 	cmdEthTransfer.Flags().StringVar(&passphraseFilePath, "passphrase-file", "", "path to a file containing the passphrase")
 
 	RootCmd.AddCommand(cmdEthTransfer)
+
+	cmdOfflineSignEthTransfer := &cobra.Command{
+		Use:   "offline-sign-eth-transfer",
+		Short: "Send a Offline Signed Ethereum transaction",
+		Args:  cobra.ExactArgs(0),
+		Long: `
+Send a offline signed transaction to the Harmony blockchain (on the same shard)
+`,
+		PreRunE: func(cmd *cobra.Command, args []string) error {
+			if givenFilePath == "" {
+				return fmt.Errorf("must give a offline-signed file")
+			}
+			return nil
+		},
+		RunE: func(cmd *cobra.Command, args []string) error {
+			var txLogs []*transactionLog
+
+			networkHandler := rpc.NewHTTPHandler(node)
+
+			openFile, err := os.Open(givenFilePath)
+			if err != nil {
+				return err
+			}
+			defer openFile.Close()
+
+			err = json.NewDecoder(openFile).Decode(&txLogs)
+			if err != nil {
+				return err
+			}
+
+			for _, txLog := range txLogs {
+				if len(txLog.Errors) > 0 {
+					continue
+				}
+
+				ctrlr := transaction.NewEthController(networkHandler, nil, nil, *chainName.chainID, ethOpts)
+				err := ctrlr.ExecuteRawTransaction(txLog.RawTxn)
+				if handlerForError(txLog, err) != nil {
+					txLog.Errors = append(txLog.Errors, err.Error())
+					continue
+				}
+
+				if txHash := ctrlr.TransactionHash(); txHash != nil {
+					txLog.TxHash = *txHash
+				}
+
+				txLog.Receipt = ctrlr.Receipt()["result"]
+			}
+
+			fmt.Println(common.ToJSONUnsafe(txLogs, true))
+			return nil
+		},
+	}
+
+	RootCmd.AddCommand(cmdOfflineSignEthTransfer)
 }

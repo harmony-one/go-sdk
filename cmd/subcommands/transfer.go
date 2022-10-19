@@ -42,6 +42,7 @@ var (
 	transferFileFlags []transferFlags
 	timeout           uint32
 	timeFormat        = "2006-01-02 15:04:05.000000"
+	data              string
 )
 
 type transactionLog struct {
@@ -169,6 +170,11 @@ func handlerForTransaction(txLog *transactionLog) error {
 		gLimit = uint64(tempLimit)
 	}
 
+	dataByte, err := transaction.StringToByte(data)
+	if err != nil {
+		return handlerForError(txLog, err)
+	}
+
 	addr := toAddress.String()
 
 	txLog.TimeSigned = time.Now().UTC().Format(timeFormat) // Approximate time of signature
@@ -177,7 +183,7 @@ func handlerForTransaction(txLog *transactionLog) error {
 		&addr,
 		fromShardID, toShardID,
 		amt, gPrice,
-		[]byte{},
+		dataByte,
 	)
 
 	if dryRun {
@@ -414,6 +420,7 @@ Create a transaction, sign it, and send off to the Harmony blockchain
 	cmdTransfer.Flags().StringVar(&inputNonce, "nonce", "", "set nonce for tx")
 	cmdTransfer.Flags().Uint32Var(&fromShardID, "from-shard", 0, "source shard id")
 	cmdTransfer.Flags().Uint32Var(&toShardID, "to-shard", 0, "target shard id")
+	cmdTransfer.Flags().StringVar(&data, "data", "", "transaction data")
 	cmdTransfer.Flags().StringVar(&targetChain, "chain-id", "", "what chain ID to target")
 	cmdTransfer.Flags().Uint32Var(&timeout, "timeout", defaultTimeout, "set timeout in seconds. Set to 0 to not wait for confirm")
 	cmdTransfer.Flags().BoolVar(&userProvidesPassphrase, "passphrase", false, ppPrompt)
@@ -449,7 +456,7 @@ Get Nonce From a Account
 		Short: "Send a Offline Signed transaction",
 		Args:  cobra.ExactArgs(0),
 		Long: `
-Send a offline signed to the Harmony blockchain
+Send a offline signed transaction to the Harmony blockchain
 `,
 		PreRunE: func(cmd *cobra.Command, args []string) error {
 			if givenFilePath == "" {
