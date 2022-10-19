@@ -545,18 +545,6 @@ func (b *bridge) HmyGetListAccounts(call jsre.Call) (goja.Value, error) {
 	return call.VM.ToValue(accounts), nil
 }
 
-func getTxData(txObj *goja.Object) ([]byte, error) {
-	dataObj := txObj.Get("data")
-	if dataObj != nil {
-		dataStr := dataObj.Export().(string)
-		if !strings.HasPrefix(dataStr, "0x") {
-			return nil, fmt.Errorf("Invalid data literal: %q", dataStr)
-		}
-		return hex.DecodeString(dataStr[2:])
-	}
-	return nil, nil
-}
-
 func (b *bridge) HmySignTransaction(call jsre.Call) (goja.Value, error) {
 	txObj := call.Arguments[0].ToObject(call.VM)
 	password := call.Arguments[1].String()
