@@ -24,7 +24,7 @@ require (
 	github.com/tyler-smith/go-bip39 v1.0.2
 	github.com/valyala/fasthttp v1.2.0
 	github.com/valyala/fastjson v1.6.3
-	golang.org/x/crypto v0.0.0-20200820211705-5c72a883971a
+	golang.org/x/crypto v0.1.0
 	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b // indirect
 )
 
