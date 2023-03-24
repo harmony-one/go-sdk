@@ -210,7 +210,7 @@ func (n *NanoS) GetAddress() (oneAddr string, err error) {
 func (n *NanoS) SignTxn(txn []byte) (sig [signatureSize]byte, err error) {
 	buf := bytes.NewBuffer(txn)
 	var resp []byte
-	
+
 	for buf.Len() > 0 {
 		var p1 byte = p1More
 		var p2 byte = p2SignHash
@@ -273,14 +273,14 @@ func OpenNanoS() (*NanoS, error) {
 	)
 
 	// search for Nano S
-	devices, err := hid.Enumerate(ledgerVendorID, ledgerNanoSProductID)
+	devices, err := hid.EnumerateHid(ledgerVendorID, ledgerNanoSProductID)
 	if err != nil {
 		return nil, err
 	}
 	if len(devices) == 0 {
-		return nil, errors.New("Nano S not detected")
+		return nil, errors.New("nano S not detected")
 	} else if len(devices) > 1 {
-		return nil, errors.New("Unexpected error -- Is the one wallet app running?")
+		return nil, errors.New("detected multiple Nano S devices")
 	}
 
 	// open the device
