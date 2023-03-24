@@ -8,7 +8,7 @@ import (
 	"fmt"
 	"io"
 
-	hid "github.com/karalabe/usb"
+	"github.com/karalabe/usb"
 )
 
 const (
@@ -273,7 +273,7 @@ func OpenNanoS() (*NanoS, error) {
 	)
 
 	// search for Nano S
-	devices, err := hid.EnumerateHid(ledgerVendorID, ledgerNanoSProductID)
+	devices, err := usb.EnumerateHid(ledgerVendorID, ledgerNanoSProductID)
 	if err != nil {
 		return nil, err
 	}
