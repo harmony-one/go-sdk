@@ -8,7 +8,7 @@ import (
 	"fmt"
 	"io"
 
-	hid "github.com/karalabe/usb"
+	"github.com/karalabe/usb"
 )
 
 const (
@@ -208,12 +208,22 @@ func (n *NanoS) GetAddress() (oneAddr string, err error) {
 }
 
 func (n *NanoS) SignTxn(txn []byte) (sig [signatureSize]byte, err error) {
+	buf := bytes.NewBuffer(txn)
 	var resp []byte
 
-	var p1 byte = p1More
-	resp, err = n.Exchange(cmdSignTx, p1, p2SignHash, txn)
-	if err != nil {
-		return [signatureSize]byte{}, err
+	for buf.Len() > 0 {
+		var p1 byte = p1More
+		var p2 byte = p2SignHash
+		if resp == nil {
+			p1 = p1First
+		}
+		if buf.Len() < packetSize {
+			p2 = p2Finish
+		}
+		resp, err = n.Exchange(cmdSignTx, p1, p2, buf.Next(packetSize))
+		if err != nil {
+			return [signatureSize]byte{}, err
+		}
 	}
 
 	copy(sig[:], resp)
@@ -263,14 +273,14 @@ func OpenNanoS() (*NanoS, error) {
 	)
 
 	// search for Nano S
-	devices, err := hid.Enumerate(ledgerVendorID, ledgerNanoSProductID)
+	devices, err := usb.EnumerateHid(ledgerVendorID, ledgerNanoSProductID)
 	if err != nil {
 		return nil, err
 	}
 	if len(devices) == 0 {
-		return nil, errors.New("Nano S not detected")
+		return nil, errors.New("nano S not detected")
 	} else if len(devices) > 1 {
-		return nil, errors.New("Unexpected error -- Is the one wallet app running?")
+		return nil, errors.New("detected multiple Nano S devices")
 	}
 
 	// open the device
