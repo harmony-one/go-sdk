@@ -13,7 +13,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ ubuntu-18.04, macos-latest ]
+        os: [ ubuntu-22.04, macos-latest ]
 
     steps:
       - name: Checkout hmy code
@@ -64,7 +64,7 @@ jobs:
           ls ${{ github.workspace }}/src/github.com/harmony-one/
 
       - name: Build hmy binary for linux ubuntu
-        if: matrix.os == 'ubuntu-18.04'
+        if: matrix.os == 'ubuntu-22.04'
         run: |
           make static
         working-directory: go-sdk
@@ -74,8 +74,9 @@ jobs:
         run: |
           brew install gmp
           brew install openssl
-          sudo ln -sf /opt/homebrew/opt/openssl@3 /usr/local/opt/openssl
-          echo "ls -l /usr/local/opt/"; ls -l /usr/local/opt/
+          sudo mkdir -p /opt/homebrew/opt/  
+          sudo ln -sf /usr/local/opt/openssl@1.1 /opt/homebrew/opt/openssl@1.1
+          echo "ls -l /opt/homebrew/opt/openssl@1.1"; ls -l /opt/homebrew/opt/openssl@1.1
           make libs
         working-directory: ${{ github.workspace }}/src/github.com/harmony-one/harmony
 
