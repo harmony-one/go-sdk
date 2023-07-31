@@ -69,6 +69,13 @@ jobs:
           make static
         working-directory: go-sdk
 
+      - name: Upload artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: hmy
+          path: ${{ github.workspace }}/go-sdk/dist/*
+          retention-days: 1
+
       - name: Build libs for macos-latest
         if: matrix.os == 'macos-latest'
         run: |
