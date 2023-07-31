@@ -84,6 +84,7 @@ jobs:
         if: matrix.os == 'macos-latest'
         run: |
           make all
+          mv dist/hmy dist/hmy-darwin-x86_64
         working-directory: go-sdk
 
       - name: Upload artifact
