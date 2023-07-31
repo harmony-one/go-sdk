@@ -75,7 +75,7 @@ jobs:
         run: |
           brew install gmp
           brew install openssl
-          sudo mkdir -p /opt/homebrew/opt/  
+          sudo mkdir -p /opt/homebrew/opt/
           sudo ln -sf /usr/local/opt/openssl@1.1 /opt/homebrew/opt/openssl@1.1
           echo "ls -l /opt/homebrew/opt/openssl@1.1"; ls -l /opt/homebrew/opt/openssl@1.1
           make libs
