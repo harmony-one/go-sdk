@@ -92,7 +92,7 @@ jobs:
         uses: actions/upload-artifact@v2
         with:
           name: hmy
-          path: ${{ github.workspace }}/go-sdk/dist/*
+          path: ${{ github.workspace }}/src/github.com/harmony-one/go-sdk/dist/hmy
           retention-days: 1
 
   # build-arm64:
