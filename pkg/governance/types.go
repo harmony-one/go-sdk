@@ -2,6 +2,7 @@ package governance
 
 import (
 	"encoding/json"
+	"fmt"
 	"strconv"
 	"strings"
 	"time"
@@ -67,32 +68,68 @@ func (v *Vote) ToEIP712() (*TypedData, error) {
 	// vote type, vote choice and vote privacy
 	// choice needs to be converted into its native format for envelope
 	var choice interface{}
+	// The space between [1, 2, 3] does not matter since we parse it
+	// hmy governance vote-proposal \
+	// 		--space harmony-mainnet.eth \
+	// 		--proposal 0xTruncated \
+	// 		--proposal-type {"approval","ranked-choice"} \
+	// 		--choice "[1, 2, 3]" \
+	//		--app my-app \
+	// 		--key <name of pk>
 	if v.ProposalType == "approval" || v.ProposalType == "ranked-choice" {
 		myType = append(myType, eip712.Type{
 			Name: "choice",
 			Type: "uint32[]",
 		})
-		var is []int
+		var is []int64
 		if err := json.Unmarshal([]byte(v.Choice), &is); err == nil {
-			choice = is
+			local := make([]interface{}, len(is))
+			for i := range is {
+				local[i] = math.NewHexOrDecimal256(is[i])
+			}
+			choice = local
 		} else {
 			return nil, errors.Wrapf(err,
 				"unexpected value of choice %s (expected uint32[])", choice,
 			)
 		}
+	// The space between [1, 2, 3] does not matter to snapshot.org
+	// But for comparing with the snapshot-js library, remove it
+	// hmy governance vote-proposal \
+	// 		--space harmony-mainnet.eth \
+	// 		--proposal 0xTruncated \
+	// 		--proposal-type {"quadratic","weighted"} \
+	// 		--choice "[1,2,3]" \
+	//		--app my-app \
+	// 		--key <name of pk>
 	} else if v.ProposalType == "quadratic" || v.ProposalType == "weighted" {
 		myType = append(myType, eip712.Type{
 			Name: "choice",
 			Type: "string",
 		})
 		choice = v.Choice
+	// hmy governance vote-proposal \
+	// 		--space harmony-mainnet.eth \
+	// 		--proposal 0xTruncated \
+	// 		--proposal-type ANY \
+	// 		--choice "unknown-format" \
+	//		--app my-app \
+	// 		--key <name of pk>
+	//      --privacy shutter
 	} else if v.Privacy == "shutter" {
 		myType = append(myType, eip712.Type{
 			Name: "choice",
 			Type: "string",
 		})
 		choice = v.Choice
-	} else {
+	// hmy governance vote-proposal \
+	// 		--space harmony-mainnet.eth \
+	// 		--proposal 0xTruncated \
+	// 		--proposal-type single-choice \
+	// 		--choice 1 \
+	//		--app my-app \
+	// 		--key <name of pk>
+	} else if v.ProposalType == "single-choice" {
 		myType = append(myType, eip712.Type{
 			Name: "choice",
 			Type: "uint32",
@@ -104,6 +141,13 @@ func (v *Vote) ToEIP712() (*TypedData, error) {
 		} else {
 			choice = math.NewHexOrDecimal256(int64(x))
 		}
+	} else {
+		return nil, errors.New(
+			fmt.Sprintf(
+				"unknown proposal type %s",
+				v.ProposalType,
+			),
+		)
 	}
 
 	// order matters so this is added last
@@ -116,7 +160,7 @@ func (v *Vote) ToEIP712() (*TypedData, error) {
 		v.Timestamp = time.Now().Unix()
 	}
 
-	typedData := TypedData{
+	return &TypedData{
 		eip712.TypedData{
 			Domain: eip712.TypedDataDomain{
 				Name:    name,
@@ -146,7 +190,5 @@ func (v *Vote) ToEIP712() (*TypedData, error) {
 			},
 			PrimaryType: "Vote",
 		},
-	}
-
-	return &typedData, nil
+	}, nil
 }

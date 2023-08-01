@@ -125,6 +125,12 @@ func (typedData *TypedData) String() (string, error) {
 		Types   core.Types            `json:"types"`
 		Message core.TypedDataMessage `json:"message"`
 	}
+	var ts uint64
+	var err error
+	if ts, err = toUint64(typedData.Message["timestamp"]); err != nil {
+		// should not happen
+		return "", errors.Wrapf(err, "timestamp")
+	}
 	formatted := data{
 		Domain: domain{
 			Name:    typedData.Domain.Name,
@@ -136,13 +142,20 @@ func (typedData *TypedData) String() (string, error) {
 		Message: core.TypedDataMessage{
 			"space":    typedData.Message["space"],
 			"proposal": typedData.Message["proposal"],
-			"choice":   toUint64(typedData.Message["choice"]),
+			"choice":   typedData.Message["choice"],
 			"app":      typedData.Message["app"],
 			// this conversion is required to stop snapshot
 			// from complaining about `wrong envelope format`
-			"timestamp": toUint64(typedData.Message["timestamp"]),
+			"timestamp": ts,
 			"from":      typedData.Message["from"],
 		},
+	}
+	if typedData.Types["Vote"][4].Type == "uint32" {
+		if choice, err := toUint64(typedData.Message["choice"]); err != nil {
+			return "", errors.Wrapf(err, "choice")
+		} else {
+			formatted.Message["choice"] = choice
+		}
 	}
 	message, err := json.Marshal(formatted)
 	if err != nil {
@@ -152,11 +165,13 @@ func (typedData *TypedData) String() (string, error) {
 	}
 }
 
-func toUint64(x interface{}) uint64 {
+func toUint64(x interface{}) (uint64, error) {
 	y, ok := x.(*math.HexOrDecimal256)
 	if !ok {
-		panic("not a *math.HexOrDecimal256")
+		return 0, errors.New(
+			fmt.Sprintf("%+v is not a *math.HexOrDecimal256", x),
+		)
 	}
 	z := (*big.Int)(y)
-	return z.Uint64()
+	return z.Uint64(), nil
 }
