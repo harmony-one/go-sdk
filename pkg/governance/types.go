@@ -13,14 +13,23 @@ import (
 	"github.com/pkg/errors"
 )
 
+var (
+		voteToNumberMapping = map[string]int64{
+			"for": 1,
+			"against": 2,
+			"abstain": 3,
+		}
+)
+
 type Vote struct {
 	From         string // --key
 	Space        string // --space
 	Proposal     string // --proposal
 	ProposalType string // --proposal-type
 	Choice       string // --choice
-	Privacy      string // --privacy
+	// Privacy      string // --privacy
 	App          string // --app
+	Reason       string // --reason
 	Timestamp    int64  // not exposed to the end user
 }
 
@@ -65,7 +74,7 @@ func (v *Vote) ToEIP712() (*TypedData, error) {
 		proposal = v.Proposal
 	}
 
-	// vote type, vote choice and vote privacy
+	// vote type, vote choice and vote privacy (TODO)
 	// choice needs to be converted into its native format for envelope
 	var choice interface{}
 	// The space between [1, 2, 3] does not matter since we parse it
@@ -74,7 +83,6 @@ func (v *Vote) ToEIP712() (*TypedData, error) {
 	// 		--proposal 0xTruncated \
 	// 		--proposal-type {"approval","ranked-choice"} \
 	// 		--choice "[1, 2, 3]" \
-	//		--app my-app \
 	// 		--key <name of pk>
 	if v.ProposalType == "approval" || v.ProposalType == "ranked-choice" {
 		myType = append(myType, eip712.Type{
@@ -93,14 +101,15 @@ func (v *Vote) ToEIP712() (*TypedData, error) {
 				"unexpected value of choice %s (expected uint32[])", choice,
 			)
 		}
-	// The space between [1, 2, 3] does not matter to snapshot.org
+	// The space between --choice {value} does not matter to snapshot.org
 	// But for comparing with the snapshot-js library, remove it
 	// hmy governance vote-proposal \
 	// 		--space harmony-mainnet.eth \
 	// 		--proposal 0xTruncated \
+	// # either quadratic or weighted
 	// 		--proposal-type {"quadratic","weighted"} \
-	// 		--choice "[1,2,3]" \
-	//		--app my-app \
+	// # 20, 20, 40 of my vote (total 80) goes to 1, 2, 3 - note the single / double quotes
+	// 		--choice '{"1":20,"2":20,"3":40}' \
 	// 		--key <name of pk>
 	} else if v.ProposalType == "quadratic" || v.ProposalType == "weighted" {
 		myType = append(myType, eip712.Type{
@@ -108,26 +117,25 @@ func (v *Vote) ToEIP712() (*TypedData, error) {
 			Type: "string",
 		})
 		choice = v.Choice
+	// TODO Untested
 	// hmy governance vote-proposal \
 	// 		--space harmony-mainnet.eth \
 	// 		--proposal 0xTruncated \
 	// 		--proposal-type ANY \
 	// 		--choice "unknown-format" \
-	//		--app my-app \
 	// 		--key <name of pk>
-	//      --privacy shutter
-	} else if v.Privacy == "shutter" {
-		myType = append(myType, eip712.Type{
-			Name: "choice",
-			Type: "string",
-		})
-		choice = v.Choice
+	//		--privacy shutter
+	// } else if v.Privacy == "shutter" {
+	// 	myType = append(myType, eip712.Type{
+	// 		Name: "choice",
+	// 		Type: "string",
+	// 	})
+	// 	choice = v.Choice
 	// hmy governance vote-proposal \
 	// 		--space harmony-mainnet.eth \
 	// 		--proposal 0xTruncated \
 	// 		--proposal-type single-choice \
 	// 		--choice 1 \
-	//		--app my-app \
 	// 		--key <name of pk>
 	} else if v.ProposalType == "single-choice" {
 		myType = append(myType, eip712.Type{
@@ -141,6 +149,28 @@ func (v *Vote) ToEIP712() (*TypedData, error) {
 		} else {
 			choice = math.NewHexOrDecimal256(int64(x))
 		}
+	// hmy governance vote-proposal \
+	// 		--space harmony-mainnet.eth \
+	// 		--proposal 0xTruncated \
+	// 		--proposal-type basic \
+	// # any character case works
+	// 		--choice {aBstAin/agAiNst/for} \
+	// 		--key <name of pk>
+	} else if v.ProposalType == "basic" {
+		myType = append(myType, eip712.Type{
+			Name: "choice",
+			Type: "uint32",
+		})
+		if number, ok := voteToNumberMapping[strings.ToLower(v.Choice)]; ok {
+			choice = math.NewHexOrDecimal256(number)
+		} else {
+			return nil, errors.New(
+				fmt.Sprintf(
+					"unknown basic choice %s",
+					v.Choice,
+				),
+			)
+		}
 	} else {
 		return nil, errors.New(
 			fmt.Sprintf(
@@ -150,11 +180,16 @@ func (v *Vote) ToEIP712() (*TypedData, error) {
 		)
 	}
 
-	// order matters so this is added last
+	// order matters so these are added last
+	myType = append(myType, eip712.Type{
+		Name: "reason",
+		Type: "string",
+	})
 	myType = append(myType, eip712.Type{
 		Name: "app",
 		Type: "string",
 	})
+	// metadata is skipped in this code intentionally
 
 	if v.Timestamp == 0 {
 		v.Timestamp = time.Now().Unix()
@@ -186,6 +221,7 @@ func (v *Vote) ToEIP712() (*TypedData, error) {
 				"timestamp": math.NewHexOrDecimal256(v.Timestamp),
 				"proposal":  proposal,
 				"choice":    choice,
+				"reason":    v.Reason,
 				"app":       v.App,
 			},
 			PrimaryType: "Vote",

@@ -35,8 +35,9 @@ func commandVote() (cmd *cobra.Command) {
 	var choice string
 	var key string
 	var proposalType string
-	var privacy string
+	// var privacy string
 	var app string
+	var reason string
 
 	cmd = &cobra.Command{
 		Use:   "vote-proposal",
@@ -63,9 +64,10 @@ func commandVote() (cmd *cobra.Command) {
 				Proposal:     proposal,
 				ProposalType: proposalType,
 				Choice:       choice,
-				Privacy:      privacy,
+				// Privacy:      privacy,
 				App:          app,
 				From:         account.Address.Hex(),
+				Reason:       reason,
 			})
 		},
 	}
@@ -75,8 +77,9 @@ func commandVote() (cmd *cobra.Command) {
 	cmd.Flags().StringVar(&proposal, "proposal", "", "Proposal hash")
 	cmd.Flags().StringVar(&proposalType, "proposal-type", "single-choice", "Proposal type like single-choice, approval, quadratic, etc.")
 	cmd.Flags().StringVar(&choice, "choice", "", "Vote choice either as integer, list of integers (e.x. when using ranked choice voting), or string")
-	cmd.Flags().StringVar(&privacy, "privacy", "", "Vote privacy ex. shutter")
-	cmd.Flags().StringVar(&app, "app", "", "Voting app")
+	// cmd.Flags().StringVar(&privacy, "privacy", "", "Vote privacy e.x. shutter")
+	cmd.Flags().StringVar(&app, "app", "snapshot", "Voting app")
+	cmd.Flags().StringVar(&reason, "reason", "", "Reason for your choice")
 	cmd.Flags().BoolVar(&userProvidesPassphrase, "passphrase", false, ppPrompt)
 
 	cmd.MarkFlagRequired("key")

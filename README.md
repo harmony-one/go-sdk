@@ -129,8 +129,7 @@ Check README for details on json file format.
 21. Vote on a governance proposal on https://snapshot.org
 ./hmy governance vote-proposal --space=[harmony-mainnet.eth] \
 	--proposal=<PROPOSAL_IPFS_HASH> --proposal-type=[single-choice] \
-	--choice=<VOTING_CHOICE(S)> --app=[APP] --key=<ACCOUNT_ADDRESS_OR_NAME> \
-	--privacy=[PRIVACY TYPE]
+	--choice=<VOTING_CHOICE(S)> --app=[APP] --key=<ACCOUNT_ADDRESS_OR_NAME>
 PS: key must first use (hmy keys import-private-key) to import
 
 22. Enter Console

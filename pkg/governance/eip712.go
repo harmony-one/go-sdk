@@ -144,6 +144,7 @@ func (typedData *TypedData) String() (string, error) {
 			"proposal": typedData.Message["proposal"],
 			"choice":   typedData.Message["choice"],
 			"app":      typedData.Message["app"],
+			"reason":   typedData.Message["reason"],
 			// this conversion is required to stop snapshot
 			// from complaining about `wrong envelope format`
 			"timestamp": ts,
@@ -163,7 +164,7 @@ func (typedData *TypedData) String() (string, error) {
 		res := make([]uint64, len(arr))
 		for i, a := range arr {
 			if c, err := toUint64(a); err != nil {
-				return "", errors.Wrapf(err, "choice member")
+				return "", errors.Wrapf(err, "choice member %d", i)
 			} else {
 				res[i] = c
 			}
