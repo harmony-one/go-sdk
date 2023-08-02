@@ -171,7 +171,6 @@ func (typedData *TypedData) String() (string, error) {
 		}
 		formatted.Message["choice"] = res
 	}
-	// TODO what about other types?
 	message, err := json.Marshal(formatted)
 	if err != nil {
 		return "", err
