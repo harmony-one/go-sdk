@@ -107,8 +107,7 @@ Check README for details on json file format.
 %s
 ./hmy governance vote-proposal --space=[harmony-mainnet.eth] \
 	--proposal=<PROPOSAL_IPFS_HASH> --proposal-type=[single-choice] \
-	--choice=<VOTING_CHOICE(S)> --app=[APP] --key=<ACCOUNT_ADDRESS_OR_NAME> \
-	--privacy=[PRIVACY TYPE]
+	--choice=<VOTING_CHOICE(S)> --app=[APP] --key=<ACCOUNT_ADDRESS_OR_NAME>
 PS: key must first use (hmy keys import-private-key) to import
 
 %s

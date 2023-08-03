@@ -144,18 +144,32 @@ func (typedData *TypedData) String() (string, error) {
 			"proposal": typedData.Message["proposal"],
 			"choice":   typedData.Message["choice"],
 			"app":      typedData.Message["app"],
+			"reason":   typedData.Message["reason"],
 			// this conversion is required to stop snapshot
 			// from complaining about `wrong envelope format`
 			"timestamp": ts,
 			"from":      typedData.Message["from"],
 		},
 	}
+	// same comment as above
 	if typedData.Types["Vote"][4].Type == "uint32" {
 		if choice, err := toUint64(typedData.Message["choice"]); err != nil {
 			return "", errors.Wrapf(err, "choice")
 		} else {
 			formatted.Message["choice"] = choice
 		}
+	// prevent hex choice interpretation
+	} else if typedData.Types["Vote"][4].Type == "uint32[]" {
+		arr := typedData.Message["choice"].([]interface{})
+		res := make([]uint64, len(arr))
+		for i, a := range arr {
+			if c, err := toUint64(a); err != nil {
+				return "", errors.Wrapf(err, "choice member %d", i)
+			} else {
+				res[i] = c
+			}
+		}
+		formatted.Message["choice"] = res
 	}
 	message, err := json.Marshal(formatted)
 	if err != nil {
