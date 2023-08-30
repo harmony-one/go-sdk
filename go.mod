@@ -25,7 +25,7 @@ require (
 	github.com/valyala/fasthttp v1.2.0
 	github.com/valyala/fastjson v1.6.3
 	golang.org/x/crypto v0.0.0-20200820211705-5c72a883971a
-	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b // indirect
+	gopkg.in/yaml.v3 v3.0.0 // indirect
 )
 
 replace github.com/ethereum/go-ethereum => github.com/ethereum/go-ethereum v1.9.9
