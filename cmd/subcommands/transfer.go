@@ -42,6 +42,7 @@ var (
 	transferFileFlags []transferFlags
 	timeout           uint32
 	timeFormat        = "2006-01-02 15:04:05.000000"
+	data              string
 )
 
 type transactionLog struct {
@@ -169,6 +170,11 @@ func handlerForTransaction(txLog *transactionLog) error {
 		gLimit = uint64(tempLimit)
 	}
 
+	dataByte, err := transaction.StringToByte(data)
+	if err != nil {
+		return handlerForError(txLog, err)
+	}
+
 	addr := toAddress.String()
 
 	txLog.TimeSigned = time.Now().UTC().Format(timeFormat) // Approximate time of signature
@@ -177,7 +183,7 @@ func handlerForTransaction(txLog *transactionLog) error {
 		&addr,
 		fromShardID, toShardID,
 		amt, gPrice,
-		[]byte{},
+		dataByte,
 	)
 
 	if dryRun {
@@ -418,6 +424,7 @@ Create a transaction, sign it, and send off to the Harmony blockchain
 	cmdTransfer.Flags().Uint32Var(&timeout, "timeout", defaultTimeout, "set timeout in seconds. Set to 0 to not wait for confirm")
 	cmdTransfer.Flags().BoolVar(&userProvidesPassphrase, "passphrase", false, ppPrompt)
 	cmdTransfer.Flags().StringVar(&passphraseFilePath, "passphrase-file", "", "path to a file containing the passphrase")
+	cmdTransfer.Flags().StringVar(&data, "data", "", "transaction data")
 
 	RootCmd.AddCommand(cmdTransfer)
 

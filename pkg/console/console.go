@@ -4,18 +4,6 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
-	ethereum_rpc "github.com/ethereum/go-ethereum/rpc"
-	"github.com/harmony-one/go-sdk/pkg/account"
-	"github.com/harmony-one/go-sdk/pkg/address"
-	"github.com/harmony-one/go-sdk/pkg/common"
-	"github.com/harmony-one/go-sdk/pkg/console/jsre"
-	"github.com/harmony-one/go-sdk/pkg/console/jsre/deps"
-	"github.com/harmony-one/go-sdk/pkg/console/prompt"
-	"github.com/harmony-one/go-sdk/pkg/console/web3ext"
-	"github.com/harmony-one/go-sdk/pkg/rpc"
-	"github.com/harmony-one/go-sdk/pkg/store"
-	"github.com/harmony-one/go-sdk/pkg/transaction"
-	"github.com/harmony-one/harmony/accounts"
 	"io"
 	"io/ioutil"
 	"math/big"
@@ -28,6 +16,19 @@ import (
 	"strings"
 	"syscall"
 	"time"
+
+	ethereum_rpc "github.com/ethereum/go-ethereum/rpc"
+	"github.com/harmony-one/go-sdk/pkg/account"
+	"github.com/harmony-one/go-sdk/pkg/address"
+	"github.com/harmony-one/go-sdk/pkg/common"
+	"github.com/harmony-one/go-sdk/pkg/console/jsre"
+	"github.com/harmony-one/go-sdk/pkg/console/jsre/deps"
+	"github.com/harmony-one/go-sdk/pkg/console/prompt"
+	"github.com/harmony-one/go-sdk/pkg/console/web3ext"
+	"github.com/harmony-one/go-sdk/pkg/rpc"
+	"github.com/harmony-one/go-sdk/pkg/store"
+	"github.com/harmony-one/go-sdk/pkg/transaction"
+	"github.com/harmony-one/harmony/accounts"
 
 	"github.com/dop251/goja"
 	"github.com/mattn/go-colorable"
@@ -553,6 +554,10 @@ func (b *bridge) HmySignTransaction(call jsre.Call) (goja.Value, error) {
 	gasLimit := getStringFromJsObjWithDefault(txObj, "gas", "1000000")
 	amount := getStringFromJsObjWithDefault(txObj, "value", "0")
 	gasPrice := getStringFromJsObjWithDefault(txObj, "gasPrice", "1")
+	input, err := transaction.StringToByte(getStringFromJsObjWithDefault(txObj, "data", ""))
+	if err != nil {
+		return nil, err
+	}
 
 	networkHandler := rpc.NewHTTPHandler(b.console.nodeUrl)
 	chanId, err := common.StringToChainID(b.console.net)
@@ -598,7 +603,7 @@ func (b *bridge) HmySignTransaction(call jsre.Call) (goja.Value, error) {
 		toP,
 		uint32(b.console.shardId), uint32(b.console.shardId),
 		amt, gPrice,
-		[]byte{},
+		input,
 	)
 	if err != nil {
 		return nil, err
@@ -635,6 +640,10 @@ func (b *bridge) HmySendTransaction(call jsre.Call) (goja.Value, error) {
 	gasLimit := getStringFromJsObjWithDefault(txObj, "gas", "1000000")
 	amount := getStringFromJsObjWithDefault(txObj, "value", "0")
 	gasPrice := getStringFromJsObjWithDefault(txObj, "gasPrice", "1")
+	input, err := transaction.StringToByte(getStringFromJsObjWithDefault(txObj, "data", ""))
+	if err != nil {
+		return nil, err
+	}
 
 	networkHandler := rpc.NewHTTPHandler(b.console.nodeUrl)
 	chanId, err := common.StringToChainID(b.console.net)
@@ -680,7 +689,7 @@ func (b *bridge) HmySendTransaction(call jsre.Call) (goja.Value, error) {
 		toP,
 		uint32(b.console.shardId), uint32(b.console.shardId),
 		amt, gPrice,
-		[]byte{},
+		input,
 	)
 	if err != nil {
 		return nil, err
