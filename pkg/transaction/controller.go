@@ -205,7 +205,6 @@ func (C *Controller) setAmount(amount numeric.Dec) {
 			return
 		}
 	}
-
 	C.transactionForRPC.params["transfer-amount"] = amountInAtto
 }
 
