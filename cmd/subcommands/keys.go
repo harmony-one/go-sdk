@@ -36,6 +36,8 @@ var (
 	blsFilePath            string
 	blsShardID             uint32
 	blsCount               uint32
+	coinType               uint32 // coin type used for key path derivation BIP-44 (1023 default for Harmony; 60 for Ethereum or for Metamask mnemonics)
+	keyIndex               uint32
 	ppPrompt               = fmt.Sprintf(
 		"prompt for passphrase, otherwise use default passphrase: \"`%s`\"", c.DefaultPassphrase,
 	)
@@ -214,7 +216,11 @@ func keysSub() []*cobra.Command {
 			if !bip39.IsMnemonicValid(m) {
 				return mnemonic.InvalidMnemonic
 			}
+
 			acc.Mnemonic = m
+			acc.CoinType = &coinType
+			acc.HdIndexNumber = &keyIndex
+
 			if err := account.CreateNewLocalAccount(&acc); err != nil {
 				return err
 			}
@@ -226,6 +232,8 @@ func keysSub() []*cobra.Command {
 	}
 	cmdRecoverMnemonic.Flags().BoolVar(&userProvidesPassphrase, "passphrase", false, ppPrompt)
 	cmdRecoverMnemonic.Flags().StringVar(&passphraseFilePath, "passphrase-file", "", "path to a file containing the passphrase")
+	cmdRecoverMnemonic.Flags().Uint32Var(&coinType, "coin-type", 1023, "coin type used for key path derivation (1023 default for Harmony; 60 for Ethereum or for Metamask mnemonics)")
+	cmdRecoverMnemonic.Flags().Uint32Var(&keyIndex, "index", 0, "index of the key recovered from the provided mnemonic")
 
 	cmdImportKS := &cobra.Command{
 		Use:   "import-ks <KEYSTORE_FILE_PATH> [ACCOUNT_NAME]",

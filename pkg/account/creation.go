@@ -18,6 +18,7 @@ type Creation struct {
 	Mnemonic        string
 	HdAccountNumber *uint32
 	HdIndexNumber   *uint32
+	CoinType        *uint32
 }
 
 func New() string {
@@ -34,8 +35,18 @@ func CreateNewLocalAccount(candidate *Creation) error {
 	if candidate.Mnemonic == "" {
 		candidate.Mnemonic = mnemonic.Generate()
 	}
-	// Hardcoded index of 0 here.
-	private, _ := keys.FromMnemonicSeedAndPassphrase(candidate.Mnemonic, 0)
+
+	index := uint32(0)
+	if candidate.HdIndexNumber != nil {
+		index = *candidate.HdIndexNumber
+	}
+
+	coinType := uint32(1023)
+	if candidate.CoinType != nil {
+		coinType = *candidate.CoinType
+	}
+
+	private, _ := keys.FromMnemonicSeedAndPassphrase(candidate.Mnemonic, int(index), int(coinType))
 	_, err := ks.ImportECDSA(private.ToECDSA(), candidate.Passphrase)
 	if err != nil {
 		return err
