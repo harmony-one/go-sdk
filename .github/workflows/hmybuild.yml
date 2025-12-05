@@ -93,6 +93,7 @@ jobs:
         working-directory: go-sdk
 
       - name: Upload artifact
+        if: matrix.os != 'macos-latest'
         uses: actions/upload-artifact@v4
         with:
           name: hmy
