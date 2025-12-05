@@ -17,29 +17,33 @@ jobs:
 
     steps:
       - name: Checkout hmy code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           path: go-sdk
 
       - name: Set up Go
-        uses: actions/setup-go@v3
+        uses: actions/setup-go@v4
         with:
           go-version-file: go-sdk/go.mod
 
       - name: Checkout dependence repo
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           repository: harmony-one/mcl
           path: ${{ github.workspace }}/src/github.com/harmony-one/mcl
+          ref: master
+          fetch-depth: 0
 
       - name: Checkout dependence repo
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           repository: harmony-one/bls
           path: ${{ github.workspace }}/src/github.com/harmony-one/bls
+          ref: master
+          fetch-depth: 0
 
       - name: Checkout dependence code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
         with:
           repository: harmony-one/harmony
           path: ${{ github.workspace }}/src/github.com/harmony-one/harmony
@@ -87,7 +91,7 @@ jobs:
         working-directory: go-sdk
 
       - name: Upload artifact for linux
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         if: matrix.os == 'ubuntu-22.04'
         with:
           name: hmy-linux
@@ -95,7 +99,7 @@ jobs:
           retention-days: 1
 
       - name: Upload artifact for darwin
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         if: matrix.os == 'macos-latest'
         with:
           name: hmy-darwin

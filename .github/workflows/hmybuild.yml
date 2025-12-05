@@ -19,29 +19,33 @@ jobs:
 
     steps:
       - name: Checkout hmy code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           path: go-sdk
 
       - name: Set up Go
-        uses: actions/setup-go@v3
+        uses: actions/setup-go@v5
         with:
           go-version-file: go-sdk/go.mod
 
       - name: Checkout dependence repo
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           repository: harmony-one/mcl
           path: ${{ github.workspace }}/src/github.com/harmony-one/mcl
+          ref: master
+          fetch-depth: 0
 
       - name: Checkout dependence repo
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           repository: harmony-one/bls
           path: ${{ github.workspace }}/src/github.com/harmony-one/bls
+          ref: master
+          fetch-depth: 0
 
       - name: Checkout dependence code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
         with:
           repository: harmony-one/harmony
           path: ${{ github.workspace }}/src/github.com/harmony-one/harmony
@@ -89,7 +93,7 @@ jobs:
         working-directory: go-sdk
 
       - name: Upload artifact
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v4
         with:
           name: hmy
           path: ${{ github.workspace }}/go-sdk/dist/*
@@ -161,7 +165,7 @@ jobs:
   #         GOPATH: /home/ubuntu/actions-runner/_work/go-sdk/go-sdk/go
 
   #     - name: Upload artifact
-  #       uses: actions/upload-artifact@v2
+  #       uses: actions/upload-artifact@v4
   #       with:
   #         name: hmy-arm64
   #         path: /home/ubuntu/actions-runner/_work/go-sdk/go-sdk/go/src/github.com/harmony-one/go-sdk/dist/*
@@ -175,13 +179,13 @@ jobs:
     runs-on: ubuntu-22.04
     steps:
       - name: Import GPG key
-        uses: crazy-max/ghaction-import-gpg@v3
+        uses: crazy-max/ghaction-import-gpg@v6
         with:
           gpg-private-key: ${{ secrets.HMY_GPG_PRIVATE_KEY }}
           passphrase: ${{ secrets.HMY_GPG_PRIVATE_KEY_PASS }}
 
       - name: Checkout hmy core code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           path: go-sdk
 
@@ -196,7 +200,7 @@ jobs:
         working-directory: go-sdk
 
       - name: Download artifact
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v4
         with:
           name: hmy
 
