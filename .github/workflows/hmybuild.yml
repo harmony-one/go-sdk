@@ -100,6 +100,14 @@ jobs:
           path: ${{ github.workspace }}/go-sdk/dist/*
           retention-days: 1
 
+      - name: Upload artifact darwin
+        if: matrix.os == 'macos-latest'
+        uses: actions/upload-artifact@v4
+        with:
+          name: hmy-darwin-x86_64
+          path: ${{ github.workspace }}/go-sdk/dist/hmy-darwin-x86_64
+          retention-days: 1
+
   # build-arm64:
   #   name: Build hmy binary
   #   runs-on: ${{ matrix.os }}
