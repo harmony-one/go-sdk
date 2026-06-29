@@ -1,0 +1,165 @@
+name: release hmy
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+env:
+  GOPATH: ${{ github.workspace }}
+  GOBIN: ${{ github.workspace }}/bin
+
+permissions: {}
+jobs:
+  build:
+    name: Build hmy binary
+    runs-on: ${{ matrix.os }}
+    permissions:
+      contents: read
+    strategy:
+      matrix:
+        os: [ ubuntu-24.04, ubuntu-24.04-arm ]
+
+    steps:
+      - name: Checkout hmy code
+        uses: actions/checkout@v4
+        with:
+          path: go-sdk
+          persist-credentials: false
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: go-sdk/go.mod
+          cache: false
+
+      - name: Checkout dependence repo
+        uses: actions/checkout@v4
+        with:
+          repository: harmony-one/mcl
+          path: ${{ github.workspace }}/src/github.com/harmony-one/mcl
+          ref: master
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Checkout dependence repo
+        uses: actions/checkout@v4
+        with:
+          repository: harmony-one/bls
+          path: ${{ github.workspace }}/src/github.com/harmony-one/bls
+          ref: master
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Checkout dependence code
+        uses: actions/checkout@v4
+        with:
+          repository: harmony-one/harmony
+          path: ${{ github.workspace }}/src/github.com/harmony-one/harmony
+          ref: main
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Get latest version and release
+        run: |
+          VERSION=$(git tag -l --sort=-v:refname | head -n 1 | tr -d v)
+          RELEASE=$(git describe --long | cut -f2 -d-)
+          echo "build_version=$VERSION" >> $GITHUB_ENV
+          echo "build_release=$RELEASE" >> $GITHUB_ENV
+        working-directory: go-sdk
+
+      - name: Build hmy binary for Linux
+        run: |
+          make static
+        working-directory: go-sdk
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: hmy
+          path: ${{ github.workspace }}/go-sdk/dist/*
+          retention-days: 1
+  release-page:
+    name: Sign binary and create and publish release page
+    needs: [ build-x86_64 ]
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Import GPG key
+        uses: crazy-max/ghaction-import-gpg@v6
+        with:
+          gpg_private_key: ${{ secrets.HMY_GPG_PRIVATE_KEY }}
+          passphrase: ${{ secrets.HMY_GPG_PRIVATE_KEY_PASS }}
+
+      - name: Checkout hmy core code
+        uses: actions/checkout@v4
+        with:
+          path: go-sdk
+          persist-credentials: false
+
+      - name: Get latest version
+        run: |
+          VERSION=$(git tag -l --sort=-v:refname | head -n 1 | tr -d v)
+          VERSION_LONG=$(git describe --always --long --dirty)
+          RELEASE=$(git describe --long | cut -f2 -d-)
+          echo "build_version=$VERSION" >> $GITHUB_ENV
+          echo "build_version_long=$VERSION_LONG" >> $GITHUB_ENV
+          echo "build_release=$RELEASE" >> $GITHUB_ENV
+        working-directory: go-sdk
+
+      - name: Download artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: hmy
+
+      - name: Download artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: hmy-darwin-x86_64
+
+      - name: Display structure of downloaded files
+        run: ls -R
+
+      - name: Signed darwin x86_64 hmy binary
+        run: |
+          gpg --detach-sign hmy-darwin-x86_64
+          sha256sum hmy-darwin-x86_64 >> hmy-darwin-x86_64.sha256
+
+      - name: Get tag message
+        env:
+          TAG_SHA: ${{ github.event.after }}
+        run: |
+          touch ./tag_message.md
+          echo -e "$TAG_SHA\n\nThe released version: $build_version_long" >> ./tag_message.md
+        working-directory: go-sdk
+
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.ref }}
+          release_name: Mainnet Release ${{ env.build_version }}
+          draft: true
+          prerelease: false
+          body_path: ${{ github.workspace }}/go-sdk/tag_message.md
+
+      - name: Upload hmy binary for Linux (x86_64)
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./hmy
+          asset_name: hmy
+          asset_content_type: application/octet-stream
+
+      - name: Upload hmy binary darwin-x86_64
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./hmy-darwin-x86_64
+          asset_name: hmy-darwin-x86_64
+          asset_content_type: application/octet-stream
