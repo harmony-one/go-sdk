@@ -5,26 +5,103 @@ on:
     tags:
       - 'v*'
 
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Tag value to create the release, for example v2026.1.0'
+        required: true
+        type: string
+
+permissions: {}
+
 env:
   GOPATH: ${{ github.workspace }}
   GOBIN: ${{ github.workspace }}/bin
 
-permissions: {}
+defaults:
+  run:
+    shell: bash
+
 jobs:
-  build:
-    name: Build hmy binary
-    runs-on: ${{ matrix.os }}
+  check:
+    name: Check release tag
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
     permissions:
       contents: read
+    outputs:
+      tag: ${{ steps.resolve-tag.outputs.tag }}
+
+    steps:
+      - name: Resolve release tag
+        id: resolve-tag
+        env:
+          INPUT_TAG: ${{ github.event.inputs.tag || '' }}
+        run: |
+          set -euo pipefail
+
+          if [[ "${GITHUB_EVENT_NAME}" == "workflow_dispatch" ]]; then
+            TAG="${INPUT_TAG}"
+          else
+            TAG="${GITHUB_REF_NAME}"
+          fi
+
+          if [[ ! "${TAG}" =~ ^v[0-9]{4}\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$ ]]; then
+            echo "::error::invalid release tag: ${TAG}"
+            echo "::error::expected format: v2026.0.0"
+            exit 1
+          fi
+
+          git check-ref-format "refs/tags/${TAG}"
+
+          echo "tag=${TAG}" >> "$GITHUB_OUTPUT"
+
+      - name: Checkout hmy code
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 #v7.0.0
+        with:
+          path: go-sdk
+          ref: refs/tags/${{ steps.resolve-tag.outputs.tag }}
+          fetch-depth: 1
+          persist-credentials: false
+
+      - name: Check tag is annotated
+        env:
+          RELEASE_TAG: ${{ steps.resolve-tag.outputs.tag }}
+        run: |
+          set -euo pipefail
+
+          git fetch --force --depth=1 origin "refs/tags/${RELEASE_TAG}:refs/tags/${RELEASE_TAG}"
+
+          if ! git rev-parse -q --verify "${RELEASE_TAG}^{tag}" >/dev/null; then
+            echo "::error::release tag '${RELEASE_TAG}' is not annotated"
+            exit 1
+          fi
+        working-directory: go-sdk
+
+  build:
+    name: Build hmy binary (${{ matrix.arch }})
+    needs: check
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 60
+    permissions:
+      contents: read
+
     strategy:
+      fail-fast: false
       matrix:
-        os: [ ubuntu-24.04, ubuntu-24.04-arm ]
+        include:
+          - os: ubuntu-24.04
+            arch: amd64
+          - os: ubuntu-24.04-arm
+            arch: arm64
 
     steps:
       - name: Checkout hmy code
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 #v7.0.0
         with:
           path: go-sdk
+          ref: refs/tags/${{ needs.check.outputs.tag }}
+          fetch-depth: 1
           persist-credentials: false
 
       - name: Set up Go
@@ -33,133 +110,258 @@ jobs:
           go-version-file: go-sdk/go.mod
           cache: false
 
-      - name: Checkout dependence repo
+      - name: Checkout mcl
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 #v7.0.0
         with:
           repository: harmony-one/mcl
-          path: ${{ github.workspace }}/src/github.com/harmony-one/mcl
+          path: src/github.com/harmony-one/mcl
           ref: master
-          fetch-depth: 0
+          fetch-depth: 1
           persist-credentials: false
 
-      - name: Checkout dependence repo
+      - name: Checkout bls
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 #v7.0.0
         with:
           repository: harmony-one/bls
-          path: ${{ github.workspace }}/src/github.com/harmony-one/bls
+          path: src/github.com/harmony-one/bls
           ref: master
-          fetch-depth: 0
+          fetch-depth: 1
           persist-credentials: false
 
-      - name: Checkout dependence code
+      - name: Checkout harmony BLS build flags helper
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 #v7.0.0
         with:
           repository: harmony-one/harmony
-          path: ${{ github.workspace }}/src/github.com/harmony-one/harmony
+          path: src/github.com/harmony-one/harmony
           ref: main
-          fetch-depth: 0
+          fetch-depth: 1
           persist-credentials: false
-
-      - name: Get latest version and release
-        run: |
-          VERSION=$(git tag -l --sort=-v:refname | head -n 1 | tr -d v)
-          RELEASE=$(git describe --long | cut -f2 -d-)
-          echo "build_version=$VERSION" >> $GITHUB_ENV
-          echo "build_release=$RELEASE" >> $GITHUB_ENV
-        working-directory: go-sdk
+          sparse-checkout: |
+            scripts/setup_bls_build_flags.sh
+          sparse-checkout-cone-mode: false
 
       - name: Build hmy binary for Linux
+        id: build-hmy
         run: |
+          set -euo pipefail
+
           make static
+
+          ARCH="$(dpkg --print-architecture)"
+          BINARY_NAME="hmy-${ARCH}"
+
+          mkdir -p release
+
+          if [[ -f dist/hmy ]]; then
+            cp dist/hmy "release/${BINARY_NAME}"
+          elif [[ -f hmy ]]; then
+            cp hmy "release/${BINARY_NAME}"
+          elif [[ -f bin/hmy ]]; then
+            cp bin/hmy "release/${BINARY_NAME}"
+          else
+            echo "::error::could not find built hmy binary"
+            find . -maxdepth 3 -type f -name 'hmy*' -print
+            exit 1
+          fi
+
+          chmod +x "release/${BINARY_NAME}"
+          test -x "release/${BINARY_NAME}"
+
+          echo "binary_name=${BINARY_NAME}" >> "$GITHUB_OUTPUT"
         working-directory: go-sdk
 
-      - name: Upload artifact
+      - name: Upload hmy binary artifact
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a #v7.0.1
         with:
-          name: hmy
-          path: ${{ github.workspace }}/go-sdk/dist/*
+          name: ${{ steps.build-hmy.outputs.binary_name }}
+          path: go-sdk/release/${{ steps.build-hmy.outputs.binary_name }}
           retention-days: 1
-  release-page:
-    name: Sign binary and create and publish release page
-    needs: build
-    runs-on: ubuntu-22.04
-    steps:
-      - name: Import GPG key
-        uses: crazy-max/ghaction-import-gpg@v6
-        with:
-          gpg_private_key: ${{ secrets.HMY_GPG_PRIVATE_KEY }}
-          passphrase: ${{ secrets.HMY_GPG_PRIVATE_KEY_PASS }}
+          if-no-files-found: error
+          archive: false
 
-      - name: Checkout hmy core code
+  release-page:
+    name: Sign binaries and create draft release
+    needs: [check, build]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout hmy code
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 #v7.0.0
         with:
           path: go-sdk
+          ref: refs/tags/${{ needs.check.outputs.tag }}
+          fetch-depth: 1
           persist-credentials: false
 
-      - name: Get latest version
+      - name: Get release metadata
+        env:
+          RELEASE_TAG: ${{ needs.check.outputs.tag }}
         run: |
-          VERSION=$(git tag -l --sort=-v:refname | head -n 1 | tr -d v)
-          VERSION_LONG=$(git describe --always --long --dirty)
-          RELEASE=$(git describe --long | cut -f2 -d-)
-          echo "build_version=$VERSION" >> $GITHUB_ENV
-          echo "build_version_long=$VERSION_LONG" >> $GITHUB_ENV
-          echo "build_release=$RELEASE" >> $GITHUB_ENV
+          set -euo pipefail
+
+          git fetch --force --depth=1 origin "refs/tags/${RELEASE_TAG}:refs/tags/${RELEASE_TAG}"
+
+          VERSION="${RELEASE_TAG#v}"
+          COMMIT_SHA="$(git rev-parse --short=12 HEAD)"
+          VERSION_LONG="${RELEASE_TAG}-${COMMIT_SHA}"
+
+          echo "build_version=${VERSION}" >> "$GITHUB_ENV"
+          echo "build_version_long=${VERSION_LONG}" >> "$GITHUB_ENV"
         working-directory: go-sdk
 
-      - name: Download artifact
+      - name: Download hmy binary artifacts
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c #v8.0.1
         with:
-          name: hmy
+          pattern: hmy-*
+          path: release-assets
+          merge-multiple: true
 
-      - name: Download artifact
-        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c #v8.0.1
-        with:
-          name: hmy-darwin-x86_64
-
-      - name: Display structure of downloaded files
-        run: ls -R
-
-      - name: Signed darwin x86_64 hmy binary
+      - name: Verify downloaded artifacts
         run: |
-          gpg --detach-sign hmy-darwin-x86_64
-          sha256sum hmy-darwin-x86_64 >> hmy-darwin-x86_64.sha256
+          set -euo pipefail
 
-      - name: Get tag message
+          test -s release-assets/hmy-amd64
+          test -s release-assets/hmy-arm64
+
+          ls -lah release-assets
+
+      - name: Import GPG private key and export public key
+        id: gpg-key
         env:
-          TAG_SHA: ${{ github.event.after }}
+          GPG_PRIVATE_KEY: ${{ secrets.HMY_GPG_PRIVATE_KEY }}
         run: |
-          touch ./tag_message.md
-          echo -e "$TAG_SHA\n\nThe released version: $build_version_long" >> ./tag_message.md
+          set -euo pipefail
+
+          if [[ -z "${GPG_PRIVATE_KEY}" ]]; then
+            echo "::error::HMY_GPG_PRIVATE_KEY secret is empty or unavailable"
+            exit 1
+          fi
+
+          install -m 700 -d ~/.gnupg
+          mkdir -p release-assets
+
+          printf '%s' "${GPG_PRIVATE_KEY}" | gpg --batch --import
+
+          KEY_FINGERPRINT="$(
+            gpg --batch --with-colons --list-secret-keys \
+              | awk -F: '/^fpr:/ { print $10; exit }'
+          )"
+
+          if [[ -z "${KEY_FINGERPRINT}" ]]; then
+            echo "::error::GPG private key was not imported"
+            exit 1
+          fi
+
+          gpg --batch --armor --export "${KEY_FINGERPRINT}" \
+            > release-assets/HMY_RELEASE_SIGNING_KEY.asc
+
+          test -s release-assets/HMY_RELEASE_SIGNING_KEY.asc
+
+          echo "fingerprint=${KEY_FINGERPRINT}" >> "$GITHUB_OUTPUT"
+          echo "[INFO] GPG public key exported"
+          echo "[INFO] GPG signing key fingerprint: ${KEY_FINGERPRINT}"
+
+      - name: Sign binaries and generate checksums
+        env:
+          GPG_PRIVATE_KEY_PASS: ${{ secrets.HMY_GPG_PRIVATE_KEY_PASS }}
+          GPG_KEY_FINGERPRINT: ${{ steps.gpg-key.outputs.fingerprint }}
+        run: |
+          set -euo pipefail
+
+          if [[ -z "${GPG_PRIVATE_KEY_PASS}" ]]; then
+            echo "::error::HMY_GPG_PRIVATE_KEY_PASS secret is empty or unavailable"
+            exit 1
+          fi
+
+          cd release-assets
+
+          for binary in hmy-amd64 hmy-arm64; do
+            gpg --batch --yes --pinentry-mode loopback \
+              --local-user "${GPG_KEY_FINGERPRINT}" \
+              --passphrase-fd 3 \
+              --output "${binary}.sig" \
+              --detach-sign "${binary}" 3<<<"${GPG_PRIVATE_KEY_PASS}"
+
+            sha256sum "${binary}" > "${binary}.sha256"
+          done
+
+      - name: Add legacy hmy asset name
+        run: |
+          set -euo pipefail
+
+          cp release-assets/hmy-amd64 release-assets/hmy
+
+      - name: Generate release notes from tag message
+        env:
+          RELEASE_TAG: ${{ needs.check.outputs.tag }}
+          GPG_KEY_FINGERPRINT: ${{ steps.gpg-key.outputs.fingerprint }}
+        run: |
+          set -euo pipefail
+
+          TAG_MESSAGE="$(
+            git for-each-ref "refs/tags/${RELEASE_TAG}" \
+              --format='%(contents:subject)%0a%0a%(contents:body)'
+          )"
+
+          if [[ -z "${TAG_MESSAGE}" ]]; then
+            echo "::error::could not read annotated tag message for ${RELEASE_TAG}"
+            exit 1
+          fi
+
+          {
+            echo "${TAG_MESSAGE}"
+            echo
+            echo "The released version: ${build_version_long}"
+            echo
+            echo "## Verify release binaries"
+            echo
+            echo "GPG signing key fingerprint:"
+            echo
+            echo '```text'
+            echo "${GPG_KEY_FINGERPRINT}"
+            echo '```'
+            echo
+            echo '```bash'
+            echo "gpg --import HMY_RELEASE_SIGNING_KEY.asc"
+            echo
+            echo "gpg --verify hmy-amd64.sig hmy-amd64"
+            echo "gpg --verify hmy-arm64.sig hmy-arm64"
+            echo
+            echo "sha256sum -c hmy-amd64.sha256"
+            echo "sha256sum -c hmy-arm64.sha256"
+            echo '```'
+          } > tag_message.md
         working-directory: go-sdk
 
-      - name: Create Release
-        id: create_release
-        uses: actions/create-release@v1
+      - name: Recreate draft release and upload assets
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          tag_name: ${{ github.ref }}
-          release_name: Mainnet Release ${{ env.build_version }}
-          draft: true
-          prerelease: false
-          body_path: ${{ github.workspace }}/go-sdk/tag_message.md
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ needs.check.outputs.tag }}
+        run: |
+          set -euo pipefail
 
-      - name: Upload hmy binary for Linux (x86_64)
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./hmy
-          asset_name: hmy
-          asset_content_type: application/octet-stream
+          if gh release view "${RELEASE_TAG}" --repo "${GITHUB_REPOSITORY}" >/dev/null 2>&1; then
+            echo "[INFO] Release ${RELEASE_TAG} already exists, deleting it"
 
-      - name: Upload hmy binary darwin-x86_64
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./hmy-darwin-x86_64
-          asset_name: hmy-darwin-x86_64
-          asset_content_type: application/octet-stream
+            gh release delete "${RELEASE_TAG}" \
+              --repo "${GITHUB_REPOSITORY}" \
+              --yes
+          fi
+
+          gh release create "${RELEASE_TAG}" release-assets/* \
+            --repo "${GITHUB_REPOSITORY}" \
+            --draft \
+            --verify-tag \
+            --title "Mainnet Release ${build_version}" \
+            --notes-file ./go-sdk/tag_message.md
+
+      - name: Cleanup GPG key
+        if: always()
+        run: |
+          set -euo pipefail
+
+          gpgconf --kill all || true
+          rm -rf ~/.gnupg
