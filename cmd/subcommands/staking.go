@@ -85,6 +85,92 @@ var (
 	errNegativeAmount                  = errors.New("amount can not be negative")
 )
 
+func bloomEpochForChainID(chainID int64) (int64, bool) {
+	switch chainID {
+	case 0:
+		return 5, true // localnet
+	case 1:
+		return 2964, true // mainnet
+	case 2:
+		return 7414, true // testnet
+	case 4:
+		return 53508, true // partner/devnet
+	default:
+		return 0, false
+	}
+}
+
+func parseRPCEpoch(raw interface{}) (int64, error) {
+	switch v := raw.(type) {
+	case float64:
+		return int64(v), nil
+
+	case string:
+		s := strings.TrimSpace(v)
+
+		if strings.HasPrefix(s, "0x") || strings.HasPrefix(s, "0X") {
+			u, err := strconv.ParseUint(s[2:], 16, 64)
+			if err != nil {
+				return 0, err
+			}
+
+			return int64(u), nil
+		}
+
+		return strconv.ParseInt(s, 10, 64)
+
+	case int:
+		return int64(v), nil
+
+	case int64:
+		return v, nil
+
+	case uint64:
+		return int64(v), nil
+
+	default:
+		return 0, errors.Errorf("unsupported hmy_getEpoch result type %T", raw)
+	}
+}
+
+func getCurrentEpoch(networkHandler *rpc.HTTPMessenger) (int64, error) {
+	reply, err := networkHandler.SendRPC("hmy_getEpoch", []interface{}{})
+	if err != nil {
+		return 0, err
+	}
+
+	raw, ok := reply["result"]
+	if !ok || raw == nil {
+		return 0, errors.New("hmy_getEpoch returned empty result")
+	}
+
+	return parseRPCEpoch(raw)
+}
+
+func currentBLSProofConfig(networkHandler *rpc.HTTPMessenger) (keys.BLSProofConfig, error) {
+	cfg := keys.BLSProofConfig{
+		ValidatorAddress: address.Parse(validatorAddress.String()),
+	}
+
+	if chainName.chainID == nil || chainName.chainID.Value == nil {
+		return cfg, errors.New("chain ID is not initialized")
+	}
+
+	bloomEpoch, ok := bloomEpochForChainID(chainName.chainID.Value.Int64())
+	if !ok {
+		return cfg, nil
+	}
+
+	currentEpoch, err := getCurrentEpoch(networkHandler)
+	if err != nil {
+		return cfg, err
+	}
+
+	cfg.BindToAddress = currentEpoch >= bloomEpoch
+
+	return cfg, nil
+}
+
 func createStakingTransaction(nonce uint64, f staking.StakeMsgFulfiller) (*staking.StakingTransaction, error) {
 	gPrice, err := common.NewDecFromString(gasPrice)
 	if err != nil {
@@ -351,7 +437,12 @@ Create a new validator"
 				blsPubKeys[i].FromLibBLSPublicKey(blsPubKey)
 			}
 
-			blsSigs, err := keys.VerifyBLSKeys(stakingBlsPubKeys, blsPubKeyDir)
+			blsProofCfg, err := currentBLSProofConfig(networkHandler)
+			if err != nil {
+				return err
+			}
+
+			blsSigs, err := keys.VerifyBLSKeysWithConfig(stakingBlsPubKeys, blsPubKeyDir, blsProofCfg)
 			if err != nil {
 				return err
 			}
@@ -522,10 +613,16 @@ Create a new validator"
 				shardKey.FromLibBLSPublicKey(blsKey)
 				shardPubKeyAdd = &shardKey
 
-				sig, err := keys.VerifyBLS(strings.TrimPrefix(slotKeyToAdd, "0x"), blsPubKeyDir)
+				blsProofCfg, err := currentBLSProofConfig(networkHandler)
 				if err != nil {
 					return err
 				}
+
+				sig, err := keys.VerifyBLSWithConfig(
+					strings.TrimPrefix(slotKeyToAdd, "0x"),
+					blsPubKeyDir,
+					blsProofCfg,
+				)
 				sigBls = &sig
 			}
 

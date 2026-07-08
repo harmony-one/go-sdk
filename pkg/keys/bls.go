@@ -16,6 +16,7 @@ import (
 	"path"
 	"strings"
 
+	ethcommon "github.com/ethereum/go-ethereum/common"
 	bls_core "github.com/harmony-one/bls/ffi/go/bls"
 	"github.com/harmony-one/go-sdk/pkg/common"
 	"github.com/harmony-one/go-sdk/pkg/sharding"
@@ -26,7 +27,12 @@ import (
 	"golang.org/x/crypto/ssh/terminal"
 )
 
-//BlsKey - struct to represent bls key data
+type BLSProofConfig struct {
+	ValidatorAddress ethcommon.Address
+	BindToAddress    bool
+}
+
+// BlsKey - struct to represent bls key data
 type BlsKey struct {
 	PrivateKey     *bls_core.SecretKey
 	PublicKey      *bls_core.PublicKey
@@ -37,7 +43,7 @@ type BlsKey struct {
 	ShardPublicKey *bls.SerializedPublicKey
 }
 
-//Initialize - initialize a bls key and assign a random private bls key if not already done
+// Initialize - initialize a bls key and assign a random private bls key if not already done
 func (blsKey *BlsKey) Initialize() {
 	if blsKey.PrivateKey == nil {
 		blsKey.PrivateKey = bls.RandPrivateKey()
@@ -47,7 +53,7 @@ func (blsKey *BlsKey) Initialize() {
 	}
 }
 
-//Reset - resets the currently assigned private and public key fields
+// Reset - resets the currently assigned private and public key fields
 func (blsKey *BlsKey) Reset() {
 	blsKey.PrivateKey = nil
 	blsKey.PrivateKeyHex = ""
@@ -153,30 +159,53 @@ func GetPublicBlsKey(privateKeyHex string) error {
 }
 
 func VerifyBLSKeys(blsPubKeys []string, blsPubKeyDir string) ([]bls.SerializedSignature, error) {
+	return VerifyBLSKeysWithConfig(blsPubKeys, blsPubKeyDir, BLSProofConfig{})
+}
+
+func VerifyBLSKeysWithConfig(
+	blsPubKeys []string,
+	blsPubKeyDir string,
+	cfg BLSProofConfig,
+) ([]bls.SerializedSignature, error) {
 	blsSigs := make([]bls.SerializedSignature, len(blsPubKeys))
+
 	for i := 0; i < len(blsPubKeys); i++ {
-		sig, err := VerifyBLS(strings.TrimPrefix(blsPubKeys[i], "0x"), blsPubKeyDir)
+		sig, err := VerifyBLSWithConfig(strings.TrimPrefix(blsPubKeys[i], "0x"), blsPubKeyDir, cfg)
 		if err != nil {
 			return nil, err
 		}
+
 		blsSigs[i] = sig
 	}
+
 	return blsSigs, nil
 }
 
 func VerifyBLS(blsPubKey string, blsPubKeyDir string) (bls.SerializedSignature, error) {
+	return VerifyBLSWithConfig(blsPubKey, blsPubKeyDir, BLSProofConfig{})
+}
+
+func VerifyBLSWithConfig(
+	blsPubKey string,
+	blsPubKeyDir string,
+	cfg BLSProofConfig,
+) (bls.SerializedSignature, error) {
 	var sig bls.SerializedSignature
 	var encryptedPrivateKeyBytes []byte
 	var pass []byte
 	var err error
+
 	// specified blsPubKeyDir
 	if len(blsPubKeyDir) != 0 {
 		filePath := fmt.Sprintf("%s/%s.key", blsPubKeyDir, blsPubKey)
+
 		encryptedPrivateKeyBytes, err = ioutil.ReadFile(filePath)
 		if err != nil {
 			return sig, common.ErrFoundNoKey
 		}
+
 		passFile := fmt.Sprintf("%s/%s.pass", blsPubKeyDir, blsPubKey)
+
 		pass, err = ioutil.ReadFile(passFile)
 		if err != nil {
 			return sig, common.ErrFoundNoPass
@@ -186,36 +215,44 @@ func VerifyBLS(blsPubKey string, blsPubKeyDir string) (bls.SerializedSignature, 
 		// if not ask for the absolute path
 		cwd, _ := os.Getwd()
 		filePath := fmt.Sprintf("%s/%s.key", cwd, blsPubKey)
+
 		encryptedPrivateKeyBytes, err = ioutil.ReadFile(filePath)
 		if err != nil {
 			reader := bufio.NewReader(os.Stdin)
+
 			fmt.Printf("For bls public key: %s\n", blsPubKey)
 			fmt.Println("Enter the absolute path to the encrypted bls private key file:")
+
 			filePath, _ := reader.ReadString('\n')
+			filePath = strings.TrimSpace(filePath)
+
 			if !path.IsAbs(filePath) {
 				return sig, common.ErrNotAbsPath
 			}
-			filePath = strings.TrimSpace(filePath)
+
 			encryptedPrivateKeyBytes, err = ioutil.ReadFile(filePath)
 			if err != nil {
 				return sig, err
 			}
 		}
-		// ask passphrase for bls key twice
+
 		fmt.Println("Enter the bls passphrase:")
 		pass, _ = terminal.ReadPassword(int(os.Stdin.Fd()))
 	}
 
 	cleanPass := strings.TrimSpace(string(pass))
 	cleanPass = strings.ReplaceAll(cleanPass, "\t", "")
+
 	decryptedPrivateKeyBytes, err := decrypt(encryptedPrivateKeyBytes, cleanPass)
 	if err != nil {
 		return sig, err
 	}
+
 	privateKey, err := getBlsKey(string(decryptedPrivateKeyBytes))
 	if err != nil {
 		return sig, err
 	}
+
 	publicKey := privateKey.GetPublicKey()
 	publicKeyHex := publicKey.SerializeToHexStr()
 
@@ -224,14 +261,29 @@ func VerifyBLS(blsPubKey string, blsPubKeyDir string) (bls.SerializedSignature, 
 	}
 
 	messageBytes := []byte(types.BLSVerificationStr)
+
+	if cfg.BindToAddress {
+		if cfg.ValidatorAddress == (ethcommon.Address{}) {
+			return sig, errors.New("validator address is required for address-bound bls proof")
+		}
+
+		boundMessageBytes := make([]byte, 0, ethcommon.AddressLength+len(messageBytes))
+		boundMessageBytes = append(boundMessageBytes, cfg.ValidatorAddress.Bytes()...)
+		boundMessageBytes = append(boundMessageBytes, messageBytes...)
+		messageBytes = boundMessageBytes
+	}
+
 	msgHash := hash.Keccak256(messageBytes)
+
 	signature := privateKey.SignHash(msgHash[:])
 
 	bytes := signature.Serialize()
 	if len(bytes) != bls.BLSSignatureSizeInBytes {
 		return sig, errors.New("bls key length is not 96 bytes")
 	}
+
 	copy(sig[:], bytes)
+
 	return sig, nil
 }
 
