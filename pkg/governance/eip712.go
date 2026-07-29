@@ -10,14 +10,14 @@ import (
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/ethereum/go-ethereum/common/math"
 	"github.com/ethereum/go-ethereum/crypto"
-	"github.com/ethereum/go-ethereum/signer/core"
+	"github.com/ethereum/go-ethereum/signer/core/apitypes"
 	"github.com/pkg/errors"
 )
 
 // This embedded type was created to override the EncodeData function
 // and remove the validation for a mandatory chain id
 type TypedData struct {
-	core.TypedData
+	apitypes.TypedData
 }
 
 // dataMismatchError generates an error for a mismatch between
@@ -122,8 +122,8 @@ func (typedData *TypedData) String() (string, error) {
 	// and neither are the blank fields in the domain
 	type data struct {
 		Domain  domain                `json:"domain"`
-		Types   core.Types            `json:"types"`
-		Message core.TypedDataMessage `json:"message"`
+		Types   apitypes.Types            `json:"types"`
+		Message apitypes.TypedDataMessage `json:"message"`
 	}
 	var ts uint64
 	var err error
@@ -136,10 +136,10 @@ func (typedData *TypedData) String() (string, error) {
 			Name:    typedData.Domain.Name,
 			Version: typedData.Domain.Version,
 		},
-		Types: core.Types{
+		Types: apitypes.Types{
 			typedData.PrimaryType: typedData.Types[typedData.PrimaryType],
 		},
-		Message: core.TypedDataMessage{
+		Message: apitypes.TypedDataMessage{
 			"space":    typedData.Message["space"],
 			"proposal": typedData.Message["proposal"],
 			"choice":   typedData.Message["choice"],
