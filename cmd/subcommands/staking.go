@@ -9,7 +9,7 @@ import (
 
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/ethereum/go-ethereum/rlp"
-	bls_core "github.com/harmony-one/bls/ffi/go/bls"
+	bls_core "github.com/harmony-one/harmony/crypto/bls/core"
 	"github.com/harmony-one/go-sdk/pkg/address"
 	"github.com/harmony-one/go-sdk/pkg/common"
 	"github.com/harmony-one/go-sdk/pkg/keys"
@@ -20,7 +20,7 @@ import (
 	"github.com/harmony-one/harmony/accounts"
 	"github.com/harmony-one/harmony/accounts/keystore"
 	"github.com/harmony-one/harmony/common/denominations"
-	"github.com/harmony-one/harmony/core"
+	"github.com/harmony-one/harmony/core/vm"
 	"github.com/harmony-one/harmony/crypto/bls"
 	"github.com/harmony-one/harmony/numeric"
 	"github.com/harmony-one/harmony/shard"
@@ -185,7 +185,7 @@ func createStakingTransaction(nonce uint64, f staking.StakeMsgFulfiller) (*staki
 	var gLimit uint64
 	if gasLimit == "" {
 		isCreateValidator := directive == staking.DirectiveCreateValidator
-		gLimit, err = core.IntrinsicGas(data, false, true, true, isCreateValidator)
+		gLimit, err = vm.IntrinsicGas(data, false, true, true, isCreateValidator, false)
 		if err != nil {
 			return nil, err
 		}

@@ -17,8 +17,7 @@ import (
 	"github.com/harmony-one/go-sdk/pkg/store"
 	"github.com/harmony-one/go-sdk/pkg/transaction"
 	"github.com/harmony-one/harmony/accounts"
-	"github.com/harmony-one/harmony/core"
-
+	"github.com/harmony-one/harmony/core/vm"
 	"github.com/spf13/cobra"
 )
 
@@ -86,7 +85,7 @@ func ethHandlerForTransaction(txLog *transactionLog) error {
 
 	var gLimit uint64
 	if gasLimit == "" {
-		gLimit, err = core.IntrinsicGas([]byte(""), false, true, true, false)
+		gLimit, err = vm.IntrinsicGas([]byte(""), false, true, true, false, false)
 		if handlerForError(txLog, err) != nil {
 			return err
 		}

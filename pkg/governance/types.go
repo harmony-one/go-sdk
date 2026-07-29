@@ -9,7 +9,7 @@ import (
 
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/ethereum/go-ethereum/common/math"
-	eip712 "github.com/ethereum/go-ethereum/signer/core"
+	eip712 "github.com/ethereum/go-ethereum/signer/core/apitypes"
 	"github.com/pkg/errors"
 )
 
