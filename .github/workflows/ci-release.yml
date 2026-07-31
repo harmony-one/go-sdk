@@ -110,36 +110,6 @@ jobs:
           go-version-file: go-sdk/go.mod
           cache: false
 
-      - name: Checkout mcl
-        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 #v7.0.0
-        with:
-          repository: harmony-one/mcl
-          path: src/github.com/harmony-one/mcl
-          ref: master
-          fetch-depth: 1
-          persist-credentials: false
-
-      - name: Checkout bls
-        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 #v7.0.0
-        with:
-          repository: harmony-one/bls
-          path: src/github.com/harmony-one/bls
-          ref: master
-          fetch-depth: 1
-          persist-credentials: false
-
-      - name: Checkout harmony BLS build flags helper
-        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 #v7.0.0
-        with:
-          repository: harmony-one/harmony
-          path: src/github.com/harmony-one/harmony
-          ref: main
-          fetch-depth: 1
-          persist-credentials: false
-          sparse-checkout: |
-            scripts/setup_bls_build_flags.sh
-          sparse-checkout-cone-mode: false
-
       - name: Build hmy binary for Linux
         id: build-hmy
         run: |

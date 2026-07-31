@@ -2,8 +2,6 @@
 
 set -ieu
 
-source ../harmony/scripts/setup_bls_build_flags.sh
-
 sender='one1yc06ghr2p8xnl2380kpfayweguuhxdtupkhqzw'
 receiver='one1q6gkzcap0uruuu8r6sldxuu47pd4ww9w9t7tg6'
 shard_zero='https://api.s0.b.hmny.io/'

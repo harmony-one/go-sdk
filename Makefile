@@ -1,7 +1,4 @@
 SHELL := /bin/bash
-TOP:=$(realpath ..)
-export LD_LIBRARY_PATH:=$(TOP)/bls/lib:$(TOP)/mcl/lib:/usr/local/opt/openssl/lib:/opt/homebrew/opt/gmp/lib/:/opt/homebrew/opt/openssl/lib
-export LIBRARY_PATH:=$(LD_LIBRARY_PATH)
 version := $(shell git rev-list --count HEAD)
 commit := $(shell git describe --always --long --dirty)
 built_at := $(shell date +%FT%T%z)
@@ -15,25 +12,19 @@ upload-path-darwin := 's3://pub.harmony.one/release/darwin-x86_64/mainnet/hmy'
 upload-path-linux := 's3://pub.harmony.one/release/linux-x86_64/mainnet/hmy'
 upload-path-linux-version := 's3://pub.harmony.one/release/linux-x86_64/mainnet/hmy_version'
 uname := $(shell uname)
-GOPATH := $(shell go env GOPATH)
 
 env := GO111MODULE=on
 
-DIR := ${CURDIR}
-export CGO_LDFLAGS=-L$(DIR)/dist/lib -Wl,-rpath -Wl,\$ORIGIN/lib
-
 all:
-	source ${GOPATH}/src/github.com/harmony-one/harmony/scripts/setup_bls_build_flags.sh && $(env) go build -o $(cli) -ldflags="$(ldflags)" cmd/main.go
+	$(env) go build -o $(cli) -ldflags="$(ldflags)" cmd/main.go
 	cp $(cli) hmy
 
 static:
-	make -C ${GOPATH}/src/github.com/harmony-one/mcl
-	make -C ${GOPATH}/src/github.com/harmony-one/bls minimised_static BLS_SWAP_G=1
-	source ${GOPATH}/src/github.com/harmony-one/harmony/scripts/setup_bls_build_flags.sh && $(env) go build -o $(cli) -ldflags="$(ldflags) -w -extldflags \"-static\"" cmd/main.go
+	$(env) go build -o $(cli) -ldflags="$(ldflags) -w -extldflags \"-static\"" cmd/main.go
 	cp $(cli) hmy
 
 debug:
-	source ${GOPATH}/src/github.com/harmony-one/harmony/scripts/setup_bls_build_flags.sh && $(env) go build $(flags) -o $(cli) -ldflags="$(ldflags)" cmd/main.go
+	$(env) go build $(flags) -o $(cli) -ldflags="$(ldflags)" cmd/main.go
 	cp $(cli) hmy
 
 install:all
